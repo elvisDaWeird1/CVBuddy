@@ -1,154 +1,155 @@
 @import "tailwindcss";
 
 /* ============================================================
-   DESIGN TOKENS — CSS Custom Properties
-   ============================================================ */
+DESIGN TOKENS — CSS Custom Properties
+============================================================ */
 
 :root {
-  /* ── Palette ─────────────────────────────── */
-  --color-bg-main: #F8FAFC;
-  --color-bg-soft: #E6F7FB;
-  --color-navy: #081020;
-  --color-teal: #006A78;
-  --color-cyan: #50D8F4;
-  --color-amber: #FFB84D;
+/* ── Palette ─────────────────────────────── */
+--color-bg: #FAF8F1;
+--color-surface: #FFFFFF;
+--color-text: #111111;
+--color-primary-dark: #1B2430;
+--color-accent: #D6A600;
+--color-accent-soft: #F4D35E;
+--color-border: #E6E1D5;
 
-  /* ── Derived neutral palette ─────────────── */
-  --color-white: #FFFFFF;
-  --color-gray-50: #F9FAFB;
-  --color-gray-100: #F3F4F6;
-  --color-gray-200: #E5E7EB;
-  --color-gray-300: #D1D5DB;
-  --color-gray-400: #9CA3AF;
-  --color-gray-500: #6B7280;
-  --color-gray-600: #4B5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1F2937;
-  --color-gray-900: #111827;
+/* ── Derived neutral palette ─────────────── */
+--color-white: #FFFFFF;
+--color-gray-50: #F9FAFB;
+--color-gray-100: #F3F4F6;
+--color-gray-200: #E5E7EB;
+--color-gray-300: #D1D5DB;
+--color-gray-400: #9CA3AF;
+--color-gray-500: #6B7280;
+--color-gray-600: #4B5563;
+--color-gray-700: #374151;
+--color-gray-800: #1F2937;
+--color-gray-900: #111827;
 
-  /* ── Semantic ────────────────────────────── */
-  --color-success: #10B981;
-  --color-success-bg: #D1FAE5;
-  --color-warning: #F59E0B;
-  --color-warning-bg: #FEF3C7;
-  --color-error: #EF4444;
-  --color-error-bg: #FEE2E2;
-  --color-info: #3B82F6;
-  --color-info-bg: #DBEAFE;
+/* ── Semantic ────────────────────────────── */
+--color-success: #10B981;
+--color-success-bg: #D1FAE5;
+--color-warning: #F59E0B;
+--color-warning-bg: #FEF3C7;
+--color-error: #EF4444;
+--color-error-bg: #FEE2E2;
+--color-info: #3B82F6;
+--color-info-bg: #DBEAFE;
 
-  /* ── Text on backgrounds ─────────────────── */
-  --color-text-primary: var(--color-navy);
-  --color-text-secondary: var(--color-gray-600);
-  --color-text-muted: var(--color-gray-400);
-  --color-text-on-teal: #FFFFFF;
-  --color-text-on-navy: #FFFFFF;
+/* ── Text on backgrounds ─────────────────── */
+--color-text-primary: var(--color-primary-dark);
+--color-text-secondary: var(--color-gray-600);
+--color-text-muted: var(--color-gray-400);
+--color-text-on-accent-soft: #111111;
+--color-text-on-primary-dark: #FFFFFF;
 
-  /* ── Border ──────────────────────────────── */
-  --color-border: var(--color-gray-200);
-  --color-border-focus: var(--color-teal);
-  --color-border-hover: var(--color-gray-300);
+/* ── Border ──────────────────────────────── */
+--color-border: var(--color-border);
+--color-border-focus: var(--color-accent);
+--color-border-hover: var(--color-gray-300);
 
-  /* ── Typography ──────────────────────────── */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'Fira Code', Consolas, monospace;
+/* ── Typography ──────────────────────────── */
+--font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+--font-mono: ui-monospace, 'Fira Code', Consolas, monospace;
 
-  --text-xs: 0.75rem;     /* 12px */
-  --text-sm: 0.875rem;    /* 14px */
-  --text-base: 1rem;      /* 16px */
-  --text-lg: 1.125rem;    /* 18px */
-  --text-xl: 1.25rem;     /* 20px */
-  --text-2xl: 1.5rem;     /* 24px */
-  --text-3xl: 1.875rem;   /* 30px */
-  --text-4xl: 2.25rem;    /* 36px */
+--text-xs: 0.75rem; /* 12px */
+--text-sm: 0.875rem; /* 14px */
+--text-base: 1rem; /* 16px */
+--text-lg: 1.125rem; /* 18px */
+--text-xl: 1.25rem; /* 20px */
+--text-2xl: 1.5rem; /* 24px */
+--text-3xl: 1.875rem; /* 30px */
+--text-4xl: 2.25rem; /* 36px */
 
-  --leading-tight: 1.25;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.75;
+--leading-tight: 1.25;
+--leading-normal: 1.5;
+--leading-relaxed: 1.75;
 
-  --font-normal: 400;
-  --font-medium: 500;
-  --font-semibold: 600;
-  --font-bold: 700;
+--font-normal: 400;
+--font-medium: 500;
+--font-semibold: 600;
+--font-bold: 700;
 
-  /* ── Spacing ─────────────────────────────── */
-  --sp-1: 0.25rem;   /* 4px */
-  --sp-2: 0.5rem;    /* 8px */
-  --sp-3: 0.75rem;   /* 12px */
-  --sp-4: 1rem;      /* 16px */
-  --sp-5: 1.25rem;   /* 20px */
-  --sp-6: 1.5rem;    /* 24px */
-  --sp-8: 2rem;      /* 32px */
-  --sp-10: 2.5rem;   /* 40px */
-  --sp-12: 3rem;     /* 48px */
-  --sp-16: 4rem;     /* 64px */
+/* ── Spacing ─────────────────────────────── */
+--sp-1: 0.25rem; /* 4px */
+--sp-2: 0.5rem; /* 8px */
+--sp-3: 0.75rem; /* 12px */
+--sp-4: 1rem; /* 16px */
+--sp-5: 1.25rem; /* 20px */
+--sp-6: 1.5rem; /* 24px */
+--sp-8: 2rem; /* 32px */
+--sp-10: 2.5rem; /* 40px */
+--sp-12: 3rem; /* 48px */
+--sp-16: 4rem; /* 64px */
 
-  /* ── Border radius ───────────────────────── */
-  --radius-sm: 0.25rem;   /* 4px */
-  --radius-md: 0.5rem;    /* 8px */
-  --radius-lg: 0.75rem;   /* 12px */
-  --radius-xl: 1rem;      /* 16px */
-  --radius-full: 9999px;
+/* ── Border radius ───────────────────────── */
+--radius-sm: 0.25rem; /* 4px */
+--radius-md: 0.5rem; /* 8px */
+--radius-lg: 0.75rem; /* 12px */
+--radius-xl: 1rem; /* 16px */
+--radius-full: 9999px;
 
-  /* ── Shadow ──────────────────────────────── */
-  --shadow-sm: 0 1px 2px rgba(8,16,32,0.05);
-  --shadow-md: 0 4px 6px -1px rgba(8,16,32,0.08), 0 2px 4px -2px rgba(8,16,32,0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(8,16,32,0.10), 0 4px 6px -4px rgba(8,16,32,0.06);
-  --shadow-xl: 0 20px 25px -5px rgba(8,16,32,0.12), 0 8px 10px -6px rgba(8,16,32,0.08);
+/* ── Shadow ──────────────────────────────── */
+--shadow-sm: 0 1px 2px rgba(27,36,48,0.05);
+--shadow-md: 0 4px 6px -1px rgba(27,36,48,0.08), 0 2px 4px -2px rgba(27,36,48,0.05);
+--shadow-lg: 0 10px 15px -3px rgba(27,36,48,0.10), 0 4px 6px -4px rgba(27,36,48,0.06);
+--shadow-xl: 0 20px 25px -5px rgba(27,36,48,0.12), 0 8px 10px -6px rgba(27,36,48,0.08);
 
-  /* ── Focus ring ──────────────────────────── */
-  --focus-ring: 0 0 0 3px rgba(0,106,120,0.25);
-  --focus-ring-cyan: 0 0 0 3px rgba(80,216,244,0.35);
+/* ── Focus ring ──────────────────────────── */
+--focus-ring: 0 0 0 3px rgba(214,166,0,0.25);
+--focus-ring-accent-soft: 0 0 0 3px rgba(244,211,94,0.4);
 
-  /* ── Transitions ─────────────────────────── */
-  --transition-fast: 150ms ease;
-  --transition-base: 200ms ease;
-  --transition-slow: 300ms ease;
+/* ── Transitions ─────────────────────────── */
+--transition-fast: 150ms ease;
+--transition-base: 200ms ease;
+--transition-slow: 300ms ease;
 
-  /* ── Z-index layers ──────────────────────── */
-  --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-modal-backdrop: 300;
-  --z-modal: 400;
-  --z-toast: 500;
+/* ── Z-index layers ──────────────────────── */
+--z-dropdown: 100;
+--z-sticky: 200;
+--z-modal-backdrop: 300;
+--z-modal: 400;
+--z-toast: 500;
 }
 
 /* ============================================================
-   BASE / RESET
-   ============================================================ */
+BASE / RESET
+============================================================ */
 *, *::before, *::after {
-  box-sizing: border-box;
+box-sizing: border-box;
 }
 
 html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+text-rendering: optimizeLegibility;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background-color: var(--color-bg-main);
-  color: var(--color-text-primary);
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: var(--leading-normal);
-  letter-spacing: 0.01em;
+margin: 0;
+padding: 0;
+min-height: 100vh;
+background-color: var(--color-bg);
+color: var(--color-text-primary);
+font-family: var(--font-sans);
+font-size: var(--text-base);
+line-height: var(--leading-normal);
+letter-spacing: 0.01em;
 }
 
 #root {
-  min-height: 100vh;
+min-height: 100vh;
 }
 
 /* ============================================================
-   TYPOGRAPHY HELPERS
-   ============================================================ */
+TYPOGRAPHY HELPERS
+============================================================ */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--color-text-primary);
-  font-weight: var(--font-semibold);
-  line-height: var(--leading-tight);
-  margin: 0;
+color: var(--color-text-primary);
+font-weight: var(--font-semibold);
+line-height: var(--leading-tight);
+margin: 0;
 }
 
 h1 { font-size: var(--text-4xl); }
@@ -159,42 +160,43 @@ h5 { font-size: var(--text-lg); }
 h6 { font-size: var(--text-base); }
 
 p {
-  margin: 0;
-  color: var(--color-text-secondary);
+margin: 0;
+color: var(--color-text-secondary);
 }
 
 a {
-  color: var(--color-teal);
-  text-decoration: none;
-  transition: color var(--transition-fast);
+color: var(--color-primary-dark);
+text-decoration: none;
+transition: color var(--transition-fast);
 }
+
 a:hover {
-  color: var(--color-cyan);
+color: var(--color-accent);
 }
 
 /* ============================================================
-   FOCUS RING (global)
-   ============================================================ */
+FOCUS RING (global)
+============================================================ */
 :focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-radius: var(--radius-sm);
+outline: none;
+box-shadow: var(--focus-ring);
+border-radius: var(--radius-sm);
 }
 
 /* ============================================================
-   SCROLLBAR (subtle)
-   ============================================================ */
+SCROLLBAR (subtle)
+============================================================ */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+width: 6px;
+height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-main);
+background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-300);
-  border-radius: var(--radius-full);
+background: var(--color-gray-300);
+border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-400);
+background: var(--color-gray-400);
 }
