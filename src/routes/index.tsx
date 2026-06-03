@@ -1,12 +1,12 @@
 import { lazy } from 'react'
 
-const Home = lazy(() => import('@/modules/pages/Home.tsx') as Promise<{ default: React.FC }>)
-const AboutUs = lazy(() => import('@/modules/pages/AboutUs.tsx') as Promise<{ default: React.FC }>)
-const Project = lazy(() => import('@/modules/pages/Project.tsx') as Promise<{ default: React.FC }>)
-const AiBuddy = lazy(() => import('@/modules/pages/AiBuddy.tsx') as Promise<{ default: React.FC }>)
-const FormPage = lazy(() => import('@/modules/pages/FormPage.tsx') as Promise<{ default: React.FC }>)
-const ComingSoon = lazy(() => import('@/modules/pages/ComingSoon.tsx') as Promise<{ default: React.FC }>)
-const NotFound = lazy(() => import('@/modules/admin/NotFound.tsx') as Promise<{ default: React.FC }>)
+const Home = lazy(() => import('@/modules/pages/Home.tsx'))
+const AboutUs = lazy(() => import('@/modules/pages/AboutUs.tsx'))
+const Project = lazy(() => import('@/modules/pages/Project.tsx'))
+const AiBuddy = lazy(() => import('@/modules/pages/AiBuddy.tsx'))
+const FormPage = lazy(() => import('@/modules/pages/FormPage.tsx'))
+const ComingSoon = lazy(() => import('@/modules/pages/ComingSoon.tsx'))
+const NotFound = lazy(() => import('@/modules/admin/NotFound.tsx'))
 
 export const routeConfig = [
   { path: '/', element: <Home /> },

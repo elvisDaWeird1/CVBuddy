@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layout/MainLayout'
+import { MainLayout } from '@/layouts/ClientLayout/ClientLayout'
 
 export function ProjectPage() {
   return (
@@ -12,3 +12,5 @@ export function ProjectPage() {
     </MainLayout>
   )
 }
+
+export default ProjectPage

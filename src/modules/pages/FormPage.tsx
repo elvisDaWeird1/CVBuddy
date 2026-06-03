@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layout/MainLayout'
+import { MainLayout } from '@/layouts/ClientLayout/ClientLayout'
 
 export function FormPage() {
   return (
@@ -12,3 +12,5 @@ export function FormPage() {
     </MainLayout>
   )
 }
+
+export default FormPage

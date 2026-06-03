@@ -15,7 +15,7 @@ export function Header() {
         {/* Logo */}
         <Link to="/home" className="flex items-center gap-2 shrink-0">
           <img
-            src="/icons.svg"
+            src="logo.png"
             alt="CV Buddy"
             className="h-8 w-8"
           />
