@@ -25,7 +25,7 @@ export function FormGroup({ label, error, helperText, required, children, classN
   )
 }
 
-interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
+type FormProps = React.FormHTMLAttributes<HTMLFormElement>
 
 export const Form = forwardRef<HTMLFormElement, FormProps>(({ className, onSubmit, ...props }, ref) => {
   return (

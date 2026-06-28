@@ -1,20 +1,20 @@
-import { lazy } from 'react'
+import { createElement, lazy, type ComponentType } from 'react'
 
-const Home = lazy(() => import('@/modules/pages/Home.tsx'))
-const AboutUs = lazy(() => import('@/modules/pages/AboutUs.tsx'))
-const Project = lazy(() => import('@/modules/pages/Project.tsx'))
-const AiBuddy = lazy(() => import('@/modules/pages/AiBuddy.tsx'))
-const FormPage = lazy(() => import('@/modules/pages/FormPage.tsx'))
-const ComingSoon = lazy(() => import('@/modules/pages/ComingSoon.tsx'))
-const NotFound = lazy(() => import('@/modules/admin/NotFound.tsx'))
+const lazyRouteElement = (loader: () => Promise<{ default: ComponentType }>) =>
+  createElement(lazy(loader))
 
 export const routeConfig = [
-  { path: '/', element: <Home /> },
-  { path: '/home', element: <Home /> },
-  { path: '/about-us', element: <AboutUs /> },
-  { path: '/project', element: <Project /> },
-  { path: '/ai-buddy', element: <AiBuddy /> },
-  { path: '/form', element: <FormPage /> },
-  { path: '/coming-soon', element: <ComingSoon /> },
-  { path: '*', element: <NotFound /> },
+  { path: '/', element: lazyRouteElement(() => import('@/modules/pages/Home.tsx')) },
+  { path: '/home', element: lazyRouteElement(() => import('@/modules/pages/Home.tsx')) },
+  { path: '/about-us', element: lazyRouteElement(() => import('@/modules/pages/AboutUs.tsx')) },
+  { path: '/project', element: lazyRouteElement(() => import('@/modules/pages/Project.tsx')) },
+  { path: '/ai-buddy', element: lazyRouteElement(() => import('@/modules/pages/AiBuddy.tsx')) },
+  { path: '/form', element: lazyRouteElement(() => import('@/modules/pages/FormPage.tsx')) },
+  { path: '/coming-soon', element: lazyRouteElement(() => import('@/modules/pages/ComingSoon.tsx')) },
+  { path: '/login', element: lazyRouteElement(() => import('@/modules/auth/LoginPage.tsx')) },
+  { path: '/register/applicant', element: lazyRouteElement(() => import('@/modules/auth/RegisterApplicantPage.tsx')) },
+  { path: '/applicant/profile', element: lazyRouteElement(() => import('@/modules/applicant/ApplicantProfilePage.tsx')) },
+  { path: '/applicant/profile/edit', element: lazyRouteElement(() => import('@/modules/applicant/EditProfilePage.tsx')) },
+  { path: '/change-password', element: lazyRouteElement(() => import('@/modules/settings/ChangePasswordPage.tsx')) },
+  { path: '*', element: lazyRouteElement(() => import('@/modules/admin/NotFound.tsx')) },
 ] as const
