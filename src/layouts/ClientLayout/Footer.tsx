@@ -7,7 +7,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
           {/* Brand */}
           <div>
-            <Link to="/home" className="inline-flex items-center gap-2">
+            <Link to="/" className="inline-flex items-center gap-2">
               <img src="/icons.svg" alt="CV Buddy" className="h-7 w-7" />
               <span className="text-base font-bold tracking-tight">CV Buddy</span>
             </Link>

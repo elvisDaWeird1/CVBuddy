@@ -24,7 +24,7 @@ export function AuthShell({ children }: AuthShellProps) {
           <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/coming-soon">Help Center</Link>
           <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/coming-soon">Privacy Policy</Link>
           <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/coming-soon">Terms of Service</Link>
-          <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/form">Contact Us</Link>
+          <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/#survey-form">Contact Us</Link>
         </nav>
       </footer>
     </div>
