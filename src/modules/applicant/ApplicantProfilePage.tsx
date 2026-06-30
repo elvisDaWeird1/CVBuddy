@@ -1,20 +1,21 @@
-import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
 import {
-  BriefcaseIcon,
   DownloadIcon,
   EditIcon,
   FileTextIcon,
-  GraduationCapIcon,
   LinkIcon,
   MailIcon,
   MapPinIcon,
   PhoneIcon,
   UserIcon,
 } from '@/components/ui/icons'
-import { applicantProfile, educationItems, experienceItems } from './profileData'
 import { cn } from '@/utils/cn'
+import { getApplicantProfile, type ApplicantProfilePayload } from './applicantApi'
+import { getAuthApiErrorMessage } from '@/modules/auth/authApi'
+import { getStoredAccount } from '@/modules/auth/authStorage'
+import { Button } from '@/components/ui/button'
 
 interface SurfaceCardProps {
   children: ReactNode
@@ -58,50 +59,126 @@ function Chip({ children, muted = false }: { children: ReactNode; muted?: boolea
   )
 }
 
+function getInitials(fullName: string) {
+  return fullName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+    .slice(0, 2) || 'AP'
+}
+
 export default function ApplicantProfilePage() {
+  const navigate = useNavigate()
+  const storedAccount = getStoredAccount()
+  const [profile, setProfile] = useState<ApplicantProfilePayload | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadProfile() {
+      setLoading(true)
+      setErrorMessage(null)
+
+      try {
+        const nextProfile = await getApplicantProfile()
+
+        if (active) {
+          setProfile(nextProfile)
+        }
+      } catch (error) {
+        const status = typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined
+
+        if (status === 401) {
+          navigate('/login', {
+            replace: true,
+            state: { authMessage: 'Your session expired. Please sign in again.' },
+          })
+          return
+        }
+
+        if (active) {
+          setErrorMessage(getAuthApiErrorMessage(error, 'Unable to load your applicant profile.'))
+        }
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadProfile()
+
+    return () => {
+      active = false
+    }
+  }, [navigate])
+
+  const fullName = profile?.fullName || storedAccount?.fullName || 'Applicant Profile'
+  const headline = profile?.headline || 'Update your professional profile.'
+  const location = profile?.location || 'Location not provided'
+  const email = storedAccount?.email || 'Email unavailable'
+  const avatarLabel = getInitials(fullName)
+
   return (
     <ApplicantShell>
       <div className="mx-auto grid w-full max-w-[1200px] gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[2fr_1fr] lg:px-8 lg:py-12">
         <div className="space-y-8">
+          {errorMessage && (
+            <div className="rounded-[var(--radius-lg)] border border-[var(--color-error)] bg-[var(--color-error-bg)] px-4 py-3 text-sm text-[var(--color-error)]" role="alert">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p>{errorMessage}</p>
+                <Button type="button" variant="secondary" size="sm" onClick={() => { void navigate(0) }}>
+                  Retry
+                </Button>
+              </div>
+            </div>
+          )}
+
           <SurfaceCard className="overflow-hidden p-0">
             <div className="h-32 bg-[var(--color-bg-soft)]" />
             <div className="-mt-10 flex flex-col gap-5 px-6 pb-6 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                 <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full border-4 border-[var(--color-white)] bg-[var(--color-bg-soft)] text-4xl font-bold text-[var(--color-teal)] shadow-[var(--shadow-md)]">
-                  {applicantProfile.initials}
+                  {loading ? '…' : avatarLabel}
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold leading-tight tracking-normal text-[var(--color-text-primary)]">
-                    {applicantProfile.fullName}
+                    {loading ? 'Loading profile…' : fullName}
                   </h1>
-                  <p className="mt-2 text-lg leading-relaxed text-[var(--color-text-secondary)]">{applicantProfile.headline}</p>
+                  <p className="mt-2 text-lg leading-relaxed text-[var(--color-text-secondary)]">{loading ? 'Please wait…' : headline}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Chip>
                       <span className="mr-1.5 inline-flex"><MapPinIcon className="h-4 w-4" /></span>
-                      {applicantProfile.location}
+                      {loading ? 'Loading…' : location}
                     </Chip>
-                    {applicantProfile.availability.map((item) => (
-                      <Chip key={item}>{item}</Chip>
-                    ))}
+                    <Chip muted>{loading ? 'Fetching profile data' : 'Applicant'}</Chip>
                   </div>
                 </div>
               </div>
-              <Link
+              <RouterLink
                 to="/applicant/profile/edit"
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-teal)] px-5 text-sm font-semibold text-[var(--color-text-on-teal)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-0.5 hover:brightness-95"
               >
                 <EditIcon className="h-4 w-4" />
                 Edit Profile
-              </Link>
+              </RouterLink>
             </div>
           </SurfaceCard>
 
           <SurfaceCard>
             <SectionHeading icon={<UserIcon className="h-6 w-6" />}>About Me</SectionHeading>
-            <p className="text-base leading-relaxed text-[var(--color-text-secondary)]">{applicantProfile.summary}</p>
+            <p className="text-base leading-relaxed text-[var(--color-text-secondary)]">
+              {loading ? 'Loading about section…' : profile?.summary || 'No summary has been added yet.'}
+            </p>
           </SurfaceCard>
 
-          <SurfaceCard>
+          {/* <SurfaceCard>
             <SectionHeading icon={<BriefcaseIcon className="h-6 w-6" />}>Work Experience</SectionHeading>
             <div className="relative space-y-8">
               <div className="absolute bottom-3 left-[19px] top-8 hidden w-px bg-[var(--color-border)] sm:block" />
@@ -125,9 +202,9 @@ export default function ApplicantProfilePage() {
                 </article>
               ))}
             </div>
-          </SurfaceCard>
+          </SurfaceCard> */}
 
-          <SurfaceCard>
+          {/* <SurfaceCard>
             <SectionHeading icon={<GraduationCapIcon className="h-6 w-6" />}>Education</SectionHeading>
             {educationItems.map((item) => (
               <article key={item.degree} className="flex gap-5">
@@ -143,11 +220,11 @@ export default function ApplicantProfilePage() {
                 </div>
               </article>
             ))}
-          </SurfaceCard>
+          </SurfaceCard> */}
         </div>
 
         <aside className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             <SurfaceCard className="flex min-h-32 flex-col items-center justify-center p-4 text-center">
               <BriefcaseIcon className="mb-2 h-8 w-8 text-[var(--color-teal)]" />
               <span className="text-3xl font-semibold leading-none text-[var(--color-text-primary)]">3+</span>
@@ -158,7 +235,7 @@ export default function ApplicantProfilePage() {
               <span className="text-3xl font-semibold leading-none text-[var(--color-text-primary)]">24</span>
               <span className="mt-1 text-sm text-[var(--color-text-secondary)]">Projects Done</span>
             </SurfaceCard>
-          </div>
+          </div> */}
 
           <SurfaceCard>
             <h2 className="mb-4 border-b border-[var(--color-border)] pb-3 text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">Contact</h2>
@@ -167,47 +244,49 @@ export default function ApplicantProfilePage() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-gray-100)] text-[var(--color-teal)]">
                   <MailIcon className="h-4 w-4" />
                 </span>
-                <a className="truncate hover:text-[var(--color-teal)]" href={`mailto:${applicantProfile.email}`}>
-                  {applicantProfile.email}
-                </a>
+                {storedAccount?.email ? (
+                  <a className="truncate hover:text-[var(--color-teal)]" href={`mailto:${storedAccount.email}`}>
+                    {storedAccount.email}
+                  </a>
+                ) : (
+                  <span>{email}</span>
+                )}
               </li>
               <li className="flex items-center gap-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-gray-100)] text-[var(--color-teal)]">
                   <PhoneIcon className="h-4 w-4" />
                 </span>
-                <span>{applicantProfile.phone}</span>
+                <span>{loading ? 'Loading…' : profile?.phone || 'Not provided'}</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-gray-100)] text-[var(--color-teal)]">
                   <LinkIcon className="h-4 w-4" />
                 </span>
-                <span className="truncate">{applicantProfile.portfolioUrl}</span>
+                <span className="truncate">{loading ? 'Loading…' : profile?.avatarUrl || 'Not provided'}</span>
               </li>
             </ul>
           </SurfaceCard>
 
-          <SurfaceCard>
+          {/* <SurfaceCard>
             <h2 className="mb-4 border-b border-[var(--color-border)] pb-3 text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">Top Skills</h2>
             <div className="flex flex-wrap gap-2">
-              {applicantProfile.skills.map((skill, index) => (
-                <Chip key={skill} muted={index > 3}>{skill}</Chip>
-              ))}
+              <Chip muted>{loading ? 'Loading profile data' : 'No skill data in API schema'}</Chip>
             </div>
-          </SurfaceCard>
+          </SurfaceCard> */}
 
           <SurfaceCard>
             <h2 className="mb-4 border-b border-[var(--color-border)] pb-3 text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">Documents</h2>
-            <Link
+            <RouterLink
               to="/coming-soon"
               className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-hover)] px-4 py-3 transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-main)]"
             >
               <FileTextIcon className="h-6 w-6 shrink-0 text-[var(--color-error)]" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-[var(--color-text-primary)]">{applicantProfile.resumeName}</span>
-                <span className="block text-sm text-[var(--color-text-secondary)]">{applicantProfile.resumeUpdated}</span>
+                <span className="block truncate font-semibold text-[var(--color-text-primary)]">{loading ? 'Loading documents…' : 'CV documents stay in the CV flow'}</span>
+                <span className="block text-sm text-[var(--color-text-secondary)]">{loading ? 'Please wait…' : 'No direct applicant profile document field in schema'}</span>
               </span>
               <DownloadIcon className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
-            </Link>
+            </RouterLink>
           </SurfaceCard>
         </aside>
       </div>

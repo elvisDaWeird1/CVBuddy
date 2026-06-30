@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
@@ -7,8 +7,10 @@ import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { BriefcaseIcon, EditIcon, GraduationCapIcon, LinkIcon, PlusIcon, UserIcon, XIcon } from '@/components/ui/icons'
-import { applicantProfile, educationItems, experienceItems } from './profileData'
+import { educationItems, experienceItems } from './profileData'
 import { cn } from '@/utils/cn'
+import { getApplicantProfile, updateApplicantProfile, type ApplicantProfilePayload } from './applicantApi'
+import { getAuthApiErrorMessage } from '@/modules/auth/authApi'
 
 const editProfileSchema = z.object({
   fullName: z.string().trim().min(1, 'Full name is required.'),
@@ -64,28 +66,110 @@ function TextAreaField({
 }
 
 export default function EditProfilePage() {
+  const navigate = useNavigate()
   const [formMessage, setFormMessage] = useState<string | null>(null)
+  const [pageError, setPageError] = useState<string | null>(null)
+  const [loadingProfile, setLoadingProfile] = useState(true)
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<EditProfileFormValues>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
-      fullName: applicantProfile.fullName,
-      headline: applicantProfile.headline,
-      phone: applicantProfile.phone,
-      location: applicantProfile.location,
-      university: applicantProfile.university,
-      major: applicantProfile.major,
-      summary: applicantProfile.summary,
-      careerGoal: applicantProfile.careerGoal,
+      fullName: '',
+      headline: '',
+      phone: '',
+      location: '',
+      university: '',
+      major: '',
+      summary: '',
+      careerGoal: '',
       avatarUrl: '',
     },
   })
 
-  const onSubmit: SubmitHandler<EditProfileFormValues> = async ({ fullName }) => {
-    setFormMessage(`${fullName}'s profile details have been validated.`)
+  useEffect(() => {
+    let active = true
+
+    async function loadProfile() {
+      setLoadingProfile(true)
+      setPageError(null)
+
+      try {
+        const profile = await getApplicantProfile()
+
+        if (active) {
+          reset(profile)
+        }
+      } catch (error) {
+        const status = typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined
+
+        if (status === 401) {
+          navigate('/login', {
+            replace: true,
+            state: { authMessage: 'Your session expired. Please sign in again.' },
+          })
+          return
+        }
+
+        if (active) {
+          setPageError(getAuthApiErrorMessage(error, 'Unable to load your profile for editing.'))
+        }
+      } finally {
+        if (active) {
+          setLoadingProfile(false)
+        }
+      }
+    }
+
+    void loadProfile()
+
+    return () => {
+      active = false
+    }
+  }, [navigate, reset])
+
+  const onSubmit: SubmitHandler<EditProfileFormValues> = async (values) => {
+    setFormMessage(null)
+
+    const payload: ApplicantProfilePayload = {
+      fullName: values.fullName,
+      phone: values.phone || '',
+      university: values.university || '',
+      major: values.major || '',
+      location: values.location || '',
+      headline: values.headline || '',
+      summary: values.summary || '',
+      careerGoal: values.careerGoal || '',
+      avatarUrl: values.avatarUrl || '',
+    }
+
+    try {
+      await updateApplicantProfile(payload)
+      setFormMessage('Profile updated successfully.')
+      navigate('/applicant/profile', {
+        replace: true,
+        state: { profileMessage: 'Profile updated successfully.' },
+      })
+    } catch (error) {
+      const status = typeof error === 'object' && error !== null && 'response' in error
+        ? (error as { response?: { status?: number } }).response?.status
+        : undefined
+
+      if (status === 401) {
+        navigate('/login', {
+          replace: true,
+          state: { authMessage: 'Your session expired. Please sign in again.' },
+        })
+        return
+      }
+
+      setFormMessage(getAuthApiErrorMessage(error, 'Unable to update your profile.'))
+    }
   }
 
   return (
@@ -118,15 +202,20 @@ export default function EditProfilePage() {
               <Button
                 type="submit"
                 form="edit-profile-form"
-                loading={isSubmitting}
+                loading={isSubmitting || loadingProfile}
                 className="h-10 rounded-[var(--radius-md)] px-5 text-sm font-semibold hover:-translate-y-0.5"
               >
                 Save Changes
               </Button>
             </div>
           </div>
+          {pageError && (
+            <p className="rounded-[var(--radius-lg)] bg-[var(--color-error-bg)] px-4 py-3 text-sm font-medium text-[var(--color-error)]" role="alert">
+              {pageError}
+            </p>
+          )}
           {formMessage && (
-            <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--color-teal)]">
+            <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--color-teal)]" role="status">
               {formMessage}
             </p>
           )}
@@ -187,7 +276,7 @@ export default function EditProfilePage() {
               </div>
             </FormCard>
 
-            <FormCard title="Education" icon={<GraduationCapIcon className="h-6 w-6" />}>
+            {/* <FormCard title="Education" icon={<GraduationCapIcon className="h-6 w-6" />}>
               <div className="grid gap-5 md:grid-cols-2">
                 <Input
                   label="University"
@@ -217,9 +306,9 @@ export default function EditProfilePage() {
                   </article>
                 ))}
               </div>
-            </FormCard>
+            </FormCard> */}
 
-            <FormCard title="Experience" icon={<BriefcaseIcon className="h-6 w-6" />}>
+            {/* <FormCard title="Experience" icon={<BriefcaseIcon className="h-6 w-6" />}>
               <div className="space-y-4">
                 {experienceItems.map((item) => (
                   <article key={`${item.role}-${item.company}`} className="rounded-[var(--radius-md)] border border-[var(--color-border-hover)] bg-[var(--color-bg-main)] p-4">
@@ -238,14 +327,14 @@ export default function EditProfilePage() {
                   Add Experience
                 </button>
               </div>
-            </FormCard>
+            </FormCard> */}
           </div>
 
           <aside className="space-y-6">
             <FormCard title="Profile Photo" icon={<EditIcon className="h-6 w-6" />}>
               <div className="flex flex-col items-center text-center">
                 <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)] text-4xl font-bold text-[var(--color-teal)]">
-                  {applicantProfile.initials}
+                  {loadingProfile ? '…' : 'AP'}
                 </div>
                 <button type="button" className="mt-4 font-semibold text-[var(--color-teal)] hover:underline">
                   Change Photo
@@ -263,9 +352,9 @@ export default function EditProfilePage() {
               </div>
             </FormCard>
 
-            <FormCard title="Skills" icon={<UserIcon className="h-6 w-6" />}>
+            {/* <FormCard title="Skills" icon={<UserIcon className="h-6 w-6" />}>
               <div className="flex flex-wrap gap-2">
-                {applicantProfile.skills.slice(0, 4).map((skill) => (
+                {['Profile data is limited', 'Skills are not in current schema', 'Update via profile/CV flows'].map((skill) => (
                   <span
                     key={skill}
                     className="inline-flex items-center gap-2 rounded-full bg-[var(--color-bg-soft)] px-3 py-1.5 text-sm font-semibold text-[var(--color-teal)]"
@@ -284,13 +373,13 @@ export default function EditProfilePage() {
                   Add Skill
                 </button>
               </div>
-            </FormCard>
+            </FormCard> */}
 
-            <FormCard title="Links" icon={<LinkIcon className="h-6 w-6" />}>
+            {/* <FormCard title="Links" icon={<LinkIcon className="h-6 w-6" />}>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-hover)] bg-[var(--color-bg-main)] px-3 py-3 text-[var(--color-text-secondary)]">
                   <LinkIcon className="h-5 w-5 shrink-0" />
-                  <span className="truncate">{applicantProfile.portfolioUrl}</span>
+                  <span className="truncate">Portfolio links are not exposed by the current applicant profile API.</span>
                 </div>
                 <button
                   type="button"
@@ -300,7 +389,7 @@ export default function EditProfilePage() {
                   Add Link
                 </button>
               </div>
-            </FormCard>
+            </FormCard> */}
           </aside>
         </form>
       </div>

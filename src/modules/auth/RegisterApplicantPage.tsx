@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
@@ -7,6 +7,8 @@ import { AuthShell } from '@/layouts/ClientLayout/AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ArrowRightIcon, LockIcon, MailIcon, UserIcon } from '@/components/ui/icons'
+import { getAuthApiErrorMessage, registerApplicant } from './authApi'
+import { saveAuthSession } from './authStorage'
 
 const registerApplicantSchema = z
   .object({
@@ -21,9 +23,11 @@ const registerApplicantSchema = z
   })
 
 type RegisterApplicantFormValues = z.infer<typeof registerApplicantSchema>
+type AuthFormStatus = { type: 'success' | 'error'; message: string }
 
 export default function RegisterApplicantPage() {
-  const [formMessage, setFormMessage] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [formStatus, setFormStatus] = useState<AuthFormStatus | null>(null)
   const {
     register,
     handleSubmit,
@@ -38,8 +42,32 @@ export default function RegisterApplicantPage() {
     },
   })
 
-  const onSubmit: SubmitHandler<RegisterApplicantFormValues> = async ({ fullName }) => {
-    setFormMessage(`${fullName}'s applicant account details are ready to submit.`)
+  const onSubmit: SubmitHandler<RegisterApplicantFormValues> = async ({ fullName, email, password }) => {
+    setFormStatus(null)
+
+    try {
+      const response = await registerApplicant({ fullName, email, password })
+
+      if (!response.success) {
+        throw new Error(response.message || 'Unable to create your applicant account.')
+      }
+
+      if (response.data?.token) {
+        saveAuthSession(response.data)
+        navigate('/applicant/profile', { replace: true })
+        return
+      }
+
+      navigate('/login', {
+        replace: true,
+        state: { authMessage: response.message || 'Applicant account created. Please sign in.' },
+      })
+    } catch (error) {
+      setFormStatus({
+        type: 'error',
+        message: getAuthApiErrorMessage(error, 'Unable to create your applicant account. Please try again.'),
+      })
+    }
   }
 
   return (
@@ -108,9 +136,14 @@ export default function RegisterApplicantPage() {
             />
           </div>
 
-          {formMessage && (
-            <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-2.5 text-sm font-medium text-[var(--color-teal)]" role="status">
-              {formMessage}
+          {formStatus && (
+            <p
+              className={`rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-2.5 text-sm font-medium ${
+                formStatus.type === 'error' ? 'text-[var(--color-error)]' : 'text-[var(--color-teal)]'
+              }`}
+              role={formStatus.type === 'error' ? 'alert' : 'status'}
+            >
+              {formStatus.message}
             </p>
           )}
 

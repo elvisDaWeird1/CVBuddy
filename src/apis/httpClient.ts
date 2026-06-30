@@ -1,10 +1,19 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { axiosConfig } from './axios.config'
+import { getAuthToken } from '@/modules/auth/authStorage'
 
 export const httpClient = axios.create(axiosConfig)
 
 httpClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => config,
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    const token = getAuthToken()
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
+    return config
+  },
   (error: AxiosError) => Promise.reject(error),
 )
 
