@@ -56,10 +56,17 @@ export function ApplicantShell({ children }: ApplicantShellProps) {
         <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-[var(--color-text-secondary)] sm:flex-row sm:px-6 lg:px-8">
           <p className="font-semibold text-[var(--color-text-primary)]">© 2024 CVBuddy. Guided Clarity for Your Career.</p>
           <nav className="flex flex-wrap justify-center gap-4">
+<<<<<<< HEAD
             <Link className="underline underline-offset-4 hover:text-[var(--color-teal)]" to="/coming-soon">Help Center</Link>
             <Link className="underline underline-offset-4 hover:text-[var(--color-teal)]" to="/coming-soon">Privacy Policy</Link>
             <Link className="underline underline-offset-4 hover:text-[var(--color-teal)]" to="/coming-soon">Terms of Service</Link>
             <Link className="underline underline-offset-4 hover:text-[var(--color-teal)]" to="/form">Contact Us</Link>
+=======
+            <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/coming-soon">Help Center</Link>
+            <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/coming-soon">Privacy Policy</Link>
+            <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/coming-soon">Terms of Service</Link>
+            <Link className="underline underline-offset-4 hover:text-[#0061a4]" to="/#survey-form">Contact Us</Link>
+>>>>>>> 690288de27cbb799d207026ec0483fd829139e99
           </nav>
         </div>
       </footer>

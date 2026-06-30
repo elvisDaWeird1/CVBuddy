@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Header } from '@/layouts/ClientLayout/Header'
+import { Footer } from '@/layouts/ClientLayout/Footer'
 
 interface AuthShellProps {
   children: ReactNode
@@ -7,6 +8,7 @@ interface AuthShellProps {
 
 export function AuthShell({ children }: AuthShellProps) {
   return (
+<<<<<<< HEAD
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[var(--color-bg-main)] text-[var(--color-text-primary)]">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(var(--color-bg-soft)_1px,transparent_1px)] bg-[length:var(--sp-6)_var(--sp-6)] opacity-70"
@@ -23,6 +25,21 @@ export function AuthShell({ children }: AuthShellProps) {
           <Link className="underline underline-offset-4 hover:text-[var(--color-teal)]" to="/form">Contact Us</Link>
         </nav>
       </footer>
+=======
+    <div className="flex min-h-screen flex-col bg-[#f8f9fa] text-[#191c1d]">
+      <Header />
+      <main className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-70"
+          style={{
+            backgroundImage: 'radial-gradient(#d1e4ff 1px, transparent 1px)',
+            backgroundSize: '22px 22px',
+          }}
+        />
+        {children}
+      </main>
+      <Footer />
+>>>>>>> 690288de27cbb799d207026ec0483fd829139e99
     </div>
   )
 }
