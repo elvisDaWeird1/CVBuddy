@@ -150,7 +150,7 @@ export default function EditProfilePage() {
     try {
       await updateApplicantProfile(payload)
       setFormMessage('Profile updated successfully.')
-      navigate('/applicant/profile', {
+      navigate('/profile', {
         replace: true,
         state: { profileMessage: 'Profile updated successfully.' },
       })
@@ -176,7 +176,7 @@ export default function EditProfilePage() {
       <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mb-8 space-y-5">
           <nav className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
-            <Link className="flex items-center gap-2 hover:text-[var(--color-teal)]" to="/applicant/profile">
+            <Link className="flex items-center gap-2 hover:text-[var(--color-teal)]" to="/profile">
               <UserIcon className="h-4 w-4" />
               Profile
             </Link>
@@ -193,7 +193,7 @@ export default function EditProfilePage() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/applicant/profile"
+                to="/profile"
                 className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] border-2 border-[var(--color-teal)] bg-[var(--color-white)] px-5 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
               >
                 Cancel

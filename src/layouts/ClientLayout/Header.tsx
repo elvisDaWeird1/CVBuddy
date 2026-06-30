@@ -83,7 +83,7 @@ export function Header() {
           })}
           {isAuthenticated && (
             <Link
-              to="/applicant/profile"
+              to="/profile"
               className="border-b-2 border-transparent py-1 text-sm font-semibold text-[var(--color-teal)] transition-colors duration-150 hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]"
             >
               Explore
@@ -95,12 +95,12 @@ export function Header() {
           {isAuthenticated ? (
             <>
               <Link
-                to="/applicant/profile"
+                to="/profile"
                 className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-teal)]"
               >
                 Explore
               </Link>
-              <AuthAvatarMenu account={account} profileTo="/applicant/profile" onLogout={handleLogout} />
+              <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
             </>
           ) : (
             <>
@@ -159,7 +159,7 @@ export function Header() {
             })}
             {isAuthenticated && (
               <Link
-                to="/applicant/profile"
+                to="/profile"
                 className="rounded-[10px] px-3 py-2 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -170,7 +170,7 @@ export function Header() {
               {isAuthenticated ? (
                 <div className="flex items-center justify-between rounded-[10px] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-3">
                   <span className="text-sm font-medium text-[var(--color-text-secondary)]">Signed in</span>
-                  <AuthAvatarMenu account={account} profileTo="/applicant/profile" onLogout={handleLogout} />
+                  <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">

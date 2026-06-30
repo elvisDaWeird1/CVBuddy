@@ -54,7 +54,7 @@ export default function LoginPage() {
       }
 
       saveAuthSession(response.data)
-      navigate('/applicant/profile', { replace: true })
+      navigate('/profile', { replace: true })
     } catch (error) {
       setFormStatus({
         type: 'error',

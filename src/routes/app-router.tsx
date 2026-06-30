@@ -47,7 +47,7 @@ const appRoutes = [
                 title="Explore"
                 description="Start from your applicant workspace and move into profile, CV, or portfolio updates."
                 primaryLabel="Open Profile"
-                primaryTo="/applicant/profile"
+                primaryTo="/profile"
                 secondaryLabel="Open CV"
                 secondaryTo="/cv"
               />
@@ -62,7 +62,7 @@ const appRoutes = [
                 title="CV"
                 description="Your CV workspace is ready for the next implementation step."
                 primaryLabel="Back to Profile"
-                primaryTo="/applicant/profile"
+                primaryTo="/profile"
                 secondaryLabel="Go to Portfolio"
                 secondaryTo="/portfolio"
               />
@@ -75,7 +75,7 @@ const appRoutes = [
                 title="Portfolio"
                 description="Your portfolio workspace is ready for the next implementation step."
                 primaryLabel="Back to Profile"
-                primaryTo="/applicant/profile"
+                primaryTo="/profile"
                 secondaryLabel="Go to CV"
                 secondaryTo="/cv"
               />

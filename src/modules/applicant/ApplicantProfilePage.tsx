@@ -162,7 +162,7 @@ export default function ApplicantProfilePage() {
                 </div>
               </div>
               <RouterLink
-                to="/applicant/profile/edit"
+                to="/profile/edit"
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-teal)] px-5 text-sm font-semibold text-[var(--color-text-on-teal)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-0.5 hover:brightness-95"
               >
                 <EditIcon className="h-4 w-4" />

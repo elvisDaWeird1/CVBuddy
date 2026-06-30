@@ -5,7 +5,7 @@ import { AuthAvatarMenu } from './AuthAvatarMenu'
 import { clearAuthSession, getStoredAccount } from '@/modules/auth/authStorage'
 
 const applicantNavItems = [
-  { label: 'Profile', to: '/applicant/profile' },
+  { label: 'Profile', to: '/profile' },
   { label: 'CV', to: '/cv' },
   { label: 'Portfolio', to: '/portfolio' },
 ] as const
@@ -31,7 +31,7 @@ export function ApplicantHeader() {
   return (
     <header className="sticky top-0 z-[200] w-full border-b border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]">
       <div className="mx-auto flex min-h-16 w-full max-w-[1200px] flex-wrap items-center justify-between gap-x-5 px-4 sm:px-6 lg:px-8">
-        <Link to="/applicant/profile" className="flex items-center gap-2 text-xl font-bold text-[var(--color-teal)]">
+        <Link to="/profile" className="flex items-center gap-2 text-xl font-bold text-[var(--color-teal)]">
           <img src="/logo.png" alt="CV Buddy" className="h-8 w-8" />
           <span>CV Buddy</span>
         </Link>
@@ -45,7 +45,7 @@ export function ApplicantHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <AuthAvatarMenu account={account} profileTo="/applicant/profile" onLogout={handleLogout} />
+          <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--color-border)] text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)] sm:hidden"

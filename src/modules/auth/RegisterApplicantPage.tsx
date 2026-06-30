@@ -54,7 +54,7 @@ export default function RegisterApplicantPage() {
 
       if (response.data?.token) {
         saveAuthSession(response.data)
-        navigate('/applicant/profile', { replace: true })
+        navigate('/profile', { replace: true })
         return
       }
 
