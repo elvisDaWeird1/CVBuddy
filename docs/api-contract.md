@@ -9,7 +9,7 @@ This document is the frontend API integration reference for CVBuddy. Backend API
 - API base URL config: `src/config/index.ts`.
 - Current frontend code uses `VITE_API_URL` for the API base URL.
 - Do not rename environment variables unless explicitly requested.
-- Current fallback base URL in code: `http://localhost:3000/api`.
+- Current fallback base URL in code: `http://localhost:5000/api`.
 
 ## Response Shape
 

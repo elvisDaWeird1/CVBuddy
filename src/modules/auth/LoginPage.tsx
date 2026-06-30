@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
@@ -7,6 +7,8 @@ import { AuthShell } from '@/layouts/ClientLayout/AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ArrowRightIcon, LockIcon, MailIcon } from '@/components/ui/icons'
+import { getAuthApiErrorMessage, login } from './authApi'
+import { saveAuthSession } from './authStorage'
 
 const loginSchema = z.object({
   email: z.string().trim().email('Enter a valid email address.'),
@@ -15,9 +17,19 @@ const loginSchema = z.object({
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
+type AuthFormStatus = { type: 'success' | 'error'; message: string }
+type LoginLocationState = { authMessage?: string }
 
 export default function LoginPage() {
-  const [formMessage, setFormMessage] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const initialMessage =
+    typeof (location.state as LoginLocationState | null)?.authMessage === 'string'
+      ? (location.state as LoginLocationState).authMessage
+      : null
+  const [formStatus, setFormStatus] = useState<AuthFormStatus | null>(
+    initialMessage ? { type: 'success', message: initialMessage } : null,
+  )
   const {
     register,
     handleSubmit,
@@ -31,8 +43,24 @@ export default function LoginPage() {
     },
   })
 
-  const onSubmit: SubmitHandler<LoginFormValues> = async () => {
-    setFormMessage('Sign-in details validated. Backend connection can be enabled without changing this UI.')
+  const onSubmit: SubmitHandler<LoginFormValues> = async ({ email, password }) => {
+    setFormStatus(null)
+
+    try {
+      const response = await login({ email, password })
+
+      if (!response.success || !response.data?.token) {
+        throw new Error(response.message || 'Unable to sign in. Please check your credentials.')
+      }
+
+      saveAuthSession(response.data)
+      navigate('/applicant/profile', { replace: true })
+    } catch (error) {
+      setFormStatus({
+        type: 'error',
+        message: getAuthApiErrorMessage(error, 'Unable to sign in. Please try again.'),
+      })
+    }
   }
 
   return (
@@ -84,9 +112,14 @@ export default function LoginPage() {
             Remember me for 30 days
           </label>
 
-          {formMessage && (
-            <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-2.5 text-sm font-medium text-[var(--color-teal)]" role="status">
-              {formMessage}
+          {formStatus && (
+            <p
+              className={`rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-2.5 text-sm font-medium ${
+                formStatus.type === 'error' ? 'text-[var(--color-error)]' : 'text-[var(--color-teal)]'
+              }`}
+              role={formStatus.type === 'error' ? 'alert' : 'status'}
+            >
+              {formStatus.message}
             </p>
           )}
 
