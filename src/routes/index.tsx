@@ -5,11 +5,6 @@ const lazyRouteElement = (loader: () => Promise<{ default: ComponentType }>) =>
 
 export const routeConfig = [
   { path: '/', element: lazyRouteElement(() => import('@/modules/pages/Home.tsx')) },
-  { path: '/home', element: lazyRouteElement(() => import('@/modules/pages/Home.tsx')) },
-  { path: '/about-us', element: lazyRouteElement(() => import('@/modules/pages/AboutUs.tsx')) },
-  { path: '/project', element: lazyRouteElement(() => import('@/modules/pages/Project.tsx')) },
-  { path: '/ai-buddy', element: lazyRouteElement(() => import('@/modules/pages/AiBuddy.tsx')) },
-  { path: '/form', element: lazyRouteElement(() => import('@/modules/pages/FormPage.tsx')) },
   { path: '/coming-soon', element: lazyRouteElement(() => import('@/modules/pages/ComingSoon.tsx')) },
   { path: '/login', element: lazyRouteElement(() => import('@/modules/auth/LoginPage.tsx')) },
   { path: '/register/applicant', element: lazyRouteElement(() => import('@/modules/auth/RegisterApplicantPage.tsx')) },
