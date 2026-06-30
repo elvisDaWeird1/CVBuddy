@@ -37,7 +37,6 @@ export function Header() {
   }
 
   return (
-<<<<<<< HEAD
     <header className="sticky top-0 z-[200] w-full bg-[var(--color-white)] border-b border-[var(--color-border)]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
@@ -50,17 +49,6 @@ export function Header() {
           <span className="text-lg font-bold text-[var(--color-navy)] tracking-tight">
             CV Buddy
           </span>
-=======
-    <header className="sticky top-0 z-[200] w-full border-b border-[#d8e3fb] bg-white/95 shadow-[0_4px_20px_rgba(33,150,243,0.08)] backdrop-blur">
-      <div className="mx-auto flex min-h-16 max-w-[1200px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link
-          to="/#home"
-          onClick={(event) => handleLandingNavClick(event, '#home')}
-          className="flex shrink-0 items-center gap-2 text-[#0061a4] hover:text-[#0061a4]"
-        >
-          <img src="/logo.png" alt="CVBuddy" className="h-8 w-8" />
-          <span className="text-lg font-bold tracking-normal text-[#0061a4]">CVBuddy</span>
->>>>>>> 690288de27cbb799d207026ec0483fd829139e99
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex" aria-label="Landing sections">

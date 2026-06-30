@@ -2,13 +2,8 @@ import { Link } from 'react-router-dom'
 
 export function Footer() {
   return (
-<<<<<<< HEAD
     <footer className="mt-auto bg-[var(--color-navy)] text-[var(--color-text-on-navy)]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-=======
-    <footer className="mt-auto border-t border-[#d8e3fb] bg-[#eef4ff] text-[#404752]">
-      <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8">
->>>>>>> 690288de27cbb799d207026ec0483fd829139e99
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
           <div>
             <Link to="/#home" className="inline-flex items-center gap-2 text-[#0061a4] hover:text-[#0061a4]">
@@ -38,13 +33,8 @@ export function Footer() {
           </div>
         </div>
 
-<<<<<<< HEAD
         <div className="mt-8 border-t border-[var(--color-gray-800)] pt-6 text-center text-xs text-[var(--color-gray-500)]">
           © {new Date().getFullYear()} CV Buddy. All rights reserved.
-=======
-        <div className="mt-8 border-t border-[#d8e3fb] pt-6 text-center text-xs text-[#526069]">
-          &copy; {new Date().getFullYear()} CVBuddy. All rights reserved.
->>>>>>> 690288de27cbb799d207026ec0483fd829139e99
         </div>
       </div>
     </footer>
