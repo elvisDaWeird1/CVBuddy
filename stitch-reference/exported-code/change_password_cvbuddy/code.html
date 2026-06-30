@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Change Password - CVBuddy</title>
+<!-- Tailwind CSS & Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed-variant": "#004786",
+                      "surface-container-high": "#e7e8e9",
+                      "primary-fixed-dim": "#9ecaff",
+                      "on-tertiary-fixed": "#001c3a",
+                      "secondary-fixed-dim": "#bac9d3",
+                      "background": "#f8f9fa",
+                      "on-secondary-fixed-variant": "#3b4951",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#0061a4",
+                      "inverse-surface": "#2e3132",
+                      "surface-variant": "#e1e3e4",
+                      "outline-variant": "#bfc7d4",
+                      "secondary": "#526069",
+                      "tertiary-fixed": "#d4e3ff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-container": "#edeeef",
+                      "on-error": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "error": "#ba1a1a",
+                      "tertiary": "#005faf",
+                      "secondary-container": "#d3e2ed",
+                      "on-secondary-container": "#56656e",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-primary-container": "#002c4f",
+                      "on-primary-fixed-variant": "#00497d",
+                      "on-secondary-fixed": "#0f1d25",
+                      "primary-container": "#2196f3",
+                      "on-tertiary-container": "#002b55",
+                      "tertiary-fixed-dim": "#a5c8ff",
+                      "tertiary-container": "#4593f1",
+                      "on-primary-fixed": "#001d36",
+                      "primary": "#0061a4",
+                      "outline": "#707883",
+                      "primary-fixed": "#d1e4ff",
+                      "on-background": "#191c1d",
+                      "surface-dim": "#d9dadb",
+                      "inverse-primary": "#9ecaff",
+                      "surface-bright": "#f8f9fa",
+                      "surface": "#f8f9fa",
+                      "on-surface-variant": "#404752",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed": "#d6e5ef",
+                      "error-container": "#ffdad6",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f3f4f5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "16px",
+                      "xs": "8px",
+                      "md": "24px",
+                      "lg": "40px",
+                      "base": "4px",
+                      "container-max": "1200px",
+                      "gutter": "24px",
+                      "xl": "64px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "caption": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-sm": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "28px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: theme('colors.background');
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface-container-lowest dark:bg-surface-container-low shadow-sm dark:shadow-none shadow-[0_4px_20px_rgba(33,150,243,0.08)] sticky full-width top-0 z-50">
+<div class="flex justify-between items-center w-full px-md md:px-lg max-w-container-max mx-auto h-16">
+<!-- Brand -->
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary" data-icon="work" data-weight="fill" style="font-variation-settings: 'FILL' 1;">work</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">CVBuddy</span>
+</div>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex gap-md h-full items-center">
+<a class="font-body-md text-body-md text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200 flex items-center h-full hover:translate-y-[-2px] transition-transform duration-200" href="#">Profile</a>
+<a class="font-body-md text-body-md text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200 flex items-center h-full hover:translate-y-[-2px] transition-transform duration-200" href="#">Applications</a>
+<a class="font-body-md text-body-md text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 flex items-center h-full translate-y-[-2px] transition-transform duration-200" href="#">Settings</a>
+</nav>
+<!-- Trailing Action -->
+<div class="flex items-center gap-sm">
+<button class="font-label-md text-label-md text-secondary hover:text-primary transition-colors hidden md:block">Logout</button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-variant border border-outline-variant">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="A close up, high quality headshot of a young professional smiling warmly. Bright lighting, clean white background, soft depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYMIf6Hm9vHzaOc65BzcbB8AFv13p0pRDToGrC1z-IKVGqKekG0deoRiPmKIdtuJyM-0Rxj2oJBG73ZlZIrKp1rE_NYu5iCGBTIOugno0oUP1RZMTtlwCR9kRnLZMfkGA6rupTRhl7DhDSKQM0dFqubS5daOAeDnHIgC0oB_lXIZ4i-DLOqUf4Ph66jpBGz8fVKhnA0CHHy6yIXtWJbMmQELZmA_eDKcoSh9hzA0f8FRqR_coTQ9G2xrwi5EL68SK1ZrwQwrlYykc"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex items-center justify-center p-md md:p-lg">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] transition-shadow duration-300">
+<div class="text-center mb-lg">
+<div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-tertiary-fixed text-on-tertiary-fixed mb-sm">
+<span class="material-symbols-outlined" data-icon="lock" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface mb-xs">Change Password</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Keep your account secure by updating your password regularly.</p>
+</div>
+<form class="space-y-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs" for="current_password">Current Password</label>
+<div class="relative">
+<input class="w-full bg-background border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-[8px] font-body-md text-body-md text-on-surface p-sm pr-lg transition-all" id="current_password" placeholder="Enter current password" type="password"/>
+<button class="absolute right-sm top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="visibility_off">visibility_off</span>
+</button>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs" for="new_password">New Password</label>
+<div class="relative">
+<input class="w-full bg-background border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-[8px] font-body-md text-body-md text-on-surface p-sm pr-lg transition-all" id="new_password" placeholder="Enter new password" type="password"/>
+<button class="absolute right-sm top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="visibility_off">visibility_off</span>
+</button>
+</div>
+<p class="font-caption text-caption text-secondary mt-base">Must be at least 8 characters long.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs" for="confirm_password">Confirm New Password</label>
+<div class="relative">
+<input class="w-full bg-background border-transparent focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-[8px] font-body-md text-body-md text-on-surface p-sm pr-lg transition-all" id="confirm_password" placeholder="Re-enter new password" type="password"/>
+<button class="absolute right-sm top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="visibility_off">visibility_off</span>
+</button>
+</div>
+</div>
+<div class="pt-sm">
+<button class="w-full bg-primary-container text-on-primary hover:bg-primary transition-colors rounded-[12px] py-sm px-md font-label-md text-label-md flex items-center justify-center gap-xs hover:-translate-y-[2px] transform duration-200" type="button">
+<span class="material-symbols-outlined" data-icon="key">key</span>
+                        Update Password
+                    </button>
+</div>
+</form>
+<div class="mt-md text-center">
+<a class="font-body-md text-body-md text-primary hover:underline" href="#">Forgot current password?</a>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container dark:bg-surface-container-high w-full py-lg px-md md:px-lg mt-auto">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-sm">
+<div class="font-label-md text-label-md font-bold text-on-surface dark:text-on-surface-variant mb-sm md:mb-0">
+                © 2024 CVBuddy. Guided Clarity for Your Career.
+            </div>
+<nav class="flex flex-wrap justify-center gap-md">
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Help Center</a>
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Terms of Service</a>
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Contact Us</a>
+</nav>
+</div>
+</footer>
+</body></html>
