@@ -44,13 +44,13 @@ export default function RegisterApplicantPage() {
 
   return (
     <AuthShell>
-      <section className="w-full max-w-[520px] rounded-[16px] bg-white p-6 shadow-[0_4px_20px_rgba(33,150,243,0.08)] transition-shadow hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] sm:p-10">
-        <div className="mb-10 border-b border-[#e1e3e4] pb-6 text-center">
-          <p className="mx-auto mb-4 inline-flex rounded-full bg-[#e3f2fd] px-4 py-1.5 text-sm font-semibold text-[#0061a4]">
+      <section className="w-full max-w-[520px] rounded-[var(--radius-xl)] bg-[var(--color-white)] p-6 shadow-[var(--shadow-lg)] transition-shadow hover:shadow-[var(--shadow-xl)] sm:p-10">
+        <div className="mb-10 border-b border-[var(--color-border)] pb-6 text-center">
+          <p className="mx-auto mb-4 inline-flex rounded-full bg-[var(--color-bg-soft)] px-4 py-1.5 text-sm font-semibold text-[var(--color-teal)]">
             Applicant account
           </p>
-          <h1 className="text-[32px] font-bold leading-tight tracking-normal text-[#191c1d]">Join CVBuddy</h1>
-          <p className="mt-3 text-base leading-relaxed text-[#526069]">Guided Clarity for Your Career.</p>
+          <h1 className="text-3xl font-bold leading-tight tracking-normal text-[var(--color-text-primary)]">Join CVBuddy</h1>
+          <p className="mt-3 text-base leading-relaxed text-[var(--color-text-secondary)]">Guided Clarity for Your Career.</p>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -62,7 +62,7 @@ export default function RegisterApplicantPage() {
             leftIcon={<UserIcon className="h-5 w-5" />}
             state={errors.fullName ? 'error' : 'default'}
             error={errors.fullName?.message}
-            className="border-transparent bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]"
+            className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
             {...register('fullName')}
           />
 
@@ -75,7 +75,7 @@ export default function RegisterApplicantPage() {
             leftIcon={<MailIcon className="h-5 w-5" />}
             state={errors.email ? 'error' : 'default'}
             error={errors.email?.message}
-            className="border-transparent bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]"
+            className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
             {...register('email')}
           />
 
@@ -89,7 +89,7 @@ export default function RegisterApplicantPage() {
             leftIcon={<LockIcon className="h-5 w-5" />}
             state={errors.password ? 'error' : 'default'}
             error={errors.password?.message}
-            className="border-transparent bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]"
+            className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
             {...register('password')}
           />
 
@@ -102,12 +102,12 @@ export default function RegisterApplicantPage() {
             leftIcon={<LockIcon className="h-5 w-5" />}
             state={errors.confirmPassword ? 'error' : 'default'}
             error={errors.confirmPassword?.message}
-            className="border-transparent bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]"
+            className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
             {...register('confirmPassword')}
           />
 
           {formMessage && (
-            <p className="rounded-[12px] bg-[#e3f2fd] px-4 py-3 text-sm font-medium text-[#00497d]">
+            <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--color-teal)]">
               {formMessage}
             </p>
           )}
@@ -115,16 +115,16 @@ export default function RegisterApplicantPage() {
           <Button
             type="submit"
             loading={isSubmitting}
-            className="h-14 w-full rounded-[12px] bg-[#2196f3] text-base font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-[#0061a4] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)]"
+            className="h-14 w-full rounded-[var(--radius-lg)] text-base font-semibold shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"
             iconRight={<ArrowRightIcon className="h-5 w-5" />}
           >
             Create Account
           </Button>
         </form>
 
-        <p className="mt-9 text-center text-base text-[#526069]">
+        <p className="mt-9 text-center text-base text-[var(--color-text-secondary)]">
           Already have an account?{' '}
-          <Link className="font-semibold text-[#0061a4] hover:underline" to="/login">
+          <Link className="font-semibold text-[var(--color-teal)] hover:underline" to="/login">
             Log in here
           </Link>
         </p>

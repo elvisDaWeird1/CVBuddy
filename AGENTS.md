@@ -79,3 +79,13 @@ Rules:
 - Keep API integration compatible with the current backend contract.
 - Do not rename environment variables, routes, or API functions unless required.
 - After coding, run the validation commands defined in `package.json`.
+
+### UI / styling tasks
+
+For any UI, layout, component styling, visual polish, or responsive design task, read:
+
+- `docs/ui-guidelines.md`
+- `src/index.css`
+- the touched component/page files
+
+`src/index.css` is the source of truth for the frontend color palette, CSS variables, spacing, radius, shadows, and shared visual tokens. Do not introduce new hard-coded colors or visual styles when an existing token/pattern is available.

@@ -79,13 +79,13 @@ export default function ChangePasswordPage() {
   return (
     <ApplicantShell>
       <div className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-[1200px] items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
-        <section className="w-full max-w-[520px] rounded-[16px] bg-white p-6 shadow-[0_4px_20px_rgba(33,150,243,0.08)] transition-shadow hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] sm:p-8">
+        <section className="w-full max-w-[520px] rounded-[var(--radius-xl)] bg-[var(--color-white)] p-6 shadow-[var(--shadow-lg)] transition-shadow hover:shadow-[var(--shadow-xl)] sm:p-8">
           <div className="mb-8 text-center">
-            <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#d1e4ff] text-[#001c3a]">
+            <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-bg-soft)] text-[var(--color-navy)]">
               <LockIcon className="h-7 w-7" />
             </span>
-            <h1 className="text-[32px] font-bold leading-tight tracking-normal text-[#191c1d]">Change Password</h1>
-            <p className="mx-auto mt-3 max-w-sm text-base leading-relaxed text-[#404752]">
+            <h1 className="text-3xl font-bold leading-tight tracking-normal text-[var(--color-text-primary)]">Change Password</h1>
+            <p className="mx-auto mt-3 max-w-sm text-base leading-relaxed text-[var(--color-text-secondary)]">
               Keep your account secure by updating your password regularly.
             </p>
           </div>
@@ -106,11 +106,11 @@ export default function ChangePasswordPage() {
                   helperText={field.helperText}
                   state={error ? 'error' : 'default'}
                   error={error}
-                  className="border-transparent bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]"
+                  className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
                   rightIcon={
                     <button
                       type="button"
-                      className="text-[#526069] transition-colors hover:text-[#0061a4]"
+                      className="text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-teal)]"
                       onClick={() => setVisible((current) => ({ ...current, [field.name]: !isVisible }))}
                       aria-label={isVisible ? `Hide ${field.label}` : `Show ${field.label}`}
                     >
@@ -123,7 +123,7 @@ export default function ChangePasswordPage() {
             })}
 
             {formMessage && (
-              <p className="rounded-[12px] bg-[#e3f2fd] px-4 py-3 text-sm font-medium text-[#00497d]">
+              <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--color-teal)]">
                 {formMessage}
               </p>
             )}
@@ -131,7 +131,7 @@ export default function ChangePasswordPage() {
             <Button
               type="submit"
               loading={isSubmitting}
-              className="h-14 w-full rounded-[12px] bg-[#2196f3] text-base font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-[#0061a4] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)]"
+              className="h-14 w-full rounded-[var(--radius-lg)] text-base font-semibold shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"
               iconLeft={<KeyIcon className="h-5 w-5" />}
             >
               Update Password
@@ -139,7 +139,7 @@ export default function ChangePasswordPage() {
           </form>
 
           <div className="mt-7 text-center">
-            <Link className="text-base font-medium text-[#0061a4] hover:underline" to="/applicant/profile">
+            <Link className="text-base font-medium text-[var(--color-teal)] hover:underline" to="/applicant/profile">
               Back to profile
             </Link>
           </div>

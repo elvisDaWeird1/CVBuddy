@@ -3,18 +3,18 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/utils/cn'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ' +
+  'inline-flex items-center justify-center font-medium rounded-[var(--radius-lg)] transition-all duration-200 ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2 ' +
   'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none select-none whitespace-nowrap',
   {
     variants: {
       variant: {
-        primary: 'bg-[var(--color-teal)] text-white hover:bg-[#005a66] active:bg-[#004a54]',
-        secondary: 'bg-[var(--color-bg-soft)] text-[var(--color-teal)] border border-[var(--color-teal)] hover:bg-[#d4eef3]',
+        primary: 'bg-[var(--color-teal)] text-[var(--color-text-on-teal)] hover:brightness-95 active:brightness-90',
+        secondary: 'bg-[var(--color-bg-soft)] text-[var(--color-teal)] border border-[var(--color-teal)] hover:bg-[var(--color-white)]',
         outline: 'bg-transparent text-[var(--color-navy)] border border-[var(--color-border)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]',
         ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-100)] hover:text-[var(--color-navy)]',
-        danger: 'bg-[var(--color-error)] text-white hover:bg-[#dc2626] active:bg-[#b91c1c]',
-        cta: 'bg-[var(--color-amber)] text-[var(--color-navy)] hover:bg-[#e6a43d] active:bg-[#cc9332] font-semibold',
+        danger: 'bg-[var(--color-error)] text-[var(--color-white)] hover:brightness-95 active:brightness-90',
+        cta: 'bg-[var(--color-amber)] text-[var(--color-navy)] hover:brightness-95 active:brightness-90 font-semibold',
       },
       size: {
         sm: 'h-8 px-3 text-sm gap-1.5',

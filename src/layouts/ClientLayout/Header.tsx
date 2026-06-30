@@ -10,7 +10,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-[200] w-full bg-white border-b border-[var(--color-border)]">
+    <header className="sticky top-0 z-[200] w-full bg-[var(--color-white)] border-b border-[var(--color-border)]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link to="/home" className="flex items-center gap-2 shrink-0">

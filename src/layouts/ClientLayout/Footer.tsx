@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export function Footer() {
   return (
-    <footer className="bg-[var(--color-navy)] text-white mt-auto">
+    <footer className="mt-auto bg-[var(--color-navy)] text-[var(--color-text-on-navy)]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
           {/* Brand */}
@@ -40,7 +40,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-white/10 pt-6 text-center text-xs text-[var(--color-gray-500)]">
+        <div className="mt-8 border-t border-[var(--color-gray-800)] pt-6 text-center text-xs text-[var(--color-gray-500)]">
           © {new Date().getFullYear()} CV Buddy. All rights reserved.
         </div>
       </div>

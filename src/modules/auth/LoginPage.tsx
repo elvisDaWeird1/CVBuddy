@@ -37,15 +37,15 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <section className="w-full max-w-[480px] rounded-[16px] bg-white p-6 shadow-[0_4px_20px_rgba(33,150,243,0.08)] sm:p-10">
+      <section className="w-full max-w-[480px] rounded-[var(--radius-xl)] bg-[var(--color-white)] p-6 shadow-[var(--shadow-lg)] sm:p-10">
         <div className="mb-10 text-center">
-          <h1 className="text-[40px] font-bold leading-tight tracking-normal text-[#0061a4]">CVBuddy</h1>
-          <p className="mt-2 text-base leading-relaxed text-[#526069]">Guided Clarity for Your Career.</p>
+          <h1 className="text-4xl font-bold leading-tight tracking-normal text-[var(--color-teal)]">CVBuddy</h1>
+          <p className="mt-2 text-base leading-relaxed text-[var(--color-text-secondary)]">Guided Clarity for Your Career.</p>
         </div>
 
         <div className="mb-6">
-          <h2 className="text-xl font-semibold tracking-normal text-[#191c1d]">Welcome back!</h2>
-          <p className="mt-2 text-base leading-relaxed text-[#404752]">Please enter your details to sign in.</p>
+          <h2 className="text-xl font-semibold tracking-normal text-[var(--color-text-primary)]">Welcome back!</h2>
+          <p className="mt-2 text-base leading-relaxed text-[var(--color-text-secondary)]">Please enter your details to sign in.</p>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -58,12 +58,12 @@ export default function LoginPage() {
             leftIcon={<MailIcon className="h-5 w-5" />}
             state={errors.email ? 'error' : 'default'}
             error={errors.email?.message}
-            className="border-transparent bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]"
+            className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
             {...register('email')}
           />
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#081020]" htmlFor="password">
+            <label className="text-sm font-medium text-[var(--color-navy)]" htmlFor="password">
               Password
             </label>
             <Input
@@ -75,22 +75,22 @@ export default function LoginPage() {
               leftIcon={<LockIcon className="h-5 w-5" />}
               state={errors.password ? 'error' : 'default'}
               error={errors.password?.message}
-              className="border-transparent bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]"
+              className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
               {...register('password')}
             />
           </div>
 
-          <label className="flex items-center gap-3 text-base text-[#404752]">
+          <label className="flex items-center gap-3 text-base text-[var(--color-text-secondary)]">
             <input
               type="checkbox"
-              className="h-[18px] w-[18px] rounded border-[#707883] text-[#0061a4] focus:ring-[#2196f3]"
+              className="h-[18px] w-[18px] rounded border-[var(--color-gray-500)] text-[var(--color-teal)] focus:ring-[var(--color-teal)]"
               {...register('remember')}
             />
             Remember me for 30 days
           </label>
 
           {formMessage && (
-            <p className="rounded-[12px] bg-[#e3f2fd] px-4 py-3 text-sm font-medium text-[#00497d]">
+            <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--color-teal)]">
               {formMessage}
             </p>
           )}
@@ -98,16 +98,16 @@ export default function LoginPage() {
           <Button
             type="submit"
             loading={isSubmitting}
-            className="h-14 w-full rounded-[12px] bg-[#2196f3] text-base font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-[#0061a4] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)]"
+            className="h-14 w-full rounded-[var(--radius-lg)] text-base font-semibold shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"
             iconRight={<ArrowRightIcon className="h-5 w-5" />}
           >
             Sign In
           </Button>
         </form>
 
-        <p className="mt-10 text-center text-base text-[#526069]">
+        <p className="mt-10 text-center text-base text-[var(--color-text-secondary)]">
           Don&apos;t have an account?{' '}
-          <Link className="font-semibold text-[#0061a4] hover:underline" to="/register/applicant">
+          <Link className="font-semibold text-[var(--color-teal)] hover:underline" to="/register/applicant">
             Create account
           </Link>
         </p>
