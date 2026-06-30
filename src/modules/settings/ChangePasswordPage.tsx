@@ -7,6 +7,8 @@ import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EyeIcon, EyeOffIcon, KeyIcon, LockIcon } from '@/components/ui/icons'
+import { changePassword, getAuthApiErrorMessage } from '@/modules/auth/authApi'
+import { useNavigate } from 'react-router-dom'
 
 const changePasswordSchema = z
   .object({
@@ -51,6 +53,7 @@ const passwordFields: Array<{
 ]
 
 export default function ChangePasswordPage() {
+  const navigate = useNavigate()
   const [visible, setVisible] = useState<Record<PasswordFieldName, boolean>>({
     currentPassword: false,
     newPassword: false,
@@ -71,9 +74,33 @@ export default function ChangePasswordPage() {
     },
   })
 
-  const onSubmit: SubmitHandler<ChangePasswordFormValues> = async () => {
-    setFormMessage('Your new password details have been validated.')
-    reset()
+  const onSubmit: SubmitHandler<ChangePasswordFormValues> = async ({ currentPassword, newPassword }) => {
+    setFormMessage(null)
+
+    try {
+      const response = await changePassword({ currentPassword, newPassword })
+
+      if (!response.success) {
+        throw new Error(response.message || 'Unable to update password.')
+      }
+
+      setFormMessage(response.message || 'Your password has been updated successfully.')
+      reset()
+    } catch (error) {
+      const status = typeof error === 'object' && error !== null && 'response' in error
+        ? (error as { response?: { status?: number } }).response?.status
+        : undefined
+
+      if (status === 401) {
+        navigate('/login', {
+          replace: true,
+          state: { authMessage: 'Your session expired. Please sign in again.' },
+        })
+        return
+      }
+
+      setFormMessage(getAuthApiErrorMessage(error, 'Unable to update password.'))
+    }
   }
 
   return (

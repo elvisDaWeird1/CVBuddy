@@ -33,6 +33,11 @@ export interface RegisterApplicantPayload {
   fullName: string
 }
 
+export interface ChangePasswordPayload {
+  currentPassword: string
+  newPassword: string
+}
+
 export async function login(payload: LoginPayload) {
   const response = await httpClient.post<BackendApiResponse<AuthSessionData>>('/auth/login', payload)
   return response.data
@@ -40,6 +45,11 @@ export async function login(payload: LoginPayload) {
 
 export async function registerApplicant(payload: RegisterApplicantPayload) {
   const response = await httpClient.post<BackendApiResponse<AuthSessionData>>('/auth/register/applicant', payload)
+  return response.data
+}
+
+export async function changePassword(payload: ChangePasswordPayload) {
+  const response = await httpClient.patch<BackendApiResponse<null>>('/auth/change-password', payload)
   return response.data
 }
 
