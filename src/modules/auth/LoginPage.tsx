@@ -135,7 +135,7 @@ export default function LoginPage() {
 
         <p className="mt-5 text-center text-sm text-[var(--color-text-secondary)]">
           Don&apos;t have an account?{' '}
-          <Link className="font-semibold text-[var(--color-teal)] hover:underline" to="/register/applicant">
+          <Link className="font-semibold text-[var(--color-teal)] hover:underline" to="/register">
             Create account
           </Link>
         </p>

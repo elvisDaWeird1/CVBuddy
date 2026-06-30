@@ -418,7 +418,7 @@ export function LandingPage() {
               ))}
             </div>
             <Link
-              to="/register/applicant"
+              to="/register"
               className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-full)] bg-[var(--color-teal)] px-6 text-base font-semibold text-[var(--color-text-on-teal)] shadow-[var(--shadow-md)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-95"
             >
               Create account

@@ -2,6 +2,8 @@ import { useState, type MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRightIcon } from '@/components/ui/icons'
 import { cn } from '@/utils/cn'
+import { AuthAvatarMenu } from './AuthAvatarMenu'
+import { clearAuthSession, getAuthToken, getStoredAccount } from '@/modules/auth/authStorage'
 
 const landingNavItems = [
   { label: 'Home', hash: '#home' },
@@ -15,6 +17,8 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const isAuthenticated = Boolean(getAuthToken())
+  const account = getStoredAccount()
   const isLandingRoute = location.pathname === '/'
   const activeHash = location.hash || '#home'
 
@@ -34,6 +38,12 @@ export function Header() {
     }
 
     navigate({ pathname: '/', hash })
+  }
+
+  const handleLogout = () => {
+    clearAuthSession()
+    setIsMenuOpen(false)
+    navigate('/', { replace: true })
   }
 
   return (
@@ -71,22 +81,44 @@ export function Header() {
               </a>
             )
           })}
+          {isAuthenticated && (
+            <Link
+              to="/applicant/profile"
+              className="border-b-2 border-transparent py-1 text-sm font-semibold text-[var(--color-teal)] transition-colors duration-150 hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]"
+            >
+              Explore
+            </Link>
+          )}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            to="/login"
-            className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#bfc7d4] px-4 text-sm font-semibold text-[#191c1d] transition-colors hover:border-[#0061a4] hover:bg-[#f8f9fa] hover:text-[#0061a4]"
-          >
-            Login
-          </Link>
-          <Link
-            to="/register/applicant"
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-[10px] bg-[#2563eb] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0061a4] hover:text-white"
-          >
-            Create account
-            <ArrowRightIcon className="h-4 w-4" />
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/applicant/profile"
+                className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-teal)]"
+              >
+                Explore
+              </Link>
+              <AuthAvatarMenu account={account} profileTo="/applicant/profile" onLogout={handleLogout} />
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#bfc7d4] px-4 text-sm font-semibold text-[#191c1d] transition-colors hover:border-[#0061a4] hover:bg-[#f8f9fa] hover:text-[#0061a4]"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-[10px] bg-[#2563eb] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0061a4] hover:text-white"
+              >
+                Create account
+                <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -125,21 +157,39 @@ export function Header() {
                 </a>
               )
             })}
-            <div className="mt-2 grid grid-cols-2 gap-3">
+            {isAuthenticated && (
               <Link
-                to="/login"
-                className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[#bfc7d4] text-sm font-semibold text-[#191c1d] hover:border-[#0061a4] hover:text-[#0061a4]"
+                to="/applicant/profile"
+                className="rounded-[10px] px-3 py-2 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Login
+                Explore
               </Link>
-              <Link
-                to="/register/applicant"
-                className="inline-flex h-10 items-center justify-center rounded-[10px] bg-[#2563eb] text-sm font-semibold text-white hover:bg-[#0061a4] hover:text-white"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Register
-              </Link>
+            )}
+            <div className="mt-2">
+              {isAuthenticated ? (
+                <div className="flex items-center justify-between rounded-[10px] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-3">
+                  <span className="text-sm font-medium text-[var(--color-text-secondary)]">Signed in</span>
+                  <AuthAvatarMenu account={account} profileTo="/applicant/profile" onLogout={handleLogout} />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    to="/login"
+                    className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[#bfc7d4] text-sm font-semibold text-[#191c1d] hover:border-[#0061a4] hover:text-[#0061a4]"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="inline-flex h-10 items-center justify-center rounded-[10px] bg-[#2563eb] text-sm font-semibold text-white hover:bg-[#0061a4] hover:text-white"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
             </div>
           </nav>
         </div>
