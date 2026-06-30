@@ -4,7 +4,7 @@ import { cn } from '@/utils/cn'
 import { ChevronDownIcon } from './icons'
 
 const selectVariants = cva(
-  'w-full appearance-none rounded-lg border bg-white px-3 py-2 pr-9 text-sm text-[var(--color-navy)] ' +
+  'w-full appearance-none rounded-[var(--radius-lg)] border bg-[var(--color-white)] px-3 py-2 pr-9 text-sm text-[var(--color-navy)] ' +
   'transition-all duration-200 outline-none cursor-pointer ' +
   'hover:border-[var(--color-border-hover)] ' +
   'focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)] ' +

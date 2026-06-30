@@ -25,3 +25,13 @@ This document summarizes current CVBuddy frontend UI conventions.
 - Include loading, empty, error, and success states for interactive UI.
 - Keep UI changes scoped to the requested screen or component.
 - Do not introduce a new UI library unless explicitly requested.
+
+## Design source of truth
+
+`src/index.css` is the source of truth for the frontend visual system.
+
+Use the existing CSS variables, color palette, spacing, border radius, shadows, typography, and shared utility patterns from `src/index.css` before adding new styles.
+
+Avoid hard-coded colors such as `#ffffff`, `#000000`, custom hex colors, or one-off shadow/radius values inside components when a matching token already exists.
+
+When creating or updating UI, preserve the existing CVBuddy visual direction unless the task explicitly asks for a redesign.

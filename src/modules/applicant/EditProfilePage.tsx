@@ -25,14 +25,14 @@ const editProfileSchema = z.object({
 type EditProfileFormValues = z.infer<typeof editProfileSchema>
 
 const fieldClass =
-  'border-[#bfc7d4] bg-[#f8f9fa] text-base focus:border-[#2196f3] focus:shadow-[0_0_0_3px_rgba(33,150,243,0.2)]'
+  'border-[var(--color-border-hover)] bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]'
 
 function FormCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-[16px] bg-white p-6 shadow-[0_4px_20px_rgba(33,150,243,0.08)] transition-shadow hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)]">
-      <div className="mb-6 flex items-center gap-3 border-b border-[#e3f2fd] pb-4">
-        <span className="text-[#2196f3]">{icon}</span>
-        <h2 className="text-2xl font-semibold tracking-normal text-[#191c1d]">{title}</h2>
+    <section className="rounded-[var(--radius-xl)] bg-[var(--color-white)] p-6 shadow-[var(--shadow-lg)] transition-shadow hover:shadow-[var(--shadow-xl)]">
+      <div className="mb-6 flex items-center gap-3 border-b border-[var(--color-bg-soft)] pb-4">
+        <span className="text-[var(--color-teal)]">{icon}</span>
+        <h2 className="text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">{title}</h2>
       </div>
       {children}
     </section>
@@ -47,14 +47,14 @@ function TextAreaField({
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string }) {
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label className="block text-sm font-semibold text-[#404752]" htmlFor={props.id}>
+      <label className="block text-sm font-semibold text-[var(--color-text-secondary)]" htmlFor={props.id}>
         {label}
       </label>
       <textarea
         className={cn(
-          'w-full rounded-[8px] border px-4 py-3 text-base leading-relaxed text-[#191c1d] outline-none transition-all placeholder:text-[#707883]',
+          'w-full rounded-[var(--radius-md)] border px-4 py-3 text-base leading-relaxed text-[var(--color-text-primary)] outline-none transition-all placeholder:text-[var(--color-gray-500)]',
           fieldClass,
-          error && 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]',
+          error && 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:shadow-[var(--focus-ring)]',
         )}
         {...props}
       />
@@ -92,26 +92,26 @@ export default function EditProfilePage() {
     <ApplicantShell>
       <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mb-8 space-y-5">
-          <nav className="flex items-center gap-2 text-sm font-medium text-[#526069]">
-            <Link className="flex items-center gap-2 hover:text-[#0061a4]" to="/applicant/profile">
+          <nav className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
+            <Link className="flex items-center gap-2 hover:text-[var(--color-teal)]" to="/applicant/profile">
               <UserIcon className="h-4 w-4" />
               Profile
             </Link>
             <span>/</span>
-            <span className="text-[#191c1d]">Edit Profile</span>
+            <span className="text-[var(--color-text-primary)]">Edit Profile</span>
           </nav>
 
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-[36px] font-bold leading-tight tracking-normal text-[#191c1d] sm:text-[40px]">Edit Profile</h1>
-              <p className="mt-2 text-base leading-relaxed text-[#526069]">
+              <h1 className="text-4xl font-bold leading-tight tracking-normal text-[var(--color-text-primary)]">Edit Profile</h1>
+              <p className="mt-2 text-base leading-relaxed text-[var(--color-text-secondary)]">
                 Update your professional details to keep your applications strong.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/applicant/profile"
-                className="inline-flex h-10 items-center justify-center rounded-[8px] border-2 border-[#0061a4] bg-white px-5 text-sm font-semibold text-[#0061a4] transition-colors hover:bg-[#e3f2fd]"
+                className="inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] border-2 border-[var(--color-teal)] bg-[var(--color-white)] px-5 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
               >
                 Cancel
               </Link>
@@ -119,14 +119,14 @@ export default function EditProfilePage() {
                 type="submit"
                 form="edit-profile-form"
                 loading={isSubmitting}
-                className="h-10 rounded-[8px] bg-[#2196f3] px-5 text-sm font-semibold text-white hover:-translate-y-0.5 hover:bg-[#0061a4]"
+                className="h-10 rounded-[var(--radius-md)] px-5 text-sm font-semibold hover:-translate-y-0.5"
               >
                 Save Changes
               </Button>
             </div>
           </div>
           {formMessage && (
-            <p className="rounded-[12px] bg-[#e3f2fd] px-4 py-3 text-sm font-medium text-[#00497d]">
+            <p className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm font-medium text-[var(--color-teal)]">
               {formMessage}
             </p>
           )}
@@ -208,12 +208,12 @@ export default function EditProfilePage() {
               </div>
               <div className="mt-5 space-y-4">
                 {educationItems.map((item) => (
-                  <article key={item.degree} className="rounded-[8px] border border-[#bfc7d4] bg-[#f8f9fa] p-4">
-                    <h3 className="font-semibold text-[#191c1d]">{item.degree}</h3>
-                    <p className="mt-1 text-[#404752]">
+                  <article key={item.degree} className="rounded-[var(--radius-md)] border border-[var(--color-border-hover)] bg-[var(--color-bg-main)] p-4">
+                    <h3 className="font-semibold text-[var(--color-text-primary)]">{item.degree}</h3>
+                    <p className="mt-1 text-[var(--color-text-secondary)]">
                       {item.school} • {item.dates}
                     </p>
-                    <p className="mt-2 text-[#404752]">{item.note}</p>
+                    <p className="mt-2 text-[var(--color-text-secondary)]">{item.note}</p>
                   </article>
                 ))}
               </div>
@@ -222,17 +222,17 @@ export default function EditProfilePage() {
             <FormCard title="Experience" icon={<BriefcaseIcon className="h-6 w-6" />}>
               <div className="space-y-4">
                 {experienceItems.map((item) => (
-                  <article key={`${item.role}-${item.company}`} className="rounded-[8px] border border-[#bfc7d4] bg-[#f8f9fa] p-4">
-                    <h3 className="font-semibold text-[#191c1d]">{item.role}</h3>
-                    <p className="mt-1 text-[#404752]">
+                  <article key={`${item.role}-${item.company}`} className="rounded-[var(--radius-md)] border border-[var(--color-border-hover)] bg-[var(--color-bg-main)] p-4">
+                    <h3 className="font-semibold text-[var(--color-text-primary)]">{item.role}</h3>
+                    <p className="mt-1 text-[var(--color-text-secondary)]">
                       {item.company} • {item.dates}
                     </p>
-                    <p className="mt-2 text-[#404752]">{item.bullets[0]}</p>
+                    <p className="mt-2 text-[var(--color-text-secondary)]">{item.bullets[0]}</p>
                   </article>
                 ))}
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#e3f2fd] px-4 py-2 text-sm font-semibold text-[#0061a4] transition-colors hover:bg-[#d1e4ff]"
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--color-bg-soft)] px-4 py-2 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:brightness-95"
                 >
                   <PlusIcon className="h-4 w-4" />
                   Add Experience
@@ -244,13 +244,13 @@ export default function EditProfilePage() {
           <aside className="space-y-6">
             <FormCard title="Profile Photo" icon={<EditIcon className="h-6 w-6" />}>
               <div className="flex flex-col items-center text-center">
-                <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-[#d1e4ff] bg-[#e3f2fd] text-4xl font-bold text-[#0061a4]">
+                <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-[var(--color-bg-soft)] bg-[var(--color-bg-soft)] text-4xl font-bold text-[var(--color-teal)]">
                   {applicantProfile.initials}
                 </div>
-                <button type="button" className="mt-4 font-semibold text-[#0061a4] hover:underline">
+                <button type="button" className="mt-4 font-semibold text-[var(--color-teal)] hover:underline">
                   Change Photo
                 </button>
-                <p className="mt-2 text-sm text-[#526069]">JPG, GIF or PNG. Max size of 5MB.</p>
+                <p className="mt-2 text-sm text-[var(--color-text-secondary)]">JPG, GIF or PNG. Max size of 5MB.</p>
                 <Input
                   label="Avatar URL"
                   placeholder="https://example.com/avatar.jpg"
@@ -268,7 +268,7 @@ export default function EditProfilePage() {
                 {applicantProfile.skills.slice(0, 4).map((skill) => (
                   <span
                     key={skill}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#e3f2fd] px-3 py-1.5 text-sm font-semibold text-[#0061a4]"
+                    className="inline-flex items-center gap-2 rounded-full bg-[var(--color-bg-soft)] px-3 py-1.5 text-sm font-semibold text-[var(--color-teal)]"
                   >
                     {skill}
                     <button type="button" className="hover:text-[var(--color-error)]" aria-label={`Remove ${skill}`}>
@@ -278,7 +278,7 @@ export default function EditProfilePage() {
                 ))}
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-full border border-dashed border-[#0061a4] px-3 py-1.5 text-sm font-semibold text-[#0061a4] hover:bg-[#e3f2fd]"
+                  className="inline-flex items-center gap-2 rounded-full border border-dashed border-[var(--color-teal)] px-3 py-1.5 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]"
                 >
                   <PlusIcon className="h-4 w-4" />
                   Add Skill
@@ -288,13 +288,13 @@ export default function EditProfilePage() {
 
             <FormCard title="Links" icon={<LinkIcon className="h-6 w-6" />}>
               <div className="space-y-3">
-                <div className="flex items-center gap-3 rounded-[8px] border border-[#bfc7d4] bg-[#f8f9fa] px-3 py-3 text-[#404752]">
+                <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-hover)] bg-[var(--color-bg-main)] px-3 py-3 text-[var(--color-text-secondary)]">
                   <LinkIcon className="h-5 w-5 shrink-0" />
                   <span className="truncate">{applicantProfile.portfolioUrl}</span>
                 </div>
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-[#0061a4] px-3 py-2 text-sm font-semibold text-[#0061a4] hover:bg-[#e3f2fd]"
+                  className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-teal)] px-3 py-2 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]"
                 >
                   <PlusIcon className="h-4 w-4" />
                   Add Link

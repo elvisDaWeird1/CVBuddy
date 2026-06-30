@@ -98,4 +98,23 @@ Before implementing or modifying UI from Stitch, read:
 - `stitch-reference/screenshots/`
 - `stitch-reference/exported-code/` if present
 
-The Stitch files are visual/design references, not final production code. Rebuild the UI using the existing project stack and conventions. Reuse existing components where possible, keep API integration compatible with the current backend contract, and validate with the scripts defined in `package.json`.
+The Stitch files are visual/design references, not final production code.
+
+Rules:
+- Match the Stitch layout, spacing, color direction, border radius, typography feel, and component hierarchy.
+- Do not blindly paste Stitch code if it conflicts with the current React/Vite project structure.
+- Rebuild the UI using the existing project stack and conventions.
+- Reuse existing components when possible.
+- Keep API integration compatible with the current backend contract.
+- Do not rename environment variables, routes, or API functions unless required.
+- After coding, run the validation commands defined in `package.json`.
+
+### UI / styling tasks
+
+For any UI, layout, component styling, visual polish, or responsive design task, read:
+
+- `docs/ui-guidelines.md`
+- `src/index.css`
+- the touched component/page files
+
+`src/index.css` is the source of truth for the frontend color palette, CSS variables, spacing, radius, shadows, and shared visual tokens. Do not introduce new hard-coded colors or visual styles when an existing token/pattern is available.
