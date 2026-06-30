@@ -25,17 +25,20 @@ This frontend repository is separate from the backend repository. Do not edit ba
 
 ## 2. Source of Truth
 
-Frontend Codex must read these files first:
+This plan defines MVP scope and phases. For day-to-day Codex workflow, `AGENTS.md` defines the lightweight read order.
 
-1. `README.md`
-2. `FRONTEND_MVP_PLAN.md`
-3. Backend API documentation, if copied into this frontend repo
-4. Backend `BACKEND_MVP_PLAN.md`, if copied into `docs/`
-5. Backend `.env.example` or API base URL note, if available
+Frontend Codex should read this plan when working on large features, MVP scope questions, or phase planning. Small tasks should follow `AGENTS.md` and read only the task-relevant files.
+
+Current repo implementation takes priority over older examples in this plan:
+
+- The current frontend environment variable is `VITE_API_URL`.
+- The current frontend structure uses existing folders such as `src/apis`, `src/modules`, `src/routes`, `src/components`, `src/config`, and `src/utils`.
+- Suggested `src/features` or `src/lib` examples below are planning references only; do not reorganize the repo unless explicitly requested.
 
 Important rule:
 
-- `FRONTEND_MVP_PLAN.md` is the source of truth for frontend implementation.
+- `FRONTEND_MVP_PLAN.md` is the source of truth for frontend MVP scope and phase planning.
+- `AGENTS.md` is the source of truth for Codex read order and lightweight workflow.
 - Backend documentation is only used to understand API endpoints, response format, roles, and MVP scope.
 - Do not change backend database design.
 - Do not add frontend features outside MVP unless approved.
@@ -307,13 +310,13 @@ If a structure already exists, keep it and adapt this plan to the current struct
 Create `.env.example`:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
 Local `.env` example:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
 Rules:
@@ -335,7 +338,7 @@ src/lib/api/apiClient.ts
 Requirements:
 
 - Use Axios.
-- Base URL comes from `import.meta.env.VITE_API_BASE_URL`.
+- Base URL comes from `import.meta.env.VITE_API_URL`.
 - Attach token if available.
 - Use `Authorization: Bearer <token>`.
 - Handle 401 globally if possible.
@@ -890,7 +893,7 @@ Check these routes:
 
 ### API client
 
-- `VITE_API_BASE_URL` is read correctly.
+- `VITE_API_URL` is read correctly.
 - Token is attached to protected requests.
 - 401 responses can be handled.
 
