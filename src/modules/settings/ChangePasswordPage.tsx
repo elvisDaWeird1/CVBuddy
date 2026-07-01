@@ -166,7 +166,7 @@ export default function ChangePasswordPage() {
           </form>
 
           <div className="mt-7 text-center">
-            <Link className="text-base font-medium text-[var(--color-teal)] hover:underline" to="/applicant/profile">
+            <Link className="text-base font-medium text-[var(--color-teal)] hover:underline" to="/profile">
               Back to profile
             </Link>
           </div>

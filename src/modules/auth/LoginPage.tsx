@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
-import { AuthShell } from '@/layouts/ClientLayout/AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ArrowRightIcon, LockIcon, MailIcon } from '@/components/ui/icons'
@@ -54,7 +53,7 @@ export default function LoginPage() {
       }
 
       saveAuthSession(response.data)
-      navigate('/applicant/profile', { replace: true })
+      navigate('/profile', { replace: true })
     } catch (error) {
       setFormStatus({
         type: 'error',
@@ -64,7 +63,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthShell>
+    <>
       <section className="w-full max-w-[420px] rounded-[var(--radius-xl)] bg-[var(--color-white)] p-5 shadow-[var(--shadow-lg)] sm:p-6">
         <div className="mb-5 text-center">
           <h1 className="text-3xl font-bold leading-tight tracking-normal text-[var(--color-teal)]">CVBuddy</h1>
@@ -135,11 +134,11 @@ export default function LoginPage() {
 
         <p className="mt-5 text-center text-sm text-[var(--color-text-secondary)]">
           Don&apos;t have an account?{' '}
-          <Link className="font-semibold text-[var(--color-teal)] hover:underline" to="/register/applicant">
+          <Link className="font-semibold text-[var(--color-teal)] hover:underline" to="/register">
             Create account
           </Link>
         </p>
       </section>
-    </AuthShell>
+    </>
   )
 }

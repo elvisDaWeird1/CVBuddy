@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
-import { MainLayout } from '@/layouts/ClientLayout/ClientLayout'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FormGroup } from '@/components/ui/form'
@@ -233,7 +232,7 @@ export function LandingPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <SectionShell
         id="home"
         className="overflow-hidden bg-gradient-to-b from-[var(--color-bg-soft)] via-[var(--color-bg-main)] to-[var(--color-white)] pt-12 lg:pt-16"
@@ -418,7 +417,7 @@ export function LandingPage() {
               ))}
             </div>
             <Link
-              to="/register/applicant"
+              to="/register"
               className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-full)] bg-[var(--color-teal)] px-6 text-base font-semibold text-[var(--color-text-on-teal)] shadow-[var(--shadow-md)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-95"
             >
               Create account
@@ -532,7 +531,7 @@ export function LandingPage() {
           </Card>
         </div>
       </SectionShell>
-    </MainLayout>
+    </>
   )
 }
 
