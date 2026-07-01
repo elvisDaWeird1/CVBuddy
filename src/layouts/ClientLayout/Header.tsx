@@ -76,19 +76,11 @@ export function Header() {
                     ? 'border-[#2563eb] text-[#2563eb]'
                     : 'border-transparent text-[#526069] hover:text-[#0061a4]',
                 )}
-              >
+              > 
                 {item.label}
               </a>
             )
           })}
-          {isAuthenticated && (
-            <Link
-              to="/profile"
-              className="border-b-2 border-transparent py-1 text-sm font-semibold text-[var(--color-teal)] transition-colors duration-150 hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]"
-            >
-              Explore
-            </Link>
-          )}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">

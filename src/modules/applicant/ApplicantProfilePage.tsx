@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
-import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
 import {
   DownloadIcon,
   EditIcon,
@@ -126,7 +125,7 @@ export default function ApplicantProfilePage() {
   const avatarLabel = getInitials(fullName)
 
   return (
-    <ApplicantShell>
+    <>
       <div className="mx-auto grid w-full max-w-[1200px] gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[2fr_1fr] lg:px-8 lg:py-12">
         <div className="space-y-8">
           {errorMessage && (
@@ -163,7 +162,7 @@ export default function ApplicantProfilePage() {
               </div>
               <RouterLink
                 to="/profile/edit"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-teal)] px-5 text-sm font-semibold text-[var(--color-text-on-teal)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-0.5 hover:brightness-95"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-teal)] px-5 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition-all hover:-translate-y-0.5 hover:brightness-95"
               >
                 <EditIcon className="h-4 w-4" />
                 Edit Profile
@@ -290,6 +289,6 @@ export default function ApplicantProfilePage() {
           </SurfaceCard>
         </aside>
       </div>
-    </ApplicantShell>
+    </>
   )
 }

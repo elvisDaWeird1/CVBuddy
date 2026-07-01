@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
-import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EditIcon, UserIcon } from '@/components/ui/icons'
@@ -172,7 +171,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <ApplicantShell>
+    <>
       <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mb-8 space-y-5">
           <nav className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]">
@@ -392,6 +391,6 @@ export default function EditProfilePage() {
           </aside>
         </form>
       </div>
-    </ApplicantShell>
+    </>
   )
 }

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
 
 interface ApplicantSectionPageProps {
   title: string
@@ -19,7 +18,7 @@ export function ApplicantSectionPage({
   secondaryTo,
 }: ApplicantSectionPageProps) {
   return (
-    <ApplicantShell>
+    <>
       <div className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-[960px] items-center px-4 py-10 sm:px-6 lg:px-8">
         <section className="w-full rounded-[var(--radius-xl)] bg-[var(--color-white)] p-8 shadow-[var(--shadow-lg)]">
           <p className="text-sm font-semibold uppercase tracking-normal text-[var(--color-teal)]">Applicant workspace</p>
@@ -45,6 +44,6 @@ export function ApplicantSectionPage({
           </div>
         </section>
       </div>
-    </ApplicantShell>
+    </>
   )
 }

@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
-import { AuthShell } from '@/layouts/ClientLayout/AuthShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ArrowRightIcon, LockIcon, MailIcon, UserIcon } from '@/components/ui/icons'
@@ -71,7 +70,7 @@ export default function RegisterApplicantPage() {
   }
 
   return (
-    <AuthShell>
+    <>
       <section className="w-full max-w-[720px] rounded-[var(--radius-xl)] bg-[var(--color-white)] p-5 shadow-[var(--shadow-lg)] transition-shadow hover:shadow-[var(--shadow-xl)] sm:p-6">
         <div className="mb-5 border-b border-[var(--color-border)] pb-4 text-center">
           <p className="mx-auto mb-3 inline-flex rounded-full bg-[var(--color-bg-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-teal)]">
@@ -164,6 +163,6 @@ export default function RegisterApplicantPage() {
           </Link>
         </p>
       </section>
-    </AuthShell>
+    </>
   )
 }
