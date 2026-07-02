@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from 'react'
+import { useState, useEffect, type MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRightIcon } from '@/components/ui/icons'
 import { cn } from '@/utils/cn'
@@ -15,12 +15,54 @@ const landingNavItems = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('#home')
   const location = useLocation()
   const navigate = useNavigate()
   const isAuthenticated = Boolean(getAuthToken())
   const account = getStoredAccount()
   const isLandingRoute = location.pathname === '/'
-  const activeHash = location.hash || '#home'
+
+  // Lưu hash trước đó để phát hiện thay đổi trong lúc render
+  const [prevHash, setPrevHash] = useState(location.hash)
+
+  // Adjust state during render thay vì trong effect
+  if (isLandingRoute && location.hash && location.hash !== prevHash) {
+    setPrevHash(location.hash)
+    setActiveSection(location.hash)
+  }
+
+  // Effect theo dõi scroll giữ nguyên (đây là hợp lệ vì setState
+  // nằm trong callback của observer, không nằm trực tiếp trong thân effect)
+  useEffect(() => {
+    if (!isLandingRoute) return
+
+    const sectionIds = landingNavItems.map((item) => item.hash.slice(1))
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null)
+
+    if (sections.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting)
+        if (visible.length > 0) {
+          const closest = visible.reduce((prev, curr) =>
+            curr.boundingClientRect.top < prev.boundingClientRect.top ? curr : prev,
+          )
+          setActiveSection(`#${closest.target.id}`)
+        }
+      },
+      {
+        root: null,
+        rootMargin: '-20% 0px -70% 0px',
+        threshold: 0,
+      },
+    )
+
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [isLandingRoute])
 
   const scrollToHash = (hash: string) => {
     const targetId = hash.slice(1)
@@ -30,9 +72,10 @@ export function Header() {
   const handleLandingNavClick = (event: MouseEvent<HTMLAnchorElement>, hash: string) => {
     event.preventDefault()
     setIsMenuOpen(false)
+    setActiveSection(hash) // feedback ngay khi click, không chờ observer
 
     if (isLandingRoute) {
-      navigate({ pathname: '/', hash }, { replace: activeHash === hash })
+      navigate({ pathname: '/', hash }, { replace: location.hash === hash })
       window.setTimeout(() => scrollToHash(hash), 0)
       return
     }
@@ -63,7 +106,7 @@ export function Header() {
 
         <nav className="hidden items-center gap-6 md:flex" aria-label="Landing sections">
           {landingNavItems.map((item) => {
-            const isActive = isLandingRoute && activeHash === item.hash
+            const isActive = isLandingRoute && activeSection === item.hash
 
             return (
               <a
@@ -133,7 +176,7 @@ export function Header() {
         <div className="border-t border-[#d8e3fb] bg-white px-4 py-4 shadow-[0_8px_30px_rgba(33,150,243,0.12)] md:hidden">
           <nav className="mx-auto flex max-w-[1200px] flex-col gap-2" aria-label="Mobile landing sections">
             {landingNavItems.map((item) => {
-              const isActive = isLandingRoute && activeHash === item.hash
+              const isActive = isLandingRoute && activeSection === item.hash
 
               return (
                 <a
