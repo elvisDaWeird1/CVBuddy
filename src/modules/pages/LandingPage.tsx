@@ -427,7 +427,7 @@ export function LandingPage() {
         </div>
       </SectionShell>
 
-      <SectionShell id="form" className="bg-[var(--color-bg-soft)]">
+      <SectionShell id="survey-form" className="bg-[var(--color-bg-soft)]">
         <div className="mx-auto max-w-3xl">
           <Card className="p-6 shadow-[var(--shadow-xl)] sm:p-8 lg:p-10">
             <div className="mb-8 text-center">
