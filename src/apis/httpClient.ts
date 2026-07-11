@@ -1,8 +1,33 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { axiosConfig } from './axios.config'
-import { getAuthToken } from '@/modules/auth/authStorage'
+import { clearAuthSession, getAuthToken, setAuthMessage } from '@/modules/auth/authStorage'
 
 export const httpClient = axios.create(axiosConfig)
+
+const AUTH_EXPIRED_MESSAGE = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.'
+const PUBLIC_AUTH_ENDPOINTS = ['/auth/login', '/auth/register/applicant', '/auth/logout']
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/home', '/about-us', '/project', '/ai-buddy', '/form', '/coming-soon']
+let isRedirectingToLogin = false
+
+function isPublicAuthRequest(error: AxiosError) {
+  const requestUrl = error.config?.url ?? ''
+
+  return PUBLIC_AUTH_ENDPOINTS.some((endpoint) => requestUrl === endpoint || requestUrl.endsWith(endpoint))
+}
+
+function isPublicRoute(pathname: string) {
+  return PUBLIC_ROUTES.some((route) => pathname === route || (route !== '/' && pathname.startsWith(`${route}/`)))
+}
+
+function handleUnauthorized() {
+  clearAuthSession()
+  setAuthMessage(AUTH_EXPIRED_MESSAGE)
+
+  if (!isRedirectingToLogin && !isPublicRoute(window.location.pathname)) {
+    isRedirectingToLogin = true
+    window.location.replace('/login')
+  }
+}
 
 httpClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
@@ -20,12 +45,10 @@ httpClient.interceptors.request.use(
 httpClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response) {
-      const { status } = error.response
-      if (status === 401) {
-        console.error('[HttpClient] Unauthorized')
-      }
+    if (error.response?.status === 401 && !isPublicAuthRequest(error)) {
+      handleUnauthorized()
     }
+
     return Promise.reject(error)
   },
 )

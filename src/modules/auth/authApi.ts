@@ -53,6 +53,11 @@ export async function changePassword(payload: ChangePasswordPayload) {
   return response.data
 }
 
+export async function logout() {
+  const response = await httpClient.post<BackendApiResponse<null>>('/auth/logout')
+  return response.data
+}
+
 export function getAuthApiErrorMessage(error: unknown, fallback: string) {
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const responseData = (error as { response?: { data?: { message?: unknown } } }).response?.data

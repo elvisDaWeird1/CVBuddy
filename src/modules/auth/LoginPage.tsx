@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type SubmitHandler } from 'react-hook-form'
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ArrowRightIcon, LockIcon, MailIcon } from '@/components/ui/icons'
 import { getAuthApiErrorMessage, login } from './authApi'
-import { saveAuthSession } from './authStorage'
+import { clearAuthMessage, getAuthMessage, saveAuthSession } from './authStorage'
 
 const loginSchema = z.object({
   email: z.string().trim().email('Enter a valid email address.'),
@@ -26,9 +26,20 @@ export default function LoginPage() {
     typeof (location.state as LoginLocationState | null)?.authMessage === 'string'
       ? (location.state as LoginLocationState).authMessage
       : null
-  const [formStatus, setFormStatus] = useState<AuthFormStatus | null>(
-    initialMessage ? { type: 'success', message: initialMessage } : null,
-  )
+  const authMessage = getAuthMessage()
+  const [formStatus, setFormStatus] = useState<AuthFormStatus | null>(() => {
+    if (initialMessage) {
+      return { type: 'success', message: initialMessage }
+    }
+
+    return authMessage ? { type: 'error', message: authMessage } : null
+  })
+
+  useEffect(() => {
+    if (authMessage) {
+      clearAuthMessage()
+    }
+  }, [authMessage])
   const {
     register,
     handleSubmit,
