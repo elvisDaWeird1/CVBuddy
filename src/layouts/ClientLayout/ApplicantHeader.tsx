@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 import { AuthAvatarMenu } from './AuthAvatarMenu'
-import { clearAuthSession, getStoredAccount } from '@/modules/auth/authStorage'
+import { logout } from '@/modules/auth/authApi'
+import { clearAuthSession } from '@/modules/auth/authStorage'
+import { useAuthSession } from '@/modules/auth/useAuthSession'
 
 const applicantNavItems = [
   { label: 'Profile', to: '/profile' },
@@ -21,11 +23,24 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export function ApplicantHeader() {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const account = getStoredAccount()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { account } = useAuthSession()
 
-  const handleLogout = () => {
-    clearAuthSession()
-    navigate('/', { replace: true })
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+
+    setIsMenuOpen(false)
+    setIsLoggingOut(true)
+
+    try {
+      await logout()
+    } catch {
+      // Local cleanup and redirect are still required when the server rejects the token.
+    } finally {
+      clearAuthSession()
+      navigate('/login', { replace: true })
+      setIsLoggingOut(false)
+    }
   }
 
   return (

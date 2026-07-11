@@ -3,7 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRightIcon } from '@/components/ui/icons'
 import { cn } from '@/utils/cn'
 import { AuthAvatarMenu } from './AuthAvatarMenu'
-import { clearAuthSession, getAuthToken, getStoredAccount } from '@/modules/auth/authStorage'
+import { logout } from '@/modules/auth/authApi'
+import { clearAuthSession } from '@/modules/auth/authStorage'
+import { useAuthSession } from '@/modules/auth/useAuthSession'
 
 const landingNavItems = [
   { label: 'Home', hash: '#home' },
@@ -15,11 +17,12 @@ const landingNavItems = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [activeSection, setActiveSection] = useState('#home')
   const location = useLocation()
   const navigate = useNavigate()
-  const isAuthenticated = Boolean(getAuthToken())
-  const account = getStoredAccount()
+  const { token, account } = useAuthSession()
+  const isAuthenticated = Boolean(token)
   const isLandingRoute = location.pathname === '/'
 
   // Lưu hash trước đó để phát hiện thay đổi trong lúc render
@@ -83,10 +86,21 @@ export function Header() {
     navigate({ pathname: '/', hash })
   }
 
-  const handleLogout = () => {
-    clearAuthSession()
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+
     setIsMenuOpen(false)
-    navigate('/', { replace: true })
+    setIsLoggingOut(true)
+
+    try {
+      await logout()
+    } catch {
+      // Local cleanup and redirect are still required when the server rejects the token.
+    } finally {
+      clearAuthSession()
+      navigate('/login', { replace: true })
+      setIsLoggingOut(false)
+    }
   }
 
   return (

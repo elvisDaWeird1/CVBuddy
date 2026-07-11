@@ -102,18 +102,6 @@ export default function EditProfilePage() {
           reset(profile)
         }
       } catch (error) {
-        const status = typeof error === 'object' && error !== null && 'response' in error
-          ? (error as { response?: { status?: number } }).response?.status
-          : undefined
-
-        if (status === 401) {
-          navigate('/login', {
-            replace: true,
-            state: { authMessage: 'Your session expired. Please sign in again.' },
-          })
-          return
-        }
-
         if (active) {
           setPageError(getAuthApiErrorMessage(error, 'Unable to load your profile for editing.'))
         }
@@ -154,18 +142,6 @@ export default function EditProfilePage() {
         state: { profileMessage: 'Profile updated successfully.' },
       })
     } catch (error) {
-      const status = typeof error === 'object' && error !== null && 'response' in error
-        ? (error as { response?: { status?: number } }).response?.status
-        : undefined
-
-      if (status === 401) {
-        navigate('/login', {
-          replace: true,
-          state: { authMessage: 'Your session expired. Please sign in again.' },
-        })
-        return
-      }
-
       setFormMessage(getAuthApiErrorMessage(error, 'Unable to update your profile.'))
     }
   }

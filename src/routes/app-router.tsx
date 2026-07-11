@@ -9,6 +9,7 @@ import LoginPage from '@/modules/auth/LoginPage'
 import RegisterApplicantPage from '@/modules/auth/RegisterApplicantPage'
 import ApplicantProfilePage from '@/modules/applicant/ApplicantProfilePage'
 import EditProfilePage from '@/modules/applicant/EditProfilePage'
+import CvPage from '@/modules/applicant/CvPage'
 import ChangePasswordPage from '@/modules/settings/ChangePasswordPage'
 import NotFound from '@/modules/admin/NotFound'
 import { ApplicantSectionPage } from '@/modules/applicant/ApplicantSectionPage'
@@ -55,19 +56,7 @@ const appRoutes = [
           },
           { path: 'profile', element: <ApplicantProfilePage /> },
           { path: 'applicant/profile', element: <ApplicantProfilePage /> },
-          {
-            path: 'cv',
-            element: (
-              <ApplicantSectionPage
-                title="CV"
-                description="Your CV workspace is ready for the next implementation step."
-                primaryLabel="Back to Profile"
-                primaryTo="/profile"
-                secondaryLabel="Go to Portfolio"
-                secondaryTo="/portfolio"
-              />
-            ),
-          },
+          { path: 'cv', element: <CvPage /> },
           {
             path: 'portfolio',
             element: (

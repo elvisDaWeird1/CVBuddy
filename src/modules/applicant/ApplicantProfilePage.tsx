@@ -89,18 +89,6 @@ export default function ApplicantProfilePage() {
           setProfile(nextProfile)
         }
       } catch (error) {
-        const status = typeof error === 'object' && error !== null && 'response' in error
-          ? (error as { response?: { status?: number } }).response?.status
-          : undefined
-
-        if (status === 401) {
-          navigate('/login', {
-            replace: true,
-            state: { authMessage: 'Your session expired. Please sign in again.' },
-          })
-          return
-        }
-
         if (active) {
           setErrorMessage(getAuthApiErrorMessage(error, 'Unable to load your applicant profile.'))
         }
@@ -276,13 +264,13 @@ export default function ApplicantProfilePage() {
           <SurfaceCard>
             <h2 className="mb-4 border-b border-[var(--color-border)] pb-3 text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">Documents</h2>
             <RouterLink
-              to="/coming-soon"
+              to="/cv"
               className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-hover)] px-4 py-3 transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-main)]"
             >
               <FileTextIcon className="h-6 w-6 shrink-0 text-[var(--color-error)]" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-[var(--color-text-primary)]">{loading ? 'Loading documents…' : 'CV documents stay in the CV flow'}</span>
-                <span className="block text-sm text-[var(--color-text-secondary)]">{loading ? 'Please wait…' : 'No direct applicant profile document field in schema'}</span>
+                <span className="block truncate font-semibold text-[var(--color-text-primary)]">{loading ? 'Loading documents…' : 'Open CV workspace'}</span>
+                <span className="block text-sm text-[var(--color-text-secondary)]">{loading ? 'Please wait…' : 'Upload and review your CV documents'}</span>
               </span>
               <DownloadIcon className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
             </RouterLink>
