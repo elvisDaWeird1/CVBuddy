@@ -9,6 +9,7 @@ import { useAuthSession } from '@/modules/auth/useAuthSession'
 const applicantNavItems = [
   { label: 'Profile', to: '/profile' },
   { label: 'CV', to: '/cv' },
+  { label: 'AI Chatting', to: '/ai-chat' },
   { label: 'Portfolio', to: '/portfolio' },
 ] as const
 
