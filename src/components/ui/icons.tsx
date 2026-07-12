@@ -48,6 +48,23 @@ export function UploadIcon({ className = '', ...props }: SVGProps<SVGSVGElement>
   )
 }
 
+export function CameraIcon({ className = '', ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 8.25h3l1.25-2h6.5l1.25 2h3A1.75 1.75 0 0121.25 10v8A1.75 1.75 0 0119.5 19.75h-15A1.75 1.75 0 012.75 18v-8A1.75 1.75 0 014.5 8.25z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 13.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  )
+}
+
+export function TrashIcon({ className = '', ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.75 7.25h14.5M9.25 7.25V5.5A1.75 1.75 0 0111 3.75h2A1.75 1.75 0 0114.75 5.5v1.75M7 7.25l.65 12A1.75 1.75 0 009.4 20.9h5.2a1.75 1.75 0 001.75-1.65l.65-12M10 11v6m4-6v6" />
+    </svg>
+  )
+}
+
 export function MailIcon({ className = '', ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" {...props}>

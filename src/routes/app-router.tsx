@@ -13,6 +13,11 @@ import CvPage from '@/modules/applicant/CvPage'
 import ChangePasswordPage from '@/modules/settings/ChangePasswordPage'
 import NotFound from '@/modules/admin/NotFound'
 import { ApplicantSectionPage } from '@/modules/applicant/ApplicantSectionPage'
+import PortfolioPage from '@/modules/portfolio/PortfolioPage'
+import PortfolioFormPage from '@/modules/portfolio/PortfolioFormPage'
+import { ExperienceDetailPage, ExperienceFormPage, ExperienceListPage } from '@/modules/portfolio/ExperiencePages'
+import { MomentCreatePage, MomentDetailPage, MomentListPage } from '@/modules/portfolio/MomentPages'
+import PublicPortfolioPage from '@/modules/portfolio/PublicPortfolioPage'
 
 const appRoutes = [
   {
@@ -35,6 +40,7 @@ const appRoutes = [
       { path: 'register/applicant', element: <RegisterApplicantPage /> },
     ],
   },
+  { path: 'p/:slug', element: <PublicPortfolioPage /> },
   {
     element: <ProtectedRoute />,
     children: [
@@ -57,19 +63,15 @@ const appRoutes = [
           { path: 'profile', element: <ApplicantProfilePage /> },
           { path: 'applicant/profile', element: <ApplicantProfilePage /> },
           { path: 'cv', element: <CvPage /> },
-          {
-            path: 'portfolio',
-            element: (
-              <ApplicantSectionPage
-                title="Portfolio"
-                description="Your portfolio workspace is ready for the next implementation step."
-                primaryLabel="Back to Profile"
-                primaryTo="/profile"
-                secondaryLabel="Go to CV"
-                secondaryTo="/cv"
-              />
-            ),
-          },
+          { path: 'portfolio', element: <PortfolioPage /> },
+          { path: 'portfolio/edit', element: <PortfolioFormPage /> },
+          { path: 'portfolio/experiences', element: <ExperienceListPage /> },
+          { path: 'portfolio/experiences/new', element: <ExperienceFormPage /> },
+          { path: 'portfolio/experiences/:experienceId/edit', element: <ExperienceFormPage /> },
+          { path: 'portfolio/experiences/:experienceId', element: <ExperienceDetailPage /> },
+          { path: 'portfolio/moments', element: <MomentListPage /> },
+          { path: 'portfolio/moments/new', element: <MomentCreatePage /> },
+          { path: 'portfolio/moments/:momentId', element: <MomentDetailPage /> },
           { path: 'applicant/cv', element: <Navigate to="/cv" replace /> },
           { path: 'applicant/portfolio', element: <Navigate to="/portfolio" replace /> },
           { path: 'profile/edit', element: <EditProfilePage /> },
