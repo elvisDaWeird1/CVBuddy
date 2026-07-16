@@ -29,7 +29,6 @@ const appRoutes = [
       { path: 'about-us', element: <Navigate to="/#about-us" replace /> },
       { path: 'project', element: <Navigate to="/#project" replace /> },
       { path: 'ai-buddy', element: <Navigate to="/#ai-buddy" replace /> },
-      { path: 'form', element: <Navigate to="/#form" replace /> },
       { path: 'coming-soon', element: <ComingSoonPage /> },
     ],
   },
