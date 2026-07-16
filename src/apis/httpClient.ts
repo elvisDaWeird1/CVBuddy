@@ -7,7 +7,7 @@ export const httpClient = axios.create(axiosConfig)
 const AUTH_EXPIRED_MESSAGE = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.'
 const PUBLIC_AUTH_ENDPOINTS = ['/auth/login', '/auth/register/applicant', '/auth/logout']
 const PUBLIC_API_PATHS = ['/portfolio/public/']
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/home', '/about-us', '/project', '/ai-buddy', '/form', '/coming-soon', '/p']
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/home', '/about-us', '/project', '/ai-buddy', '/coming-soon', '/p']
 let isRedirectingToLogin = false
 
 function isPublicAuthRequest(error: AxiosError) {

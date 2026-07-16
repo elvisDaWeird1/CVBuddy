@@ -1,24 +1,20 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, type SubmitHandler } from 'react-hook-form'
-import { z } from 'zod'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { FormGroup } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import {
   ArrowRightIcon,
-  BriefcaseIcon,
+  CameraIcon,
   CheckIcon,
+  EyeIcon,
   FileTextIcon,
   GraduationCapIcon,
   LinkIcon,
+  UploadIcon,
   UserIcon,
 } from '@/components/ui/icons'
 import heroImage from '@/assets/hero.png'
 import { cn } from '@/utils/cn'
+import { scrollToLandingSection } from './landingNavigation'
 
 type ProjectFeature = {
   title: string
@@ -28,43 +24,28 @@ type ProjectFeature = {
   inverted?: boolean
 }
 
-const surveyDefaults = {
-  fullName: '',
-  email: '',
-  currentRole: '',
-  difficulties: [] as string[],
-  aiReadiness: '',
-  feedback: '',
+type TeamMember = {
+  id: number
+  name: string
+  role: string
+  image: string | null
 }
 
-const surveySchema = z.object({
-  fullName: z.string().trim().min(1, 'Full name is required.'),
-  email: z.string().trim().email('Enter a valid email address.'),
-  currentRole: z.string().min(1, 'Choose your current role.'),
-  difficulties: z.array(z.string()).min(1, 'Choose at least one challenge.'),
-  aiReadiness: z.string().min(1, 'Choose one answer.'),
-  feedback: z.string().trim().max(600, 'Feedback must be 600 characters or fewer.').optional(),
-})
+type LandingFeature = {
+  title: string
+  label: string
+  body: string
+  icon: ReactNode
+}
 
-type SurveyFormValues = z.infer<typeof surveySchema>
-
-const aboutCards = [
-  {
-    title: 'Easy to use',
-    body: 'A focused flow helps applicants upload, review, and improve career materials without extra complexity.',
-    icon: <CheckIcon className="h-6 w-6" />,
-  },
-  {
-    title: 'Personal guidance',
-    body: 'Suggestions are shaped around role goals, profile details, and the story each applicant wants to tell.',
-    icon: <UserIcon className="h-6 w-6" />,
-  },
-  {
-    title: 'Practical direction',
-    body: 'CVBuddy turns broad advice into clear next steps for stronger applications and portfolio proof.',
-    icon: <BriefcaseIcon className="h-6 w-6" />,
-  },
-] as const
+const teamMembers: TeamMember[] = [
+  { id: 1, name: 'Member 1', role: 'Team role to be updated', image: null },
+  { id: 2, name: 'Member 2', role: 'Team role to be updated', image: null },
+  { id: 3, name: 'Member 3', role: 'Team role to be updated', image: null },
+  { id: 4, name: 'Member 4', role: 'Team role to be updated', image: null },
+  { id: 5, name: 'Member 5', role: 'Team role to be updated', image: null },
+  { id: 6, name: 'Member 6', role: 'Team role to be updated', image: null },
+]
 
 const projectFeatures: ProjectFeature[] = [
   {
@@ -94,32 +75,56 @@ const projectFeatures: ProjectFeature[] = [
   },
 ]
 
-const aiCapabilities = [
-  'Real-time CV feedback',
-  'ATS keyword guidance',
-  'Interview preparation prompts',
-  'Portfolio improvement ideas',
-] as const
-
-const roleOptions = [
-  { value: 'early-career-applicant', label: 'Early-career applicant' },
-  { value: 'recent-graduate', label: 'Recent graduate' },
-  { value: 'job-seeker', label: 'Job seeker' },
-  { value: 'career-switcher', label: 'Career switcher' },
-] as const
-
-const difficultyOptions = [
-  { value: 'career-summary', label: 'Writing a clear career summary.' },
-  { value: 'limited-experience', label: 'Showing impact with limited experience.' },
-  { value: 'layout', label: 'Making the CV layout look professional.' },
-  { value: 'ats', label: 'Knowing whether the CV is ATS ready.' },
-] as const
-
-const aiReadinessOptions = [
-  { value: 'yes', label: 'Yes, I would use AI suggestions' },
-  { value: 'maybe', label: 'Maybe, if the guidance is clear' },
-  { value: 'not-yet', label: 'Not yet' },
+const aiFeatures: LandingFeature[] = [
+  {
+    title: 'Translate CV',
+    label: 'Vietnamese to English',
+    body: 'Translate your CV from Vietnamese to English while preserving its professional meaning and structure.',
+    icon: <FileTextIcon className="h-6 w-6" />,
+  },
+  {
+    title: 'Score Your CV',
+    label: 'Overall readiness score',
+    body: 'Get an overall CV score to quickly understand the strengths and weaknesses of your current resume.',
+    icon: <GraduationCapIcon className="h-6 w-6" />,
+  },
+  {
+    title: 'Get CV Feedback',
+    label: 'Practical improvements',
+    body: 'Receive detailed feedback and practical suggestions to improve your CV.',
+    icon: <CheckIcon className="h-6 w-6" />,
+  },
 ]
+
+const portfolioSteps: LandingFeature[] = [
+  {
+    title: 'Capture',
+    label: '01',
+    body: 'Use the CVBuddy mobile app to photograph projects, events, campaigns, and work in progress.',
+    icon: <CameraIcon className="h-5 w-5" />,
+  },
+  {
+    title: 'Upload',
+    label: '02',
+    body: 'Publish selected photos directly to your personal portfolio without moving between tools.',
+    icon: <UploadIcon className="h-5 w-5" />,
+  },
+  {
+    title: 'Showcase',
+    label: '03',
+    body: 'Present real projects and practical experience in one professional, visual space.',
+    icon: <EyeIcon className="h-5 w-5" />,
+  },
+]
+
+const creativeIndustries = [
+  'Communication',
+  'Marketing',
+  'Event',
+  'Design',
+  'Photography',
+  'Content Creation',
+] as const
 
 function SectionShell({
   id,
@@ -142,14 +147,16 @@ function SectionIntro({
   title,
   children,
   centered = false,
+  className,
 }: {
   eyebrow?: string
   title: string
   children: ReactNode
   centered?: boolean
+  className?: string
 }) {
   return (
-    <div className={cn('mb-10 max-w-2xl', centered && 'mx-auto text-center')}>
+    <div className={cn('mb-10 max-w-2xl', centered && 'mx-auto text-center', className)}>
       {eyebrow && (
         <p className="mb-3 text-sm font-semibold uppercase tracking-normal text-[var(--color-teal)]">
           {eyebrow}
@@ -186,8 +193,13 @@ function SectionLink({
   children: ReactNode
 }) {
   return (
-    <a
-      href={to}
+    <Link
+      to={to}
+      onClick={() => {
+        if (to.startsWith('#')) {
+          window.setTimeout(() => scrollToLandingSection(to), 0)
+        }
+      }}
       className={cn(
         'inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-full)] px-6 text-base font-semibold transition-all duration-200',
         variant === 'primary'
@@ -196,40 +208,24 @@ function SectionLink({
       )}
     >
       {children}
-    </a>
+    </Link>
   )
 }
 
 export function LandingPage() {
   const location = useLocation()
-  const [surveyMessage, setSurveyMessage] = useState<string | null>(null)
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<SurveyFormValues>({
-    resolver: zodResolver(surveySchema),
-    defaultValues: surveyDefaults,
-  })
 
   useEffect(() => {
     if (!location.hash) {
       return
     }
 
-    const targetId = location.hash.slice(1)
     const timeoutId = window.setTimeout(() => {
-      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      scrollToLandingSection(location.hash)
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
   }, [location.hash])
-
-  const onSubmit: SubmitHandler<SurveyFormValues> = async ({ fullName }) => {
-    setSurveyMessage(`Thanks, ${fullName}. Your survey response was saved for this session.`)
-    reset(surveyDefaults)
-  }
 
   return (
     <>
@@ -250,8 +246,8 @@ export function LandingPage() {
               Review your CV, organize applicant details, collect AI feedback, and shape a portfolio that makes your work easier to trust.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <SectionLink to="#form">
-                Start the survey
+              <SectionLink to="/register">
+                Create your account
                 <ArrowRightIcon className="h-5 w-5" />
               </SectionLink>
               <SectionLink to="#ai-buddy" variant="secondary">
@@ -306,19 +302,57 @@ export function LandingPage() {
       </SectionShell>
 
       <SectionShell id="about-us" className="bg-[var(--color-white)]">
-        <SectionIntro eyebrow="About us" title="A calmer way to prepare for the job search" centered>
-          CVBuddy is built to reduce the uncertainty around job applications by making CV review, profile preparation, and portfolio storytelling easier to understand.
-        </SectionIntro>
+        <div className="grid items-stretch gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+          <SectionIntro
+            className="mb-0 self-center"
+            eyebrow="About us"
+            title="The team building a clearer path from experience to opportunity"
+          >
+            CVBuddy is developed by a collaborative team focused on making CV review, career storytelling, and portfolio building easier for students and early-career applicants.
+          </SectionIntro>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {aboutCards.map((card) => (
-            <SoftCard key={card.title}>
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] text-[var(--color-teal)]">
-                {card.icon}
-              </div>
-              <h3 className="text-xl font-semibold text-[var(--color-navy)]">{card.title}</h3>
-              <p className="mt-3 text-base leading-relaxed text-[var(--color-text-secondary)]">{card.body}</p>
-            </SoftCard>
+          <Card className="overflow-hidden border-[var(--color-navy)] bg-[var(--color-navy)] p-6 shadow-[var(--shadow-lg)] sm:p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-cyan)]">Our shared direction</p>
+            <h3 className="mt-4 text-2xl font-semibold text-[var(--color-text-on-navy)]">
+              Practical tools, thoughtful guidance, and proof that feels personal.
+            </h3>
+            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-on-navy)]/70">
+              We combine product, design, engineering, and career-focused thinking to help applicants understand what to improve and how to present their work with confidence.
+            </p>
+          </Card>
+        </div>
+
+        <div className="mb-6 mt-12 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-teal)]">Meet the builders</p>
+            <h3 className="mt-2 text-2xl font-semibold text-[var(--color-navy)]">The CVBuddy development team</h3>
+          </div>
+          <p className="text-sm text-[var(--color-text-muted)]">Six team profiles ready to be updated.</p>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {teamMembers.map((member) => (
+            <article key={member.id}>
+              <Card className="h-full overflow-hidden shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--color-border-hover)] hover:shadow-[var(--shadow-md)]">
+                <div className="flex aspect-[16/10] items-center justify-center bg-[var(--color-bg-main)]">
+                  {member.image ? (
+                    <img className="h-full w-full object-cover" src={member.image} alt={`${member.name} profile`} />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[var(--radius-full)] border border-dashed border-[var(--color-border-hover)] bg-[var(--color-white)] text-[var(--color-text-muted)]">
+                      <UserIcon aria-hidden="true" className="h-9 w-9" />
+                      <span className="sr-only">Member photo placeholder</span>
+                    </div>
+                  )}
+                </div>
+                <div className="border-t border-[var(--color-border)] p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">
+                    Team member {String(member.id).padStart(2, '0')}
+                  </p>
+                  <h4 className="mt-2 text-lg font-semibold text-[var(--color-navy)]">{member.name}</h4>
+                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{member.role}</p>
+                </div>
+              </Card>
+            </article>
           ))}
         </div>
       </SectionShell>
@@ -363,172 +397,139 @@ export function LandingPage() {
       </SectionShell>
 
       <SectionShell id="ai-buddy" className="bg-[var(--color-white)]">
-        <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1fr]">
-          <Card className="order-2 p-5 shadow-[var(--shadow-lg)] lg:order-1">
-            <div className="mb-5 flex items-center gap-3 border-b border-[var(--color-border)] pb-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-full)] bg-[var(--color-teal)] text-[var(--color-text-on-teal)]">
-                <BriefcaseIcon className="h-5 w-5" />
-              </span>
-              <div>
-                <h3 className="text-base font-semibold text-[var(--color-navy)]">AI Buddy</h3>
-                <p className="text-sm font-medium text-[var(--color-teal)]">Personal CV feedback</p>
-              </div>
-            </div>
+        <SectionIntro centered eyebrow="AI Buddy" title="Three focused ways to understand and improve your CV">
+          Translate your content, see an overall readiness score, and review practical feedback in one guided CVBuddy workspace.
+        </SectionIntro>
 
-            <div className="space-y-4">
-              <div className="ml-auto max-w-[82%] rounded-[var(--radius-xl)] rounded-tr-[var(--radius-sm)] bg-[var(--color-teal)] px-4 py-3 text-sm leading-relaxed text-[var(--color-text-on-teal)]">
-                Where does my CV need the most improvement?
-              </div>
-              <div className="max-w-[92%] rounded-[var(--radius-xl)] rounded-tl-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-white)] px-4 py-4 shadow-[var(--shadow-sm)]">
-                <p className="text-sm leading-relaxed text-[var(--color-navy)]">
-                  Your experience section is strong. I would improve two areas next:
-                </p>
-                <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                  <li className="flex gap-2">
-                    <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-teal)]" />
-                    Add numbers to show impact in project outcomes.
-                  </li>
-                  <li className="flex gap-2">
-                    <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-teal)]" />
-                    Tune keywords for the role you want next.
-                  </li>
-                </ul>
-              </div>
-              <div className="flex items-center justify-between rounded-[var(--radius-full)] border border-[var(--color-border)] bg-[var(--color-gray-50)] px-4 py-3 text-sm text-[var(--color-text-muted)]">
-                Ask about your CV...
-                <ArrowRightIcon className="h-4 w-4 text-[var(--color-teal)]" />
-              </div>
-            </div>
-          </Card>
-
-          <div className="order-1 lg:order-2">
-            <SectionIntro eyebrow="AI Buddy" title="Personalized suggestions without the guesswork">
-              AI Buddy turns CV review into a guided conversation about phrasing, missing evidence, role-specific keywords, and next interview preparation steps.
-            </SectionIntro>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {aiCapabilities.map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-3 rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm font-semibold text-[var(--color-teal)]"
-                >
-                  <CheckIcon className="h-4 w-4 shrink-0" />
-                  {item}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {aiFeatures.map((feature) => (
+            <article key={feature.title}>
+              <Card className="group h-full p-6 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--color-teal)] hover:shadow-[var(--shadow-lg)]">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] text-[var(--color-teal)] transition-colors group-hover:bg-[var(--color-teal)] group-hover:text-[var(--color-text-on-teal)]">
+                    {feature.icon}
+                  </span>
+                  <span className="rounded-[var(--radius-full)] bg-[var(--color-bg-main)] px-3 py-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+                    AI feature
+                  </span>
                 </div>
-              ))}
-            </div>
-            <Link
-              to="/register"
-              className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-full)] bg-[var(--color-teal)] px-6 text-base font-semibold text-[var(--color-text-on-teal)] shadow-[var(--shadow-md)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-95"
-            >
-              Create account
-              <ArrowRightIcon className="h-5 w-5" />
-            </Link>
-          </div>
+                <p className="mt-6 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">{feature.label}</p>
+                <h3 className="mt-2 text-xl font-semibold text-[var(--color-navy)]">{feature.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">{feature.body}</p>
+              </Card>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <Link
+            to="/register"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-full)] bg-[var(--color-teal)] px-6 text-base font-semibold text-[var(--color-text-on-teal)] shadow-[var(--shadow-md)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-95"
+          >
+            Create account
+            <ArrowRightIcon className="h-5 w-5" />
+          </Link>
         </div>
       </SectionShell>
 
-      <SectionShell id="survey-form" className="bg-[var(--color-bg-soft)]">
-        <div className="mx-auto max-w-3xl">
-          <Card className="p-6 shadow-[var(--shadow-xl)] sm:p-8 lg:p-10">
-            <div className="mb-8 text-center">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-normal text-[var(--color-teal)]">Survey form</p>
-              <h2 className="text-3xl font-bold leading-tight tracking-normal text-[var(--color-navy)]">
-                Help shape CVBuddy
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-[var(--color-text-secondary)]">
-                Share what would make CVBuddy most useful for your next application.
-              </p>
+      <SectionShell id="portfolio" className="bg-[var(--color-bg-soft)]">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <SectionIntro
+              className="mb-8"
+              eyebrow="Portfolio"
+              title="Build Your Portfolio Anywhere"
+            >
+              Capture your work with the CVBuddy mobile app and publish it directly to your personal portfolio.
+            </SectionIntro>
+
+            <p className="mb-6 max-w-2xl text-base leading-relaxed text-[var(--color-text-secondary)]">
+              Showcase real projects, events, campaigns, and creative work in one professional space. Turn practical experience into visual proof that is easy to revisit and share.
+            </p>
+
+            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-1">
+              {portfolioSteps.map((step) => (
+                <Card key={step.title} className="flex h-full items-start gap-4 p-4 shadow-[var(--shadow-sm)]">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-white)] text-[var(--color-teal)] shadow-[var(--shadow-sm)]">
+                    {step.icon}
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">{step.label}</p>
+                    <h3 className="mt-1 text-lg font-semibold text-[var(--color-navy)]">{step.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{step.body}</p>
+                  </div>
+                </Card>
+              ))}
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
-              <div className="grid gap-5 md:grid-cols-2">
-                <Input
-                  label="Full name"
-                  placeholder="Alex Walker"
-                  autoComplete="name"
-                  state={errors.fullName ? 'error' : 'default'}
-                  error={errors.fullName?.message}
-                  {...register('fullName')}
-                />
-                <Input
-                  label="Email"
-                  type="email"
-                  placeholder="alex@example.com"
-                  autoComplete="email"
-                  state={errors.email ? 'error' : 'default'}
-                  error={errors.email?.message}
-                  {...register('email')}
-                />
+            <div className="mt-6">
+              <p className="text-sm font-semibold text-[var(--color-navy)]">Ideal for visual and creative fields</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {creativeIndustries.map((industry) => (
+                  <span
+                    key={industry}
+                    className="rounded-[var(--radius-full)] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text-secondary)]"
+                  >
+                    {industry}
+                  </span>
+                ))}
+                <span className="rounded-[var(--radius-full)] border border-dashed border-[var(--color-border-hover)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text-muted)]">
+                  Other creative fields
+                </span>
               </div>
+            </div>
+          </div>
 
-              <FormGroup label="Current role" error={errors.currentRole?.message}>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {roleOptions.map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-white)] p-3 text-sm text-[var(--color-navy)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-soft)] has-[:checked]:border-[var(--color-teal)] has-[:checked]:bg-[var(--color-bg-soft)]"
-                    >
-                      <input
-                        type="radio"
-                        value={option.value}
-                        className="h-4 w-4 accent-[var(--color-teal)]"
-                        {...register('currentRole')}
-                      />
-                      <span>{option.label}</span>
-                    </label>
-                  ))}
+          <div className="relative mx-auto w-full max-w-[440px]" aria-hidden="true">
+            <div className="rounded-[calc(var(--radius-xl)*2)] bg-[var(--color-navy)] p-3 shadow-[var(--shadow-xl)]">
+              <div className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-white)]">
+                <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-bg-soft)] text-[var(--color-teal)]">
+                      <CameraIcon className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--color-navy)]">CVBuddy Mobile</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">New portfolio moment</p>
+                    </div>
+                  </div>
+                  <span className="h-2.5 w-2.5 rounded-[var(--radius-full)] bg-[var(--color-success)]" />
                 </div>
-              </FormGroup>
 
-              <FormGroup label="Challenges when writing a CV" error={errors.difficulties?.message}>
-                <div className="space-y-3">
-                  {difficultyOptions.map((option) => (
-                    <label key={option.value} className="flex cursor-pointer items-start gap-3 text-sm text-[var(--color-text-secondary)]">
-                      <input
-                        type="checkbox"
-                        value={option.value}
-                        className="mt-0.5 h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-teal)]"
-                        {...register('difficulties')}
-                      />
-                      <span>{option.label}</span>
-                    </label>
-                  ))}
+                <div className="space-y-4 p-5">
+                  <div className="flex aspect-[4/3] flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--color-teal)] bg-[var(--color-bg-soft)] text-center">
+                    <CameraIcon className="h-10 w-10 text-[var(--color-teal)]" />
+                    <p className="mt-3 text-sm font-semibold text-[var(--color-navy)]">Campaign behind the scenes</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-secondary)]">Photo placeholder</p>
+                  </div>
+
+                  <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <UploadIcon className="h-4 w-4 text-[var(--color-teal)]" />
+                        <p className="text-sm font-semibold text-[var(--color-navy)]">Publishing to portfolio</p>
+                      </div>
+                      <span className="text-xs font-semibold text-[var(--color-success)]">Complete</span>
+                    </div>
+                    <div className="mt-3 h-2 overflow-hidden rounded-[var(--radius-full)] bg-[var(--color-gray-200)]">
+                      <div className="h-full w-full rounded-[var(--radius-full)] bg-[var(--color-teal)]" />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[var(--radius-lg)] bg-[var(--color-navy)] p-4">
+                    <div className="flex items-center gap-2 text-[var(--color-cyan)]">
+                      <EyeIcon className="h-4 w-4" />
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-cyan)]">Portfolio preview</p>
+                    </div>
+                    <p className="mt-3 text-base font-semibold text-[var(--color-text-on-navy)]">Spring campaign launch</p>
+                    <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-on-navy)]/70">
+                      A visual project moment ready to connect with skills, experience, and outcomes.
+                    </p>
+                  </div>
                 </div>
-              </FormGroup>
-
-              <Select
-                label="Would you use AI suggestions to improve your CV?"
-                placeholder="Choose one answer"
-                options={aiReadinessOptions}
-                state={errors.aiReadiness ? 'error' : 'default'}
-                error={errors.aiReadiness?.message}
-                {...register('aiReadiness')}
-              />
-
-              <FormGroup label="Additional feedback" error={errors.feedback?.message}>
-                <textarea
-                  className="min-h-32 w-full resize-y rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-2 text-base text-[var(--color-navy)] outline-none transition-all duration-200 placeholder:text-[var(--color-gray-400)] hover:border-[var(--color-border-hover)] focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
-                  placeholder="What would you want CVBuddy to help with next?"
-                  {...register('feedback')}
-                />
-              </FormGroup>
-
-              {surveyMessage && (
-                <p role="status" className="rounded-[var(--radius-lg)] bg-[var(--color-success-bg)] px-4 py-3 text-sm font-semibold text-[var(--color-success)]">
-                  {surveyMessage}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                className="h-12 w-full rounded-[var(--radius-lg)] text-base font-semibold"
-                iconRight={<ArrowRightIcon className="h-5 w-5" />}
-              >
-                Submit survey
-              </Button>
-            </form>
-          </Card>
+              </div>
+            </div>
+          </div>
         </div>
       </SectionShell>
     </>

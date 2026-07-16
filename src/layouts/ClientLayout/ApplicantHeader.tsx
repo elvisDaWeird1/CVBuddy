@@ -5,6 +5,7 @@ import { AuthAvatarMenu } from './AuthAvatarMenu'
 import { logout } from '@/modules/auth/authApi'
 import { clearAuthSession } from '@/modules/auth/authStorage'
 import { useAuthSession } from '@/modules/auth/useAuthSession'
+import { getLandingPath, LANDING_HOME_HASH } from '@/modules/pages/landingNavigation'
 
 const applicantNavItems = [
   { label: 'Profile', to: '/profile' },
@@ -47,8 +48,13 @@ export function ApplicantHeader() {
   return (
     <header className="sticky top-0 z-[200] w-full border-b border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]">
       <div className="mx-auto flex min-h-16 w-full max-w-[1200px] flex-wrap items-center justify-between gap-x-5 px-4 sm:px-6 lg:px-8">
-        <Link to="/profile" className="flex items-center gap-2 text-xl font-bold text-[var(--color-teal)]">
-          <img src="/logo.png" alt="CV Buddy" className="h-8 w-8" />
+        <Link
+          aria-label="Go to the top of the CVBuddy landing page"
+          className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] text-xl font-bold text-[var(--color-teal)]"
+          onClick={() => setIsMenuOpen(false)}
+          to={getLandingPath(LANDING_HOME_HASH)}
+        >
+          <img src="/logo.png" alt="" aria-hidden="true" className="h-8 w-8" />
           <span>CV Buddy</span>
         </Link>
 
@@ -64,10 +70,11 @@ export function ApplicantHeader() {
           <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--color-border)] text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)] sm:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)] sm:hidden"
             onClick={() => setIsMenuOpen((current) => !current)}
             aria-label="Toggle applicant navigation"
             aria-expanded={isMenuOpen}
+            aria-controls="applicant-mobile-navigation"
           >
             <span className="flex flex-col gap-1.5">
               <span className="h-0.5 w-5 rounded-full bg-current" />
@@ -80,7 +87,7 @@ export function ApplicantHeader() {
 
       {isMenuOpen && (
         <div className="border-t border-[var(--color-border)] bg-[var(--color-white)] px-4 py-4 shadow-[var(--shadow-md)] sm:hidden">
-          <nav className="mx-auto flex max-w-[1200px] flex-col gap-2" aria-label="Applicant mobile navigation">
+          <nav id="applicant-mobile-navigation" className="mx-auto flex max-w-[1200px] flex-col gap-2" aria-label="Applicant mobile navigation">
             {applicantNavItems.map((item) => (
               <NavLink
                 key={item.to}

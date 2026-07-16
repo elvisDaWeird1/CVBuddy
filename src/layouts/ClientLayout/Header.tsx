@@ -6,14 +6,12 @@ import { AuthAvatarMenu } from './AuthAvatarMenu'
 import { logout } from '@/modules/auth/authApi'
 import { clearAuthSession } from '@/modules/auth/authStorage'
 import { useAuthSession } from '@/modules/auth/useAuthSession'
-
-const landingNavItems = [
-  { label: 'Home', hash: '#home' },
-  { label: 'About Us', hash: '#about-us' },
-  { label: 'Project', hash: '#project' },
-  { label: 'AI Buddy', hash: '#ai-buddy' },
-  { label: 'Form / Survey', hash: '#survey-form' },
-] as const
+import {
+  getLandingPath,
+  LANDING_HOME_HASH,
+  landingNavItems,
+  scrollToLandingSection,
+} from '@/modules/pages/landingNavigation'
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -67,11 +65,6 @@ export function Header() {
     return () => observer.disconnect()
   }, [isLandingRoute])
 
-  const scrollToHash = (hash: string) => {
-    const targetId = hash.slice(1)
-    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
   const handleLandingNavClick = (event: MouseEvent<HTMLAnchorElement>, hash: string) => {
     event.preventDefault()
     setIsMenuOpen(false)
@@ -79,11 +72,28 @@ export function Header() {
 
     if (isLandingRoute) {
       navigate({ pathname: '/', hash }, { replace: location.hash === hash })
-      window.setTimeout(() => scrollToHash(hash), 0)
+      window.setTimeout(() => scrollToLandingSection(hash), 0)
       return
     }
 
     navigate({ pathname: '/', hash })
+  }
+
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    setIsMenuOpen(false)
+    setActiveSection(LANDING_HOME_HASH)
+
+    if (isLandingRoute) {
+      navigate(
+        { pathname: '/', hash: LANDING_HOME_HASH },
+        { replace: location.hash === LANDING_HOME_HASH },
+      )
+      window.setTimeout(() => scrollToLandingSection(LANDING_HOME_HASH), 0)
+      return
+    }
+
+    navigate(getLandingPath(LANDING_HOME_HASH))
   }
 
   const handleLogout = async () => {
@@ -104,16 +114,21 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-[200] w-full bg-[var(--color-white)] border-b border-[var(--color-border)]">
+    <header className="sticky top-0 z-[200] w-full border-b border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
-        <Link to="/home" className="flex items-center gap-2 shrink-0">
+        <Link
+          aria-label="Go to the top of the CVBuddy landing page"
+          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-[var(--radius-md)]"
+          onClick={handleLogoClick}
+          to={getLandingPath(LANDING_HOME_HASH)}
+        >
           <img
-            src="logo.png"
-            alt="CV Buddy"
+            src="/logo.png"
+            alt=""
+            aria-hidden="true"
             className="h-8 w-8"
           />
-          <span className="text-lg font-bold text-[var(--color-navy)] tracking-tight">
+          <span className="text-lg font-bold tracking-tight text-[var(--color-navy)]">
             CV Buddy
           </span>
         </Link>
@@ -125,15 +140,15 @@ export function Header() {
             return (
               <a
                 key={item.hash}
-                href={`/${item.hash}`}
+                href={getLandingPath(item.hash)}
                 onClick={(event) => handleLandingNavClick(event, item.hash)}
                 className={cn(
                   'border-b-2 py-1 text-sm font-semibold transition-colors duration-150',
                   isActive
-                    ? 'border-[#2563eb] text-[#2563eb]'
-                    : 'border-transparent text-[#526069] hover:text-[#0061a4]',
+                    ? 'border-[var(--color-teal)] text-[var(--color-teal)]'
+                    : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-teal)]',
                 )}
-              > 
+              >
                 {item.label}
               </a>
             )
@@ -145,9 +160,9 @@ export function Header() {
             <>
               <Link
                 to="/profile"
-                className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-teal)]"
+                className="inline-flex h-9 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-teal)]"
               >
-                Explore
+                Explore -&gt;
               </Link>
               <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
             </>
@@ -155,13 +170,13 @@ export function Header() {
             <>
               <Link
                 to="/login"
-                className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#bfc7d4] px-4 text-sm font-semibold text-[#191c1d] transition-colors hover:border-[#0061a4] hover:bg-[#f8f9fa] hover:text-[#0061a4]"
+                className="inline-flex h-9 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-teal)]"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-[10px] bg-[#2563eb] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0061a4] hover:text-white"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-teal)] px-4 text-sm font-semibold text-[var(--color-text-on-teal)] transition-all hover:brightness-95"
               >
                 Create account
                 <ArrowRightIcon className="h-4 w-4" />
@@ -172,10 +187,11 @@ export function Header() {
 
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#d8e3fb] text-[#0061a4] transition-colors hover:bg-[#e3f2fd] md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)] md:hidden"
           onClick={() => setIsMenuOpen((current) => !current)}
           aria-label="Toggle navigation menu"
           aria-expanded={isMenuOpen}
+          aria-controls="landing-mobile-navigation"
         >
           <span className="sr-only">Toggle navigation menu</span>
           <span className="flex flex-col gap-1.5">
@@ -187,19 +203,21 @@ export function Header() {
       </div>
 
       {isMenuOpen && (
-        <div className="border-t border-[#d8e3fb] bg-white px-4 py-4 shadow-[0_8px_30px_rgba(33,150,243,0.12)] md:hidden">
-          <nav className="mx-auto flex max-w-[1200px] flex-col gap-2" aria-label="Mobile landing sections">
+        <div className="border-t border-[var(--color-border)] bg-[var(--color-white)] px-4 py-4 shadow-[var(--shadow-lg)] md:hidden">
+          <nav id="landing-mobile-navigation" className="mx-auto flex max-w-[1200px] flex-col gap-2" aria-label="Mobile landing sections">
             {landingNavItems.map((item) => {
               const isActive = isLandingRoute && activeSection === item.hash
 
               return (
                 <a
                   key={item.hash}
-                  href={`/${item.hash}`}
+                  href={getLandingPath(item.hash)}
                   onClick={(event) => handleLandingNavClick(event, item.hash)}
                   className={cn(
-                    'rounded-[10px] px-3 py-2 text-sm font-semibold transition-colors',
-                    isActive ? 'bg-[#e3f2fd] text-[#0061a4]' : 'text-[#526069] hover:bg-[#f8f9fa] hover:text-[#0061a4]',
+                    'rounded-[var(--radius-lg)] px-3 py-2 text-sm font-semibold transition-colors',
+                    isActive
+                      ? 'bg-[var(--color-bg-soft)] text-[var(--color-teal)]'
+                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-teal)]',
                   )}
                 >
                   {item.label}
@@ -209,15 +227,15 @@ export function Header() {
             {isAuthenticated && (
               <Link
                 to="/profile"
-                className="rounded-[10px] px-3 py-2 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
+                className="rounded-[var(--radius-lg)] px-3 py-2 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Explore
+                Explore -&gt;
               </Link>
             )}
             <div className="mt-2">
               {isAuthenticated ? (
-                <div className="flex items-center justify-between rounded-[10px] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-3">
+                <div className="flex items-center justify-between rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-3">
                   <span className="text-sm font-medium text-[var(--color-text-secondary)]">Signed in</span>
                   <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
                 </div>
@@ -225,14 +243,14 @@ export function Header() {
                 <div className="grid grid-cols-2 gap-3">
                   <Link
                     to="/login"
-                    className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[#bfc7d4] text-sm font-semibold text-[#191c1d] hover:border-[#0061a4] hover:text-[#0061a4]"
+                    className="inline-flex h-10 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="inline-flex h-10 items-center justify-center rounded-[10px] bg-[#2563eb] text-sm font-semibold text-white hover:bg-[#0061a4] hover:text-white"
+                    className="inline-flex h-10 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-teal)] text-sm font-semibold text-[var(--color-text-on-teal)] hover:brightness-95"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Register
