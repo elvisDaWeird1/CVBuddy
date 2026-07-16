@@ -10,6 +10,7 @@ import RegisterApplicantPage from '@/modules/auth/RegisterApplicantPage'
 import ApplicantProfilePage from '@/modules/applicant/ApplicantProfilePage'
 import EditProfilePage from '@/modules/applicant/EditProfilePage'
 import CvPage from '@/modules/applicant/CvPage'
+import AiChatPage from '@/modules/ai/AiChatPage'
 import ChangePasswordPage from '@/modules/settings/ChangePasswordPage'
 import NotFound from '@/modules/admin/NotFound'
 import { ApplicantSectionPage } from '@/modules/applicant/ApplicantSectionPage'
@@ -63,6 +64,7 @@ const appRoutes = [
           { path: 'profile', element: <ApplicantProfilePage /> },
           { path: 'applicant/profile', element: <ApplicantProfilePage /> },
           { path: 'cv', element: <CvPage /> },
+          { path: 'ai-chat', element: <AiChatPage /> },
           { path: 'portfolio', element: <PortfolioPage /> },
           { path: 'portfolio/edit', element: <PortfolioFormPage /> },
           { path: 'portfolio/experiences', element: <ExperienceListPage /> },

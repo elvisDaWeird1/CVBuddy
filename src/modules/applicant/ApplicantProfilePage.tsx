@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import {
-  DownloadIcon,
+  // DownloadIcon,
   EditIcon,
-  FileTextIcon,
+  // FileTextIcon,
   LinkIcon,
   MailIcon,
   MapPinIcon,
@@ -261,11 +261,11 @@ export default function ApplicantProfilePage() {
             </div>
           </SurfaceCard> */}
 
-          <SurfaceCard>
+          {/* <SurfaceCard>
             <h2 className="mb-4 border-b border-[var(--color-border)] pb-3 text-2xl font-semibold tracking-normal text-[var(--color-text-primary)]">Documents</h2>
             <RouterLink
               to="/cv"
-              className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-hover)] px-4 py-3 transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-main)]"
+              className="flex iztems-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-hover)] px-4 py-3 transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-main)]"
             >
               <FileTextIcon className="h-6 w-6 shrink-0 text-[var(--color-error)]" />
               <span className="min-w-0 flex-1">
@@ -274,7 +274,7 @@ export default function ApplicantProfilePage() {
               </span>
               <DownloadIcon className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
             </RouterLink>
-          </SurfaceCard>
+          </SurfaceCard> */}
         </aside>
       </div>
     </>
