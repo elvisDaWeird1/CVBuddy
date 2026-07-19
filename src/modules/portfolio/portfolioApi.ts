@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { AxiosProgressEvent } from 'axios'
 import { httpClient } from '@/apis'
 import type {
   BackendApiResponse,
@@ -8,10 +9,13 @@ import type {
   MomentFilters,
   MomentInput,
   Portfolio,
+  PortfolioCollection,
+  PortfolioCollectionInput,
   PortfolioEvidence,
   PortfolioExperience,
   PortfolioMoment,
   PortfolioProfileInput,
+  PortfolioVisibility,
   PublicPortfolioResponse,
 } from './portfolioTypes'
 
@@ -23,8 +27,9 @@ interface EvidenceListResponse {
 
 export interface PortfolioApiError {
   status?: number
+  code?: string
   message: string
-  errors: Array<{ field?: string; message?: string }>
+  errors: Array<{ field?: string; code?: string; message?: string }>
 }
 
 function toApiError(error: unknown, fallback: string): PortfolioApiError {
@@ -35,6 +40,7 @@ function toApiError(error: unknown, fallback: string): PortfolioApiError {
     const response = responseContainer?.data ?? (axios.isAxiosError(error) ? error.response?.data as BackendApiResponse | undefined : undefined)
     return {
       status: responseContainer?.status ?? (axios.isAxiosError(error) ? error.response?.status : undefined),
+      code: response?.code,
       message: typeof response?.message === 'string' && response.message
         ? response.message
         : axios.isAxiosError(error) && error.message
@@ -76,10 +82,101 @@ export function getPortfolioErrorStatus(error: unknown) {
     : undefined
 }
 
+export function getPortfolioErrorCode(error: unknown) {
+  return typeof error === 'object' && error !== null && 'code' in error
+    ? (error as { code?: string }).code
+    : undefined
+}
+
 export function getPortfolioFieldError(error: unknown, field: string) {
   if (typeof error !== 'object' || error === null || !('errors' in error)) return undefined
   const errors = (error as PortfolioApiError).errors
   return errors.find((item) => item.field === field)?.message
+}
+
+export async function getPortfolioCollections() {
+  const response = await request<Wrapped<PortfolioCollection[], 'portfolios'>>(
+    () => httpClient.get('/portfolios'),
+    'Unable to load your portfolios.',
+  )
+  return response.data?.portfolios ?? []
+}
+
+export async function getPortfolioCollection(portfolioId: string) {
+  const response = await request<Wrapped<PortfolioCollection, 'portfolio'>>(
+    () => httpClient.get(`/portfolios/${encodeURIComponent(portfolioId)}`),
+    'Unable to load this portfolio.',
+  )
+  return response.data?.portfolio
+}
+
+export async function createPortfolioCollection(payload: PortfolioCollectionInput) {
+  const response = await request<Wrapped<PortfolioCollection, 'portfolio'>>(
+    () => httpClient.post('/portfolios', cleanPayload(payload)),
+    'Unable to create this portfolio.',
+  )
+  return response.data?.portfolio
+}
+
+export async function updatePortfolioCollection(portfolioId: string, payload: PortfolioCollectionInput) {
+  const response = await request<Wrapped<PortfolioCollection, 'portfolio'>>(
+    () => httpClient.patch(`/portfolios/${encodeURIComponent(portfolioId)}`, cleanPayload(payload)),
+    'Unable to update this portfolio.',
+  )
+  return response.data?.portfolio
+}
+
+export async function deletePortfolioCollection(portfolioId: string) {
+  await request<unknown>(
+    () => httpClient.delete(`/portfolios/${encodeURIComponent(portfolioId)}`),
+    'Unable to delete this portfolio.',
+  )
+}
+
+export async function updatePortfolioVisibility(portfolioId: string, visibility: PortfolioVisibility) {
+  const response = await request<Wrapped<PortfolioCollection, 'portfolio'>>(
+    () => httpClient.patch(`/portfolios/${encodeURIComponent(portfolioId)}/visibility`, { visibility }),
+    'Unable to update portfolio visibility.',
+  )
+  return response.data?.portfolio
+}
+
+export async function getPortfolioCollectionExperiences(portfolioId: string) {
+  const response = await request<Wrapped<PortfolioExperience[], 'experiences'>>(
+    () => httpClient.get(`/portfolios/${encodeURIComponent(portfolioId)}/experiences`),
+    'Unable to load portfolio experiences.',
+  )
+  return response.data?.experiences ?? []
+}
+
+export async function getPortfolioCollectionMoments(portfolioId: string) {
+  const response = await request<Wrapped<PortfolioMoment[], 'moments'>>(
+    () => httpClient.get(`/portfolios/${encodeURIComponent(portfolioId)}/moments`),
+    'Unable to load portfolio moments.',
+  )
+  return response.data?.moments ?? []
+}
+
+export async function createPortfolioCollectionMoment(
+  portfolioId: string,
+  file: File,
+  payload: { caption?: string; capturedAt?: string },
+  options: PortfolioUploadOptions = {},
+) {
+  const formData = new FormData()
+  formData.append('image', file)
+  if (payload.caption) formData.append('caption', payload.caption)
+  if (payload.capturedAt) formData.append('capturedAt', payload.capturedAt)
+
+  const response = await request<Wrapped<PortfolioMoment, 'moment'>>(
+    () => httpClient.post(
+      `/portfolios/${encodeURIComponent(portfolioId)}/moments`,
+      formData,
+      { onUploadProgress: options.onUploadProgress },
+    ),
+    'Unable to upload this portfolio moment.',
+  )
+  return response.data?.moment
 }
 
 export async function getPortfolio() {
@@ -124,7 +221,7 @@ export async function updateFeaturedExperiences(featuredExperienceIds: string[])
 
 export async function getPublicPortfolio(slug: string) {
   const response = await request<PublicPortfolioResponse>(
-    () => httpClient.get(`/portfolio/public/${encodeURIComponent(slug)}`),
+    () => httpClient.get(`/public/portfolios/${encodeURIComponent(slug)}`),
     'Unable to load this public portfolio.',
   )
   return response.data
@@ -192,7 +289,15 @@ export async function updateExperienceCover(id: string, file: File) {
   return response.data?.experience
 }
 
-export async function createMoment(fileList: File[], payload: MomentInput) {
+export interface PortfolioUploadOptions {
+  onUploadProgress?: (event: AxiosProgressEvent) => void
+}
+
+export async function createMoment(
+  fileList: File[],
+  payload: MomentInput,
+  options: PortfolioUploadOptions = {},
+) {
   const formData = new FormData()
   fileList.forEach((file) => formData.append('media', file))
   Object.entries({
@@ -203,7 +308,9 @@ export async function createMoment(fileList: File[], payload: MomentInput) {
   })
 
   const response = await request<Wrapped<PortfolioMoment, 'moment'>>(
-    () => httpClient.post('/portfolio/moments', formData),
+    () => httpClient.post('/portfolio/moments', formData, {
+      onUploadProgress: options.onUploadProgress,
+    }),
     'Unable to upload moment.',
   )
   return response.data?.moment

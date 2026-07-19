@@ -4,14 +4,13 @@ import {
   // DownloadIcon,
   EditIcon,
   // FileTextIcon,
-  LinkIcon,
   MailIcon,
   MapPinIcon,
   PhoneIcon,
   UserIcon,
 } from '@/components/ui/icons'
 import { cn } from '@/utils/cn'
-import { getApplicantProfile, type ApplicantProfilePayload } from './applicantApi'
+import { getApplicantProfile, type ApplicantProfile } from './applicantApi'
 import { getAuthApiErrorMessage } from '@/modules/auth/authApi'
 import { getStoredAccount } from '@/modules/auth/authStorage'
 import { Button } from '@/components/ui/button'
@@ -71,7 +70,7 @@ function getInitials(fullName: string) {
 export default function ApplicantProfilePage() {
   const navigate = useNavigate()
   const storedAccount = getStoredAccount()
-  const [profile, setProfile] = useState<ApplicantProfilePayload | null>(null)
+  const [profile, setProfile] = useState<ApplicantProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -131,8 +130,10 @@ export default function ApplicantProfilePage() {
             <div className="h-32 bg-[var(--color-bg-soft)]" />
             <div className="-mt-10 flex flex-col gap-5 px-6 pb-6 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-full border-4 border-[var(--color-white)] bg-[var(--color-bg-soft)] text-4xl font-bold text-[var(--color-teal)] shadow-[var(--shadow-md)]">
-                  {loading ? '…' : avatarLabel}
+                <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--color-white)] bg-[var(--color-bg-soft)] text-4xl font-bold text-[var(--color-teal)] shadow-[var(--shadow-md)]">
+                  {!loading && profile?.avatarUrl ? (
+                    <img className="h-full w-full object-cover" src={profile.avatarUrl} alt={`${fullName} avatar`} />
+                  ) : loading ? '…' : avatarLabel}
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold leading-tight tracking-normal text-[var(--color-text-primary)]">
@@ -244,12 +245,6 @@ export default function ApplicantProfilePage() {
                   <PhoneIcon className="h-4 w-4" />
                 </span>
                 <span>{loading ? 'Loading…' : profile?.phone || 'Not provided'}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-gray-100)] text-[var(--color-teal)]">
-                  <LinkIcon className="h-4 w-4" />
-                </span>
-                <span className="truncate">{loading ? 'Loading…' : profile?.avatarUrl || 'Not provided'}</span>
               </li>
             </ul>
           </SurfaceCard>

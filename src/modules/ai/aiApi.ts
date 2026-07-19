@@ -4,7 +4,7 @@ import { type BackendApiResponse } from '@/modules/auth/authApi'
 
 export interface AiRequestPayload {
   industrySlug: string
-  targetRole?: string
+  targetRole: string
 }
 
 export type AiResultType =
@@ -29,7 +29,35 @@ export interface AiResultRecord {
   inputText?: string
   resultText?: string
   result?: unknown
+  errorCode?: string | null
   errorMessage?: string | null
+  industrySlug?: string
+  targetRole?: string
+  workflowId?: string
+}
+
+export interface AiWorkflowStep {
+  status: AiResultStatus
+  resultId: string
+  errorCode: string | null
+  errorMessage: string | null
+  result: unknown
+}
+
+export interface AiTranslateAndScoreWorkflow {
+  id: string
+  status: AiResultStatus
+  cvId: string
+  industrySlug: string
+  targetRole: string
+  resultIds: {
+    translation: string
+    scoring: string
+  }
+  steps: {
+    translation: AiWorkflowStep
+    scoring: AiWorkflowStep
+  }
 }
 
 interface AiActionData {
@@ -40,16 +68,20 @@ interface AiResultsData {
   aiResults: AiResultRecord[]
 }
 
+interface AiWorkflowData {
+  workflow: AiTranslateAndScoreWorkflow
+}
+
 export interface AiResultsQuery {
   aiType?: AiResultType
   status?: AiResultStatus
 }
 
 function normalizePayload(payload: AiRequestPayload): AiRequestPayload {
-  const industrySlug = payload.industrySlug.trim()
-  const targetRole = payload.targetRole?.trim()
-
-  return targetRole ? { industrySlug, targetRole } : { industrySlug }
+  return {
+    industrySlug: payload.industrySlug.trim(),
+    targetRole: payload.targetRole.trim(),
+  }
 }
 
 async function runAiAction(path: string, body: unknown) {
@@ -72,6 +104,23 @@ export function getFeedback(cvId: string, payload: AiRequestPayload) {
 
 export function translateCv(cvId: string) {
   return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/translate-to-english`, {})
+}
+
+export async function translateAndScoreCv(cvId: string, payload: AiRequestPayload) {
+  const response = await httpClient.post<BackendApiResponse<AiWorkflowData>>(
+    `/ai/cvs/${encodeURIComponent(cvId)}/translate-and-score`,
+    normalizePayload(payload),
+  )
+
+  if (!response.data.success || !response.data.data?.workflow) {
+    throw new Error(response.data.message || 'The translate and score workflow was not returned.')
+  }
+
+  return response.data.data.workflow
+}
+
+export function reviewCv(cvId: string, payload: AiRequestPayload) {
+  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/review`, normalizePayload(payload))
 }
 
 export async function getAiResults(query: AiResultsQuery = {}) {

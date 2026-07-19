@@ -55,6 +55,13 @@ export function getStoredAccount(): AuthAccount | null {
   }
 }
 
+export function updateStoredAccount(patch: Partial<AuthAccount>) {
+  const current = getStoredAccount()
+  if (!current) return
+  window.localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify({ ...current, ...patch }))
+  notifyAuthSessionChange()
+}
+
 export function clearAuthSession() {
   window.localStorage.removeItem(AUTH_TOKEN_KEY)
   window.localStorage.removeItem(AUTH_ACCOUNT_KEY)

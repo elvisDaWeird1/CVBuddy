@@ -36,6 +36,7 @@ export function AuthAvatarMenu({
   menuClassName,
 }: AuthAvatarMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState('')
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -61,13 +62,15 @@ export function AuthAvatarMenu({
   }, [])
 
   const initials = useMemo(() => getInitials(account), [account])
+  const avatarUrl = typeof account?.avatarUrl === 'string' ? account.avatarUrl.trim() : ''
+  const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl)
 
   return (
     <div ref={containerRef} className={cn('relative', className)}>
       <button
         type="button"
         className={cn(
-          'inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--color-border-hover)] bg-[var(--color-bg-soft)] text-sm font-bold text-[var(--color-teal)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-white)]',
+          'inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[var(--color-border-hover)] bg-[var(--color-bg-soft)] text-sm font-bold text-[var(--color-teal)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-white)]',
           buttonClassName,
         )}
         onClick={() => setIsOpen((current) => !current)}
@@ -75,7 +78,14 @@ export function AuthAvatarMenu({
         aria-expanded={isOpen}
         aria-label="Open account menu"
       >
-        {initials || <UserIcon className="h-5 w-5" />}
+        {showAvatar ? (
+          <img
+            alt=""
+            className="h-full w-full object-cover"
+            onError={() => setFailedAvatarUrl(avatarUrl)}
+            src={avatarUrl}
+          />
+        ) : initials || <UserIcon className="h-5 w-5" />}
       </button>
 
       {isOpen && (

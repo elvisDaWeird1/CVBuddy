@@ -13,6 +13,8 @@ export interface AiHistoryItemViewModel {
   status: AiHistoryStatus
   statusLabel: string
   score: number | null
+  industrySlug?: string
+  targetRole?: string
   createdAt: Date | null
   createdAtLabel: string
   errorMessage?: string
@@ -106,7 +108,7 @@ export function adaptAiHistory(records: AiResultRecord[], cvs: CvDocument[]): Ai
     const cvId = readCvId(record)
     const cv = cvId ? cvs.find((item) => item.id === cvId) : undefined
     const errorMessage = status === 'failed'
-      ? 'This AI task could not be completed.'
+      ? readString(record.errorMessage) || 'This AI task could not be completed.'
       : undefined
     const createdAt = normalizeDate(record.createdAt)
 
@@ -119,6 +121,8 @@ export function adaptAiHistory(records: AiResultRecord[], cvs: CvDocument[]): Ai
       status,
       statusLabel: STATUS_LABELS[status],
       score: normalizeScore(record.score),
+      industrySlug: readString(record.industrySlug),
+      targetRole: readString(record.targetRole),
       createdAt,
       createdAtLabel: formatDate(createdAt),
       errorMessage,

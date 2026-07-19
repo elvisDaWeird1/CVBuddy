@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormGroup } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { UploadProgress } from '@/components/ui/upload-progress'
 import { ArrowRightIcon, CameraIcon, TrashIcon, UploadIcon, XIcon } from '@/components/ui/icons'
 import { assignMoment, createMoment, deleteMoment, getExperiences, getMoment, getMoments, getPortfolioErrorMessage, unassignMoment, updateMoment } from './portfolioApi'
 import { EXPERIENCE_VISIBILITIES, MOMENT_STATUSES, type ExperienceVisibility, type PortfolioExperience, type PortfolioMoment } from './portfolioTypes'
 import { ConfirmButton, EmptyState, LoadingState, MediaPreview, Notice, PageHeading, PageShell, StatusBadge, TagList } from './PortfolioShared'
 import { formatDate } from './portfolioFormat'
+import { compressImageFile, validateImageFile } from '@/utils/imageUpload'
+import { cn } from '@/utils/cn'
 
 const validMediaTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4']
 const mediaAccept = 'image/jpeg,image/png,image/webp,video/mp4'
@@ -20,8 +23,16 @@ function validateFiles(files: File[]) {
   if (files.length > 5) return 'A moment can contain at most 5 media files.'
   const invalid = files.find((file) => !validMediaTypes.includes(file.type))
   if (invalid) return `${invalid.name} is not a supported media type.`
-  const tooLarge = files.find((file) => file.size > 10 * 1024 * 1024)
-  if (tooLarge) return `${tooLarge.name} is larger than the 10 MB upload limit.`
+
+  for (const file of files) {
+    if (file.type.startsWith('image/')) {
+      const imageError = validateImageFile(file, { maxBytes: 10 * 1024 * 1024 })
+      if (imageError) return `${file.name}: ${imageError}`
+    } else if (file.size <= 0 || file.size > 10 * 1024 * 1024) {
+      return `${file.name} must be a non-empty video within the 10 MB upload limit.`
+    }
+  }
+
   return undefined
 }
 
@@ -42,7 +53,9 @@ export function MomentCreatePage() {
   const [status, setStatus] = useState<'draft' | 'ready'>('draft')
   const [experiences, setExperiences] = useState<PortfolioExperience[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [preparingFiles, setPreparingFiles] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -52,11 +65,34 @@ export function MomentCreatePage() {
   const previews = useMemo(() => files.map((file) => ({ file, url: URL.createObjectURL(file) })), [files])
   useEffect(() => () => previews.forEach(({ url }) => URL.revokeObjectURL(url)), [previews])
 
-  const chooseFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const next = Array.from(event.target.files ?? [])
+  const prepareFiles = async (next: File[]) => {
+    if (uploading || preparingFiles) return
     const validationError = validateFiles(next)
     setErrorMessage(validationError ?? null)
-    if (!validationError) setFiles(next)
+    if (validationError) return
+
+    setPreparingFiles(true)
+    setUploadProgress(0)
+
+    try {
+      const prepared: File[] = []
+      for (const file of next) {
+        prepared.push(file.type.startsWith('image/')
+          ? await compressImageFile(file, { maxDimension: 1600, quality: 0.82 })
+          : file)
+      }
+      setFiles(prepared)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to prepare these files for upload.')
+    } finally {
+      setPreparingFiles(false)
+    }
+  }
+
+  const chooseFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const next = Array.from(event.target.files ?? [])
+    event.target.value = ''
+    void prepareFiles(next)
   }
 
   const removeFile = (index: number) => {
@@ -69,11 +105,161 @@ export function MomentCreatePage() {
     const fileError = validateFiles(files)
     if (fileError) { setErrorMessage(fileError); return }
     if (new Date(capturedAt).getTime() > Date.now() + 5 * 60 * 1000) { setErrorMessage('Captured date cannot be more than 5 minutes in the future.'); return }
-    setUploading(true); setErrorMessage(null)
-    try { const moment = await createMoment(files, { caption: caption.trim() || undefined, capturedAt: new Date(capturedAt).toISOString(), location: location.trim() || undefined, skills: skills.split(',').map((item) => item.trim()).filter(Boolean), experienceId: experienceId || undefined, visibility, status }); if (moment) navigate(`/portfolio/moments/${moment.id}`, { replace: true }) } catch (error) { setErrorMessage(getPortfolioErrorMessage(error, 'Unable to upload moment.')) } finally { setUploading(false) }
+    if (uploading || preparingFiles) return
+    setUploading(true); setUploadProgress(0); setErrorMessage(null)
+    try {
+      const moment = await createMoment(
+        files,
+        { caption: caption.trim() || undefined, capturedAt: new Date(capturedAt).toISOString(), location: location.trim() || undefined, skills: skills.split(',').map((item) => item.trim()).filter(Boolean), experienceId: experienceId || undefined, visibility, status },
+        {
+          onUploadProgress: (progressEvent) => {
+            const value = progressEvent.total
+              ? (progressEvent.loaded / progressEvent.total) * 100
+              : (progressEvent.progress ?? 0) * 100
+            setUploadProgress(Math.min(99, Math.round(value)))
+          },
+        },
+      )
+      setUploadProgress(100)
+      if (moment) navigate(`/portfolio/moments/${moment.id}`, { replace: true })
+    } catch (error) {
+      setErrorMessage(getPortfolioErrorMessage(error, 'Unable to upload moment.'))
+    } finally {
+      setUploading(false)
+    }
   }
 
-  return <PageShell className="max-w-[1000px]"><PageHeading eyebrow="Capture proof quickly" title="New moment" description="Use your phone camera or choose media from your device. Camera permission is optional; the file picker is always available." actions={<Link to="/portfolio/moments" className="text-sm font-semibold text-[var(--color-teal)]">Back to moments</Link>} />{errorMessage && <div className="mb-6"><Notice>{errorMessage}</Notice></div>}<form className="grid gap-6 lg:grid-cols-[1.1fr_1fr]" onSubmit={(event) => void submit(event)}><div className="space-y-6"><Card><CardHeader><CardTitle>Media</CardTitle></CardHeader><CardContent className="space-y-4"><div className="rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-6 text-center"><CameraIcon className="mx-auto h-10 w-10 text-[var(--color-teal)]" /><p className="mt-3 font-semibold text-[var(--color-text-primary)]">Capture or choose media</p><p className="mt-1 text-sm text-[var(--color-text-secondary)]">JPG, PNG, WEBP or MP4 · up to 5 files · 10 MB each</p><div className="mt-4 flex flex-wrap justify-center gap-3"><label className="inline-flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-teal)] px-4 py-2 text-sm font-semibold text-white hover:brightness-95"><CameraIcon className="h-4 w-4" />Use camera<input className="sr-only" type="file" accept={mediaAccept} capture="environment" onChange={chooseFiles} /></label><label className="inline-flex cursor-pointer items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-teal)] bg-[var(--color-white)] px-4 py-2 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]"><UploadIcon className="h-4 w-4" />Choose files<input className="sr-only" type="file" accept={mediaAccept} multiple onChange={chooseFiles} /></label></div></div>{files.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{previews.map(({ file, url }) => <div key={`${file.name}-${file.lastModified}`} className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)]"><div className="relative aspect-square bg-[var(--color-gray-100)]">{file.type.startsWith('video/') ? <video className="h-full w-full object-cover" src={url} controls /> : <img className="h-full w-full object-cover" src={url} alt={file.name} />}</div><div className="p-2"><p className="truncate text-xs font-medium">{file.name}</p><p className="mt-1 text-[11px] text-[var(--color-text-muted)]">{file.type} · {formatBytes(file.size)}</p><button type="button" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-error)]" onClick={() => removeFile(previews.findIndex((preview) => preview.file === file))} aria-label={`Remove ${file.name}`}><XIcon className="h-3.5 w-3.5" />Remove</button></div></div>)}</div> : <p className="text-center text-sm text-[var(--color-text-muted)]">Your media preview will appear here.</p>}</CardContent></Card></div><div className="space-y-6"><Card><CardHeader><CardTitle>Moment details</CardTitle></CardHeader><CardContent className="space-y-4"><FormGroup label="Caption" helperText="Up to 500 characters."><textarea className="min-h-24 w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] px-3 py-2 text-sm outline-none focus:border-[var(--color-teal)]" maxLength={500} value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="What happened here?" /></FormGroup><Input type="datetime-local" label="Captured at" value={capturedAt} onChange={(event) => setCapturedAt(event.target.value)} /><Input label="Location" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Optional" /><Input label="Skills" value={skills} onChange={(event) => setSkills(event.target.value)} placeholder="Optional, comma separated" /><Select label="Experience" value={experienceId} onChange={(event) => setExperienceId(event.target.value)} placeholder="Leave unassigned" options={experiences.filter((item) => item.status !== 'archived').map((item) => ({ value: item.id, label: item.title }))} /><div className="grid gap-4 sm:grid-cols-2"><Select label="Visibility" value={visibility} onChange={(event) => setVisibility(event.target.value as ExperienceVisibility)} options={visibilityOptions} /><Select label="Status" value={status} onChange={(event) => setStatus(event.target.value as 'draft' | 'ready')} options={MOMENT_STATUSES.map((value) => ({ value, label: value }))} /></div></CardContent></Card><Card><CardHeader><CardTitle>Ready to upload?</CardTitle></CardHeader><CardContent><p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">The media will be sent to CVBuddy through the backend. It is not uploaded directly to Cloudinary from your browser.</p><Button type="submit" className="mt-4 w-full" loading={uploading} iconLeft={<UploadIcon className="h-4 w-4" />}>Upload moment</Button></CardContent></Card></div></form></PageShell>
+  return (
+    <PageShell className="max-w-[1000px]">
+      <PageHeading
+        eyebrow="Capture proof quickly"
+        title="New moment"
+        description="Choose media, review the prepared files, then confirm the upload. Images are resized in your browser before they are sent."
+        actions={<Link to="/portfolio/moments" className="text-sm font-semibold text-[var(--color-teal)]">Back to moments</Link>}
+      />
+      {errorMessage && <div className="mb-6"><Notice>{errorMessage}</Notice></div>}
+
+      <form className="grid gap-6 lg:grid-cols-[1.1fr_1fr]" onSubmit={(event) => void submit(event)}>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Media</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div
+                aria-busy={preparingFiles}
+                className="rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-6 text-center"
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  if (!uploading && !preparingFiles) void prepareFiles(Array.from(event.dataTransfer.files))
+                }}
+              >
+                <CameraIcon className="mx-auto h-10 w-10 text-[var(--color-teal)]" />
+                <p className="mt-3 font-semibold text-[var(--color-text-primary)]">
+                  {preparingFiles ? 'Preparing images…' : 'Capture, choose, or drop media'}
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">JPG, PNG, WEBP or MP4 · up to 5 files · 10 MB each</p>
+                <div className="mt-4 flex flex-wrap justify-center gap-3">
+                  <label className={cn('inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-teal)] px-4 py-2 text-sm font-semibold text-white hover:brightness-95', (uploading || preparingFiles) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')}>
+                    <CameraIcon className="h-4 w-4" />
+                    Use camera
+                    <input className="sr-only" type="file" accept={mediaAccept} capture="environment" disabled={uploading || preparingFiles} onChange={chooseFiles} />
+                  </label>
+                  <label className={cn('inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-teal)] bg-[var(--color-white)] px-4 py-2 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]', (uploading || preparingFiles) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')}>
+                    <UploadIcon className="h-4 w-4" />
+                    Choose files
+                    <input className="sr-only" type="file" accept={mediaAccept} multiple disabled={uploading || preparingFiles} onChange={chooseFiles} />
+                  </label>
+                </div>
+              </div>
+
+              {preparingFiles ? (
+                <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm text-[var(--color-teal)]" role="status" aria-live="polite">
+                  Resizing and compressing images. You can keep editing the rest of the page.
+                </div>
+              ) : null}
+
+              {files.length ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {previews.map(({ file, url }, index) => (
+                      <div key={`${file.name}-${file.lastModified}-${index}`} className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)]">
+                        <div className="relative aspect-square bg-[var(--color-gray-100)]">
+                          {file.type.startsWith('video/')
+                            ? <video className="h-full w-full object-cover" src={url} controls />
+                            : <img className="h-full w-full object-cover" src={url} alt={file.name} />}
+                        </div>
+                        <div className="p-2">
+                          <p className="truncate text-xs font-medium">{file.name}</p>
+                          <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">{file.type} · {formatBytes(file.size)}</p>
+                          <button
+                            type="button"
+                            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-error)] disabled:opacity-50"
+                            disabled={uploading || preparingFiles}
+                            onClick={() => removeFile(index)}
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            <XIcon className="h-3.5 w-3.5" />Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    className="text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-error)] disabled:opacity-50"
+                    disabled={uploading || preparingFiles}
+                    onClick={() => setFiles([])}
+                    type="button"
+                  >
+                    Clear selection
+                  </button>
+                </>
+              ) : (
+                <p className="text-center text-sm text-[var(--color-text-muted)]">Your media preview will appear here before upload.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Moment details</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <FormGroup label="Caption" helperText="Up to 500 characters.">
+                <textarea className="min-h-24 w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] px-3 py-2 text-sm outline-none focus:border-[var(--color-teal)]" maxLength={500} value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="What happened here?" />
+              </FormGroup>
+              <Input type="datetime-local" label="Captured at" value={capturedAt} onChange={(event) => setCapturedAt(event.target.value)} />
+              <Input label="Location" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Optional" />
+              <Input label="Skills" value={skills} onChange={(event) => setSkills(event.target.value)} placeholder="Optional, comma separated" />
+              <Select label="Experience" value={experienceId} onChange={(event) => setExperienceId(event.target.value)} placeholder="Leave unassigned" options={experiences.filter((item) => item.status !== 'archived').map((item) => ({ value: item.id, label: item.title }))} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Select label="Visibility" value={visibility} onChange={(event) => setVisibility(event.target.value as ExperienceVisibility)} options={visibilityOptions} />
+                <Select label="Status" value={status} onChange={(event) => setStatus(event.target.value as 'draft' | 'ready')} options={MOMENT_STATUSES.map((value) => ({ value, label: value }))} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Confirm upload</CardTitle></CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                Files are sent through the CVBuddy backend. A failed request keeps your preview and details so you can retry.
+              </p>
+              {uploading ? <UploadProgress className="mt-4" label="Uploading moment" value={uploadProgress} /> : null}
+              <Button
+                type="submit"
+                className="mt-4 w-full"
+                disabled={!files.length || preparingFiles || uploading}
+                loading={uploading}
+                iconLeft={<UploadIcon className="h-4 w-4" />}
+              >
+                Upload moment
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </form>
+    </PageShell>
+  )
 }
 
 export function MomentListPage() {
