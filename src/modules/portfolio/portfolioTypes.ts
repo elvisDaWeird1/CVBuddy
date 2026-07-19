@@ -17,6 +17,7 @@ export const EXPERIENCE_VISIBILITIES = ['private', 'portfolio'] as const
 export const MOMENT_STATUSES = ['draft', 'ready'] as const
 export const EVIDENCE_TYPES = ['file', 'certificate', 'github', 'website', 'article', 'video', 'other'] as const
 export const VERIFICATION_STATUSES = ['unverified', 'document-provided'] as const
+export const PORTFOLIO_VISIBILITIES = ['PRIVATE', 'PUBLIC'] as const
 
 export type ExperienceType = (typeof EXPERIENCE_TYPES)[number]
 export type ExperienceStatus = (typeof EXPERIENCE_STATUSES)[number]
@@ -24,6 +25,27 @@ export type ExperienceVisibility = (typeof EXPERIENCE_VISIBILITIES)[number]
 export type MomentStatus = (typeof MOMENT_STATUSES)[number]
 export type EvidenceType = (typeof EVIDENCE_TYPES)[number]
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number]
+export type PortfolioVisibility = (typeof PORTFOLIO_VISIBILITIES)[number]
+
+export interface PortfolioCollection {
+  id: string
+  title: string
+  description: string
+  coverImageUrl: string
+  visibility: PortfolioVisibility
+  slug: string
+  publicUrl: string
+  publishedAt: string | null
+  momentCount: number
+  experienceCount: number
+  createdAt?: string
+  updatedAt: string
+}
+
+export interface PortfolioCollectionInput {
+  title: string
+  description?: string
+}
 
 export interface PaginationMeta {
   page: number
@@ -96,6 +118,8 @@ export interface PortfolioMoment {
   createdAt: string
   updatedAt: string
   applicantId?: string
+  portfolioId?: string
+  imageUrl?: string
 }
 
 export interface PortfolioEvidence {
@@ -115,12 +139,18 @@ export interface PortfolioEvidence {
 
 export interface PublicPortfolio {
   id: string
-  headline: string
-  about: string
-  desiredRole: string
+  title?: string
+  description?: string
+  coverImageUrl?: string
+  visibility?: PortfolioVisibility
+  publicUrl?: string
+  publishedAt?: string | null
+  headline?: string
+  about?: string
+  desiredRole?: string
   slug: string
-  skills: string[]
-  socialLinks: Record<string, string>
+  skills?: string[]
+  socialLinks?: Record<string, string>
   createdAt: string
   updatedAt: string
 }
@@ -146,11 +176,11 @@ export interface MomentsByExperience {
 
 export interface PublicPortfolioResponse {
   portfolio: PublicPortfolio
-  featuredExperiences: PublicPortfolioExperience[]
+  featuredExperiences?: PublicPortfolioExperience[]
   experiences: PublicPortfolioExperience[]
   moments: PublicPortfolioMoment[]
-  momentsByExperience: Array<{ experienceId: string | null; moments: PublicPortfolioMoment[] }>
-  evidence: PublicPortfolioEvidence[]
+  momentsByExperience?: Array<{ experienceId: string | null; moments: PublicPortfolioMoment[] }>
+  evidence?: PublicPortfolioEvidence[]
 }
 
 export interface PortfolioProfileInput {
@@ -214,12 +244,14 @@ export interface EvidenceInput {
 
 export interface ApiErrorItem {
   field?: string
+  code?: string
   message?: string
 }
 
 export interface BackendApiResponse<TData = unknown> {
   success: boolean
   message: string
+  code?: string
   data?: TData
   errors?: ApiErrorItem[]
   pagination?: PaginationMeta

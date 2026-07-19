@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileTextIcon } from '@/components/ui/icons'
+import { Select } from '@/components/ui/select'
 import { type AiHistoryItemViewModel } from '@/modules/ai/aiHistoryAdapter'
 
 interface AiResultHistoryProps {
@@ -36,6 +38,16 @@ export function AiResultHistory({
   onRetry,
   onSelect,
 }: AiResultHistoryProps) {
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const filteredItems = useMemo(
+    () => items.filter((item) => (
+      (typeFilter === 'all' || item.type === typeFilter)
+      && (statusFilter === 'all' || item.status === statusFilter)
+    )),
+    [items, statusFilter, typeFilter],
+  )
+
   return (
     <Card className="overflow-hidden shadow-[var(--shadow-sm)]">
       <CardHeader>
@@ -46,6 +58,32 @@ export function AiResultHistory({
         <CardDescription>Open a saved score, feedback result, or English translation.</CardDescription>
       </CardHeader>
       <CardContent>
+        {!loading && !error && items.length > 0 ? (
+          <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <Select
+              aria-label="Filter AI results by type"
+              onChange={(event) => setTypeFilter(event.target.value)}
+              options={[
+                { value: 'all', label: 'All types' },
+                { value: 'translation', label: 'Translation' },
+                { value: 'score', label: 'Scoring' },
+                { value: 'feedback', label: 'Feedback' },
+              ]}
+              value={typeFilter}
+            />
+            <Select
+              aria-label="Filter AI results by status"
+              onChange={(event) => setStatusFilter(event.target.value)}
+              options={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'processing', label: 'Pending' },
+                { value: 'failed', label: 'Failed' },
+              ]}
+              value={statusFilter}
+            />
+          </div>
+        ) : null}
         {loading ? (
           <div className="space-y-3" role="status" aria-live="polite">
             <span className="sr-only">Loading recent AI results...</span>
@@ -67,9 +105,14 @@ export function AiResultHistory({
               Select a CV and start an analysis to build your history.
             </p>
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-hover)] bg-[var(--color-bg-main)] px-4 py-6 text-center">
+            <p className="text-sm font-semibold text-[var(--color-text-primary)]">No results match these filters.</p>
+            <button className="mt-2 text-sm font-semibold text-[var(--color-teal)] hover:underline" onClick={() => { setTypeFilter('all'); setStatusFilter('all') }} type="button">Clear filters</button>
+          </div>
         ) : (
           <div className="space-y-3" role="list" aria-label="Recent AI results">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <button
                 aria-pressed={selectedId === item.id}
                 className={selectedId === item.id
@@ -92,6 +135,11 @@ export function AiResultHistory({
                   <span>{item.createdAtLabel}</span>
                   {item.type === 'score' && item.score !== null ? <span className="font-semibold text-[var(--color-teal)]">Score {item.score}/100</span> : null}
                 </span>
+                {item.targetRole || item.industrySlug ? (
+                  <span className="mt-2 block truncate text-xs text-[var(--color-text-secondary)]">
+                    {[item.targetRole, item.industrySlug?.replace(/_/g, ' ')].filter(Boolean).join(' · ')}
+                  </span>
+                ) : null}
                 {item.status === 'failed' && item.errorMessage ? (
                   <span className="mt-2 block text-xs leading-relaxed text-[var(--color-error)]">{item.errorMessage}</span>
                 ) : null}

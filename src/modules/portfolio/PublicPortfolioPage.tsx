@@ -1,25 +1,126 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowRightIcon, LinkIcon, MapPinIcon } from '@/components/ui/icons'
+import { ArrowRightIcon, CameraIcon, MapPinIcon } from '@/components/ui/icons'
 import { getPublicPortfolio, getPortfolioErrorMessage, getPortfolioErrorStatus } from './portfolioApi'
 import type { PublicPortfolioResponse } from './portfolioTypes'
-import { EmptyState, LoadingState, MediaPreview, PageShell, TagList } from './PortfolioShared'
+import { EmptyState, LoadingState, PageShell, TagList } from './PortfolioShared'
 import { formatDate } from './portfolioFormat'
 
 export default function PublicPortfolioPage() {
   const { slug } = useParams()
   const [data, setData] = useState<PublicPortfolioResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  useEffect(() => { let active = true; const timer = window.setTimeout(() => { setLoading(true); setData(null); setErrorMessage(null); async function load() { if (!slug) return; try { const result = await getPublicPortfolio(slug); if (active && result) setData(result) } catch (error) { if (active) setErrorMessage(getPortfolioErrorStatus(error) === 404 ? 'This portfolio is not public or no longer exists.' : getPortfolioErrorMessage(error, 'Unable to load this portfolio.')) } finally { if (active) setLoading(false) } } void load() }, 0); return () => { active = false; window.clearTimeout(timer) } }, [slug])
-  if (loading) return <main className="min-h-screen bg-[var(--color-bg-main)] py-12"><PageShell><LoadingState label="Loading public portfolio…" /></PageShell></main>
-  if (!data) return <main className="min-h-screen bg-[var(--color-bg-main)] py-12"><PageShell><EmptyState title="Portfolio unavailable" description={errorMessage ?? 'This portfolio could not be found.'} action={<Link to="/"><span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-teal)]">Back to CVBuddy <ArrowRightIcon className="h-4 w-4" /></span></Link>} /></PageShell></main>
-  const { portfolio, featuredExperiences, experiences, moments, evidence } = data
-  return <main className="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-primary)]"><header className="border-b border-[var(--color-border)] bg-[var(--color-white)]"><div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8"><Link to="/" className="text-lg font-bold text-[var(--color-teal)]">CV Buddy</Link><span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">Professional portfolio</span></div></header><PageShell>
-    <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-navy)] text-white shadow-[var(--shadow-lg)]"><div className="grid gap-8 p-7 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-end"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-cyan)]">{portfolio.desiredRole || 'Open to meaningful work'}</p><h1 className="mt-4 max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl">{portfolio.headline || 'A thoughtful professional portfolio'}</h1><p className="mt-5 max-w-2xl whitespace-pre-line text-base leading-relaxed text-white/75">{portfolio.about || 'A collection of work, learning, and evidence.'}</p></div><div className="rounded-[var(--radius-lg)] border border-white/15 bg-white/5 p-5 text-sm text-white/80"><p className="text-xs uppercase tracking-[0.14em] text-white/55">Portfolio</p><p className="mt-2 font-semibold text-white">/{portfolio.slug}</p><p className="mt-2 text-xs text-white/55">Published profile</p></div></div></section>
-    <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_300px]"><div className="space-y-8"><section><div className="mb-4"><h2 className="text-2xl font-bold">Featured work</h2><p className="mt-1 text-sm text-[var(--color-text-secondary)]">Selected experiences from the journey.</p></div>{featuredExperiences.length ? <div className="grid gap-5 md:grid-cols-2">{featuredExperiences.map((experience) => <article key={experience.id} className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]">{experience.coverAsset && <img className="h-44 w-full object-cover" src={experience.coverAsset.secureUrl} alt={`${experience.title} cover`} />}<div className="space-y-3 p-5"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">{experience.type}</p><h3 className="text-xl font-semibold">{experience.title}</h3><p className="text-sm text-[var(--color-text-secondary)]">{experience.role || experience.organization || 'Professional experience'}</p><p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">{experience.description || 'A chapter in the professional journey.'}</p><TagList items={experience.skills} /></div></article>)}</div> : <EmptyState title="Featured work is coming together" description="This portfolio has not selected featured experiences yet." />}</section>
-      <section><div className="mb-4"><h2 className="text-2xl font-bold">Career journey</h2><p className="mt-1 text-sm text-[var(--color-text-secondary)]">Published experiences and the context around them.</p></div>{experiences.length ? <div className="space-y-4">{experiences.map((experience) => <article key={experience.id} className="relative rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] p-5 shadow-[var(--shadow-sm)]"><div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><h3 className="text-lg font-semibold">{experience.title}</h3><p className="mt-1 text-sm text-[var(--color-text-secondary)]">{experience.role || experience.organization || 'Professional experience'}</p></div><span className="text-sm text-[var(--color-text-secondary)]">{experience.startDate ? formatDate(experience.startDate) : 'Date not provided'} — {experience.isCurrent ? 'Present' : experience.endDate ? formatDate(experience.endDate) : 'Date not provided'}</span></div>{experience.location && <p className="mt-3 flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)]"><MapPinIcon className="h-4 w-4 text-[var(--color-teal)]" />{experience.location}</p>}{experience.description && <p className="mt-3 leading-relaxed text-[var(--color-text-secondary)]">{experience.description}</p>}<TagList items={experience.skills} /></article>)}</div> : <EmptyState title="No published experiences" description="There are no public experience chapters to show yet." />}</section>
-      <section><div className="mb-4"><h2 className="text-2xl font-bold">Moments</h2><p className="mt-1 text-sm text-[var(--color-text-secondary)]">Public proof points from the work.</p></div>{moments.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{moments.map((moment) => <article key={moment.id} className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]"><MediaPreview moment={moment} /><div className="p-4"><p className="font-medium">{moment.caption || 'Portfolio moment'}</p><p className="mt-1 text-xs text-[var(--color-text-secondary)]">{formatDate(moment.capturedAt)}</p><TagList items={moment.skills} /></div></article>)}</div> : <EmptyState title="No public moments" description="Public moments will appear here when they are ready and linked to a portfolio-visible experience." />}</section>
-    </div><aside className="space-y-6"><section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] p-5 shadow-[var(--shadow-sm)]"><h2 className="text-lg font-semibold">Skills</h2><div className="mt-4"><TagList items={portfolio.skills} /></div></section><section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] p-5 shadow-[var(--shadow-sm)]"><h2 className="text-lg font-semibold">Links</h2><div className="mt-4 space-y-3">{Object.entries(portfolio.socialLinks).length ? Object.entries(portfolio.socialLinks).map(([platform, url]) => <a key={platform} className="flex items-center gap-2 text-sm font-medium text-[var(--color-teal)]" href={url} target="_blank" rel="noopener noreferrer"><LinkIcon className="h-4 w-4" />{platform}</a>) : <p className="text-sm text-[var(--color-text-secondary)]">No links added.</p>}</div></section><section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] p-5 shadow-[var(--shadow-sm)]"><h2 className="text-lg font-semibold">Evidence</h2><div className="mt-4 space-y-3">{evidence.length ? evidence.map((item) => <div key={item.id}><p className="text-sm font-semibold">{item.title}</p>{item.url ? <a className="mt-1 block truncate text-xs text-[var(--color-teal)]" href={item.url} target="_blank" rel="noopener noreferrer">{item.url}</a> : item.asset && <a className="mt-1 block truncate text-xs text-[var(--color-teal)]" href={item.asset.secureUrl} target="_blank" rel="noopener noreferrer">{item.asset.originalFilename}</a>}</div>) : <p className="text-sm text-[var(--color-text-secondary)]">No public evidence added.</p>}</div></section></aside></div>
-  </PageShell></main>
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    const timer = window.setTimeout(() => {
+      setLoading(true)
+      setData(null)
+      setError(null)
+      if (!slug) {
+        setLoading(false)
+        return
+      }
+      void getPublicPortfolio(slug)
+        .then((result) => {
+          if (active && result) setData(result)
+        })
+        .catch((loadError) => {
+          if (!active) return
+          setError(getPortfolioErrorStatus(loadError) === 404
+            ? 'This portfolio is private or no longer exists.'
+            : getPortfolioErrorMessage(loadError, 'Unable to load this portfolio.'))
+        })
+        .finally(() => {
+          if (active) setLoading(false)
+        })
+    }, 0)
+    return () => {
+      active = false
+      window.clearTimeout(timer)
+    }
+  }, [slug])
+
+  if (loading) return <main className="min-h-screen bg-[var(--color-bg-main)] py-12"><PageShell><LoadingState label="Loading public portfolio..." /></PageShell></main>
+  if (!data) {
+    return (
+      <main className="min-h-screen bg-[var(--color-bg-main)] py-12">
+        <PageShell>
+          <EmptyState
+            action={<Link className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-teal)]" to="/">Back to CVBuddy <ArrowRightIcon className="h-4 w-4" /></Link>}
+            description={error || 'This portfolio could not be found.'}
+            title="Portfolio unavailable"
+          />
+        </PageShell>
+      </main>
+    )
+  }
+
+  const { portfolio } = data
+  const experiences = data.experiences ?? []
+  const moments = data.moments ?? []
+  const title = portfolio.title || portfolio.headline || 'Professional Portfolio'
+  const description = portfolio.description || portfolio.about || 'A collection of real work, projects, and experiences.'
+
+  return (
+    <main className="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-primary)]">
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-white)]">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <Link className="text-lg font-bold text-[var(--color-teal)]" to="/">CVBuddy</Link>
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">Public portfolio</span>
+        </div>
+      </header>
+      <PageShell>
+        <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-navy)] text-white shadow-[var(--shadow-lg)]">
+          {portfolio.coverImageUrl ? <img alt="" className="h-64 w-full object-cover opacity-80" src={portfolio.coverImageUrl} /> : null}
+          <div className="p-7 sm:p-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-cyan)]">{portfolio.desiredRole || 'Selected work'}</p>
+            <h1 className="mt-4 max-w-4xl text-4xl font-bold tracking-tight text-white sm:text-5xl">{title}</h1>
+            <p className="mt-5 max-w-3xl whitespace-pre-line text-base leading-relaxed text-white/75">{description}</p>
+          </div>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-2xl font-bold">Moments</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Visual proof from projects, events, and creative work.</p>
+          {moments.length ? (
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {moments.map((moment) => {
+                const imageUrl = moment.imageUrl || moment.mediaAssets?.[0]?.secureUrl
+                return (
+                  <article className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]" key={moment.id}>
+                    {imageUrl ? <img alt={moment.caption || 'Portfolio moment'} className="aspect-[4/3] w-full object-cover" loading="lazy" src={imageUrl} /> : <div className="flex aspect-[4/3] items-center justify-center bg-[var(--color-bg-soft)]"><CameraIcon className="h-9 w-9 text-[var(--color-teal)]" /></div>}
+                    <div className="p-4">
+                      <p className="font-medium">{moment.caption || 'Portfolio moment'}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{formatDate(moment.capturedAt)}</p>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          ) : <div className="mt-5"><EmptyState title="No public moments" description="Public moments will appear here when they are ready." /></div>}
+        </section>
+
+        <section className="mt-10">
+          <h2 className="text-2xl font-bold">Experiences</h2>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Published experiences connected to this portfolio.</p>
+          {experiences.length ? (
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              {experiences.map((experience) => (
+                <article className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] p-5 shadow-[var(--shadow-sm)]" key={experience.id}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">{experience.type}</p>
+                  <h3 className="mt-2 text-xl font-semibold">{experience.title}</h3>
+                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{experience.role || experience.organization || 'Professional experience'}</p>
+                  {experience.location ? <p className="mt-3 flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)]"><MapPinIcon className="h-4 w-4 text-[var(--color-teal)]" />{experience.location}</p> : null}
+                  {experience.description ? <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">{experience.description}</p> : null}
+                  <TagList items={experience.skills || []} />
+                </article>
+              ))}
+            </div>
+          ) : <div className="mt-5"><EmptyState title="No public experiences" description="There are no public experience chapters to show yet." /></div>}
+        </section>
+      </PageShell>
+    </main>
+  )
 }

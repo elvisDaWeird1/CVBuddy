@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { ArrowRightIcon, EyeIcon, FileTextIcon } from '@/components/ui/icons'
+import { ArrowRightIcon, FileTextIcon } from '@/components/ui/icons'
 import { Form } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -18,11 +18,13 @@ import {
   getAiApiErrorStatus,
   getAiResultById,
   getAiResults,
-  getFeedback,
-  scoreCv,
-  translateCv,
+  reviewCv,
+  translateAndScoreCv,
   type AiRequestPayload,
   type AiResultRecord,
+  type AiResultType,
+  type AiTranslateAndScoreWorkflow,
+  type AiWorkflowStep,
 } from './aiApi'
 import { adaptAiHistory, type AiHistoryItemViewModel } from './aiHistoryAdapter'
 import {
@@ -51,17 +53,56 @@ type FormErrors = {
   cv?: string
   industry?: string
   targetRole?: string
+  action?: string
 }
+
+type AiAction = 'translate-score' | 'review'
+
+const AI_ACTION_OPTIONS: Array<{ value: AiAction; title: string; description: string }> = [
+  {
+    value: 'translate-score',
+    title: 'Translate and Score',
+    description: 'Translate your CV into English, then score the translated content for your career target.',
+  },
+  {
+    value: 'review',
+    title: 'Review CV',
+    description: 'Receive structured feedback and practical improvement suggestions.',
+  },
+]
 
 type RequestError = {
   text: string
   status?: number
 }
 
+function workflowStepToRecord(
+  workflow: AiTranslateAndScoreWorkflow,
+  step: AiWorkflowStep,
+  aiType: AiResultType,
+): AiResultRecord {
+  return {
+    id: step.resultId,
+    accountId: '',
+    cvDocumentId: workflow.cvId,
+    aiType,
+    status: step.status,
+    score: null,
+    createdAt: new Date().toISOString(),
+    result: step.result,
+    errorCode: step.errorCode,
+    errorMessage: step.errorMessage,
+    industrySlug: workflow.industrySlug,
+    targetRole: workflow.targetRole,
+    workflowId: workflow.id,
+  }
+}
+
 function formatFileType(fileType?: string) {
   const normalized = fileType?.toLowerCase() || ''
   if (normalized.includes('pdf')) return 'PDF'
   if (normalized.includes('docx') || normalized.includes('word')) return 'DOCX'
+  if (normalized.includes('doc')) return 'DOC'
   return fileType?.toUpperCase() || 'File'
 }
 
@@ -177,17 +218,6 @@ function CvSelectionList({
                   {available ? 'Available' : formatStatus(cv.status)}
                 </span>
               </div>
-              {cv.fileUrl ? (
-                <a
-                  className="ml-7 mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-teal)] hover:underline"
-                  href={cv.fileUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <EyeIcon className="h-3.5 w-3.5" />
-                  View CV
-                </a>
-              ) : null}
             </div>
           )
         })}
@@ -204,6 +234,7 @@ export default function AiChatPage() {
   const [selectedCvId, setSelectedCvId] = useState('')
   const [industrySlug, setIndustrySlug] = useState('')
   const [targetRole, setTargetRole] = useState('')
+  const [selectedAction, setSelectedAction] = useState<AiAction | ''>('')
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [isScorePending, setIsScorePending] = useState(false)
   const [isFeedbackPending, setIsFeedbackPending] = useState(false)
@@ -339,33 +370,6 @@ export default function AiChatPage() {
     setTranslationResult(null)
   }
 
-  const handleTranslate = async () => {
-    if (!selectedCv || !isCvAvailable(selectedCv) || isAnyAiPending) {
-      return
-    }
-
-    setActiveResultSource('current')
-    setSelectedHistoryId(null)
-    setHistoryDetail(null)
-    setHistoryDetailError(null)
-    setTranslationError(null)
-    setTranslationResult(null)
-    setIsTranslationPending(true)
-
-    try {
-      const result = await translateCv(selectedCv.id)
-      setTranslationResult(adaptTranslationResult(result))
-      void refreshHistory()
-    } catch (error) {
-      setTranslationError({
-        text: getAiApiErrorMessage(error, 'Unable to translate your CV. Please try again.'),
-        status: getAiApiErrorStatus(error),
-      })
-    } finally {
-      setIsTranslationPending(false)
-    }
-  }
-
   const handleHistorySelect = async (item: AiHistoryItemViewModel) => {
     setSelectedHistoryId(item.id)
     setActiveResultSource('history')
@@ -402,17 +406,22 @@ export default function AiChatPage() {
     const nextErrors: FormErrors = {
       cv: !selectedCv || !isCvAvailable(selectedCv) ? 'Choose an available CV before analyzing.' : undefined,
       industry: !industrySlug ? 'Choose an industry before analyzing.' : undefined,
-      targetRole: trimmedRole.length > 150 ? 'Target role must be 150 characters or fewer.' : undefined,
+      targetRole: !trimmedRole
+        ? 'Target role is required.'
+        : trimmedRole.length < 2
+          ? 'Target role must contain at least 2 characters.'
+        : trimmedRole.length > 150
+          ? 'Target role must be 150 characters or fewer.'
+          : undefined,
+      action: !selectedAction ? 'Choose one AI action before continuing.' : undefined,
     }
     setFormErrors(nextErrors)
 
-    if (nextErrors.cv || nextErrors.industry || nextErrors.targetRole || !selectedCv || isAnyAiPending) {
+    if (nextErrors.cv || nextErrors.industry || nextErrors.targetRole || nextErrors.action || !selectedCv || !selectedAction || isAnyAiPending) {
       return
     }
 
-    const payload: AiRequestPayload = trimmedRole
-      ? { industrySlug, targetRole: trimmedRole }
-      : { industrySlug }
+    const payload: AiRequestPayload = { industrySlug, targetRole: trimmedRole }
 
     setActiveResultSource('current')
     setSelectedHistoryId(null)
@@ -420,40 +429,68 @@ export default function AiChatPage() {
     setHistoryDetailError(null)
     setScoreError(null)
     setFeedbackError(null)
+    setTranslationError(null)
     setScoreResult(null)
     setFeedbackResult(null)
-    setIsScorePending(true)
-    setIsFeedbackPending(true)
+    setTranslationResult(null)
+    let succeeded = false
 
-    const [scoreOutcome, feedbackOutcome] = await Promise.allSettled([
-      scoreCv(selectedCv.id, payload),
-      getFeedback(selectedCv.id, payload),
-    ])
+    if (selectedAction === 'translate-score') {
+      setIsScorePending(true)
+      setIsTranslationPending(true)
+      try {
+        const workflow = await translateAndScoreCv(selectedCv.id, payload)
+        const translationStep = workflow.steps.translation
+        const scoringStep = workflow.steps.scoring
 
-    if (scoreOutcome.status === 'fulfilled') {
-      setScoreResult(adaptScoreResult(scoreOutcome.value))
-    } else {
-      setScoreError({
-        text: getAiApiErrorMessage(scoreOutcome.reason, 'Unable to generate a CV score. Please try again.'),
-        status: getAiApiErrorStatus(scoreOutcome.reason),
-      })
+        if (translationStep.status === 'COMPLETED') {
+          setTranslationResult(adaptTranslationResult(
+            workflowStepToRecord(workflow, translationStep, 'CV_TRANSLATION'),
+          ))
+          succeeded = true
+        } else {
+          setTranslationError({
+            text: translationStep.errorMessage || 'The CV translation step failed.',
+          })
+        }
+
+        if (scoringStep.status === 'COMPLETED') {
+          setScoreResult(adaptScoreResult(
+            workflowStepToRecord(workflow, scoringStep, 'CV_SCORING'),
+          ))
+          succeeded = true
+        } else {
+          setScoreError({
+            text: scoringStep.errorMessage || 'The CV scoring step failed.',
+          })
+        }
+      } catch (error) {
+        setScoreError({
+          text: getAiApiErrorMessage(error, 'Unable to translate and score this CV. Please try again.'),
+          status: getAiApiErrorStatus(error),
+        })
+      } finally {
+        setIsScorePending(false)
+        setIsTranslationPending(false)
+      }
     }
 
-    if (feedbackOutcome.status === 'fulfilled') {
-      setFeedbackResult(adaptFeedbackResult(feedbackOutcome.value))
-    } else {
-      setFeedbackError({
-        text: getAiApiErrorMessage(feedbackOutcome.reason, 'Unable to generate CV feedback. Please try again.'),
-        status: getAiApiErrorStatus(feedbackOutcome.reason),
-      })
+    if (selectedAction === 'review') {
+      setIsFeedbackPending(true)
+      try {
+        setFeedbackResult(adaptFeedbackResult(await reviewCv(selectedCv.id, payload)))
+        succeeded = true
+      } catch (error) {
+        setFeedbackError({
+          text: getAiApiErrorMessage(error, 'Unable to generate CV feedback. Please try again.'),
+          status: getAiApiErrorStatus(error),
+        })
+      } finally {
+        setIsFeedbackPending(false)
+      }
     }
 
-    setIsScorePending(false)
-    setIsFeedbackPending(false)
-
-    if (scoreOutcome.status === 'fulfilled' || feedbackOutcome.status === 'fulfilled') {
-      void refreshHistory()
-    }
+    if (succeeded) void refreshHistory()
   }
 
   return (
@@ -465,30 +502,51 @@ export default function AiChatPage() {
           <span className="text-[var(--color-text-primary)]">AI Chatting</span>
         </nav>
 
-        <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-navy)] p-6 shadow-[var(--shadow-lg)] sm:p-8">
-          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-cyan)]">AI Assistant</p>
-              <h1 className="mt-3 text-4xl font-bold leading-tight tracking-normal text-[var(--color-text-on-navy)]">AI CV Assistant</h1>
-              <p className="mt-3 text-base leading-relaxed text-[var(--color-text-on-navy)]/75">
-                Select a CV, choose an industry, and get a score plus focused feedback for your next application.
-              </p>
-            </div>
-            <Link className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-text-on-navy)]/30 px-4 text-sm font-semibold text-[var(--color-text-on-navy)] transition-colors hover:border-[var(--color-text-on-navy)] hover:text-[var(--color-cyan)]" to="/cv">
-              Manage CVs
-              <ArrowRightIcon className="h-4 w-4" />
-            </Link>
+        <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-teal)]">AI workspace</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-normal sm:text-4xl">AI CV Analysis</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              Choose one verified AI task and review the saved result in the same workspace.
+            </p>
           </div>
+          <Link className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-teal)] px-4 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]" to="/cv">
+            Manage CVs
+            <ArrowRightIcon className="h-4 w-4" />
+          </Link>
         </section>
+
+        <ol className="grid gap-2 sm:grid-cols-4" aria-label="AI analysis steps">
+          {[
+            ['1', 'Select CV', Boolean(selectedCv)],
+            ['2', 'Career target', Boolean(industrySlug && targetRole.trim())],
+            ['3', 'Choose action', Boolean(selectedAction)],
+            ['4', 'Result', Boolean(scoreResult || feedbackResult || translationResult || selectedHistoryId)],
+          ].map(([number, label, complete]) => (
+            <li
+              className={complete
+                ? 'flex items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-teal)] bg-[var(--color-bg-soft)] px-3 py-2 text-sm font-semibold text-[var(--color-teal)]'
+                : 'flex items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)]'}
+              key={label as string}
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-[var(--radius-full)] bg-[var(--color-white)] text-xs font-bold">{number as string}</span>
+              {label as string}
+            </li>
+          ))}
+        </ol>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(300px,0.9fr)]">
         <div className="min-w-0 space-y-6">
+          <div>
+            <h2 className="text-2xl font-semibold">AI CV Analysis</h2>
+            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Complete the steps below before starting an AI request.</p>
+          </div>
           <Card className="overflow-hidden shadow-[var(--shadow-lg)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <FileTextIcon className="h-5 w-5 text-[var(--color-teal)]" />
-                Choose a CV
+                Step 1 · Select CV
               </CardTitle>
               <CardDescription>Select an uploaded CV to use for this analysis. Your source file will not be changed.</CardDescription>
             </CardHeader>
@@ -518,8 +576,8 @@ export default function AiChatPage() {
           {cvs.length > 0 && !loadingCvs && !listError ? (
             <Card className="overflow-hidden shadow-[var(--shadow-lg)]">
               <CardHeader>
-                <CardTitle className="text-xl">Set up your analysis</CardTitle>
-                <CardDescription>Tell the assistant where you want this CV to be more relevant.</CardDescription>
+                <CardTitle className="text-xl">Step 2 · Career Target</CardTitle>
+                <CardDescription>Industry and target role are required before you can continue.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Form className="space-y-5" onSubmit={handleSubmit}>
@@ -543,16 +601,53 @@ export default function AiChatPage() {
                     <Input
                       error={formErrors.targetRole}
                       id="ai-target-role"
-                      label="Target role (optional)"
+                      label="Target role"
                       maxLength={150}
                       onChange={(event) => {
                         setTargetRole(event.target.value)
                         setFormErrors((current) => ({ ...current, targetRole: undefined }))
                       }}
-                      placeholder="e.g. Frontend Developer, Marketing Intern..."
+                      placeholder="Marketing Intern, Frontend Developer, Event Coordinator"
                       value={targetRole}
                     />
                   </div>
+
+                  <fieldset aria-describedby={formErrors.action ? 'ai-action-error' : undefined}>
+                    <legend className="text-sm font-medium text-[var(--color-navy)]">Step 3 · Choose AI Action</legend>
+                    <div className="mt-2 grid gap-3 md:grid-cols-2">
+                      {AI_ACTION_OPTIONS.map((option) => {
+                        const selected = selectedAction === option.value
+                        return (
+                          <label
+                            className={selected
+                              ? 'cursor-pointer rounded-[var(--radius-lg)] border-2 border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-4 transition-colors'
+                              : 'cursor-pointer rounded-[var(--radius-lg)] border-2 border-[var(--color-border)] bg-[var(--color-white)] p-4 transition-colors hover:border-[var(--color-border-hover)]'}
+                            key={option.value}
+                          >
+                            <span className="flex items-start gap-3">
+                              <input
+                                checked={selected}
+                                className="mt-1 h-4 w-4 accent-[var(--color-teal)]"
+                                disabled={isAnyAiPending}
+                                name="ai-action"
+                                onChange={() => {
+                                  setSelectedAction(option.value)
+                                  setFormErrors((current) => ({ ...current, action: undefined }))
+                                }}
+                                type="radio"
+                                value={option.value}
+                              />
+                              <span>
+                                <span className="block text-sm font-semibold text-[var(--color-text-primary)]">{option.title}</span>
+                                <span className="mt-1 block text-xs leading-relaxed text-[var(--color-text-secondary)]">{option.description}</span>
+                              </span>
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    {formErrors.action ? <p className="mt-2 text-sm text-[var(--color-error)]" id="ai-action-error">{formErrors.action}</p> : null}
+                  </fieldset>
 
                   <div className="flex flex-col gap-4 rounded-[var(--radius-lg)] bg-[var(--color-bg-main)] p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
@@ -561,12 +656,12 @@ export default function AiChatPage() {
                     </div>
                     <Button
                       className="w-full shrink-0 sm:w-auto"
-                      disabled={!selectedCv || !industrySlug || isAnyAiPending}
+                      disabled={!selectedCv || !industrySlug || !targetRole.trim() || !selectedAction || isAnyAiPending}
                       iconRight={<ArrowRightIcon className="h-4 w-4" />}
-                      loading={isProcessing}
+                      loading={isAnyAiPending}
                       type="submit"
                     >
-                      Analyze CV
+                      Start AI action
                     </Button>
                   </div>
                 </Form>
@@ -574,7 +669,12 @@ export default function AiChatPage() {
             </Card>
           ) : null}
 
-          {isProcessing ? <AiProcessingState /> : null}
+          {isAnyAiPending ? <AiProcessingState /> : null}
+
+          <div className="border-t border-[var(--color-border)] pt-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">Step 4</p>
+            <h2 className="mt-1 text-2xl font-semibold">Result</h2>
+          </div>
 
           {activeResultSource === 'history' && selectedHistoryItem ? (
             <AiResultHistoryDetail
@@ -589,60 +689,29 @@ export default function AiChatPage() {
             <>
               {scoreError ? <ErrorMessage error={scoreError} /> : null}
               {feedbackError ? <ErrorMessage error={feedbackError} /> : null}
+              {translationError ? <ErrorMessage error={translationError} /> : null}
 
               {scoreResult ? <ScoreOverview result={scoreResult} /> : null}
               {hasCurrentAnalysisOutcome ? <AiCommentCard comment={currentAiComment} /> : null}
               {feedbackResult ? <FeedbackPanel result={feedbackResult} /> : null}
 
-              {selectedCv && isCvAvailable(selectedCv) ? (
-                <TranslationPanel
-                  disabled={isAnyAiPending}
-                  error={translationError?.text}
-                  onTranslate={() => void handleTranslate()}
-                  pending={isTranslationPending}
-                  result={translationResult}
-                />
+              {translationResult ? <TranslationPanel result={translationResult} /> : null}
+              {!scoreResult && !feedbackResult && !translationResult && !scoreError && !feedbackError && !translationError && !isAnyAiPending ? (
+                <Card className="border-dashed">
+                  <CardContent className="py-8 text-center text-sm text-[var(--color-text-secondary)]">
+                    Your completed AI result will appear here. Saved results remain available in AI Results.
+                  </CardContent>
+                </Card>
               ) : null}
             </>
           )}
         </div>
 
         <aside className="h-fit space-y-6 lg:sticky lg:top-6">
-          <Card className="overflow-hidden shadow-[var(--shadow-sm)]">
-            <CardHeader>
-              <CardTitle>How it works</CardTitle>
-              <CardDescription>A guided task, not an open-ended chatbot.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ol className="space-y-4">
-                {[
-                  ['01', 'Choose a saved CV', 'Use a current PDF or DOCX from your CV workspace.'],
-                  ['02', 'Add context', 'Choose the industry and optionally name the role you want.'],
-                  ['03', 'Review suggestions', 'Use the score and feedback as guidance before editing your CV.'],
-                ].map(([number, title, description]) => (
-                  <li className="flex gap-3" key={number}>
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-full)] bg-[var(--color-bg-soft)] text-xs font-bold text-[var(--color-teal)]">{number}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</p>
-                      <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{description}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden shadow-[var(--shadow-sm)]">
-            <CardHeader>
-              <CardTitle>Keep your original CV safe</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                AI results are suggestions only. This page never overwrites your uploaded document or starts a new upload flow.
-              </p>
-            </CardContent>
-          </Card>
-
+          <div>
+            <h2 className="text-2xl font-semibold">AI Results</h2>
+            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Open completed, pending, or failed tasks without starting a new request.</p>
+          </div>
           <AiResultHistory
             error={historyError}
             items={history}

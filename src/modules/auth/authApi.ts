@@ -4,7 +4,8 @@ export interface BackendApiResponse<TData = unknown> {
   success: boolean
   message: string
   data?: TData
-  errors?: unknown[]
+  errors?: Array<{ field?: string; code?: string; message?: string }>
+  code?: string
 }
 
 export interface AuthAccount {
@@ -13,6 +14,7 @@ export interface AuthAccount {
   email?: string
   fullName?: string
   companyName?: string
+  avatarUrl?: string
   role?: string
   [key: string]: unknown
 }
@@ -68,4 +70,10 @@ export function getAuthApiErrorMessage(error: unknown, fallback: string) {
   }
 
   return error instanceof Error && error.message ? error.message : fallback
+}
+
+export function getAuthApiErrorCode(error: unknown) {
+  if (typeof error !== 'object' || error === null || !('response' in error)) return undefined
+  const responseData = (error as { response?: { data?: { code?: unknown } } }).response?.data
+  return typeof responseData?.code === 'string' ? responseData.code : undefined
 }

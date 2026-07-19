@@ -19,6 +19,10 @@ import PortfolioFormPage from '@/modules/portfolio/PortfolioFormPage'
 import { ExperienceDetailPage, ExperienceFormPage, ExperienceListPage } from '@/modules/portfolio/ExperiencePages'
 import { MomentCreatePage, MomentDetailPage, MomentListPage } from '@/modules/portfolio/MomentPages'
 import PublicPortfolioPage from '@/modules/portfolio/PublicPortfolioPage'
+import {
+  PortfolioCollectionDetailPage,
+  PortfolioCollectionFormPage,
+} from '@/modules/portfolio/PortfolioCollectionPages'
 
 const appRoutes = [
   {
@@ -41,6 +45,7 @@ const appRoutes = [
     ],
   },
   { path: 'p/:slug', element: <PublicPortfolioPage /> },
+  { path: 'portfolio/:slug', element: <PublicPortfolioPage /> },
   {
     element: <ProtectedRoute />,
     children: [
@@ -65,6 +70,9 @@ const appRoutes = [
           { path: 'cv', element: <CvPage /> },
           { path: 'ai-chat', element: <AiChatPage /> },
           { path: 'portfolio', element: <PortfolioPage /> },
+          { path: 'portfolio/new', element: <PortfolioCollectionFormPage /> },
+          { path: 'portfolio/manage/:portfolioId', element: <PortfolioCollectionDetailPage /> },
+          { path: 'portfolio/manage/:portfolioId/edit', element: <PortfolioCollectionFormPage /> },
           { path: 'portfolio/edit', element: <PortfolioFormPage /> },
           { path: 'portfolio/experiences', element: <ExperienceListPage /> },
           { path: 'portfolio/experiences/new', element: <ExperienceFormPage /> },
