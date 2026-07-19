@@ -49,8 +49,8 @@ export function MomentCreatePage() {
   const [location, setLocation] = useState('')
   const [skills, setSkills] = useState('')
   const [experienceId, setExperienceId] = useState('')
-  const [visibility, setVisibility] = useState<ExperienceVisibility>('private')
-  const [status, setStatus] = useState<'draft' | 'ready'>('draft')
+  const [visibility, setVisibility] = useState<ExperienceVisibility>('portfolio')
+  const [status, setStatus] = useState<'draft' | 'ready'>('ready')
   const [experiences, setExperiences] = useState<PortfolioExperience[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [preparingFiles, setPreparingFiles] = useState(false)
@@ -121,7 +121,7 @@ export function MomentCreatePage() {
         },
       )
       setUploadProgress(100)
-      if (moment) navigate(`/portfolio/moments/${moment.id}`, { replace: true })
+      if (moment) navigate('/portfolio', { replace: true })
     } catch (error) {
       setErrorMessage(getPortfolioErrorMessage(error, 'Unable to upload moment.'))
     } finally {
@@ -135,7 +135,7 @@ export function MomentCreatePage() {
         eyebrow="Capture proof quickly"
         title="New moment"
         description="Choose media, review the prepared files, then confirm the upload. Images are resized in your browser before they are sent."
-        actions={<Link to="/portfolio/moments" className="text-sm font-semibold text-[var(--color-teal)]">Back to moments</Link>}
+        actions={<Link to="/portfolio" className="text-sm font-semibold text-[var(--color-teal)]">Back to Portfolio</Link>}
       />
       {errorMessage && <div className="mb-6"><Notice>{errorMessage}</Notice></div>}
 

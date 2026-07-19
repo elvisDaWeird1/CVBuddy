@@ -12,6 +12,16 @@ This document is the frontend API integration reference for CVBuddy. Backend API
 - `.env.example` uses `VITE_API_URL=http://localhost:5000/api`; the code fallback is `/api`.
 - Portfolio service request paths start at `/portfolio/...`, so the final URL is `/api/portfolio/...` without a duplicated `/api` segment.
 
+## Portfolio
+
+- Each Applicant owns at most one Portfolio.
+- `GET /api/portfolio/me` returns `data.portfolio: null` before creation and must not create data as a side effect.
+- `PUT /api/portfolio/me` creates or updates the authenticated Applicant's Portfolio.
+- `PATCH /api/portfolio/me/publish` and `/unpublish` persist visibility; the UI does not update optimistically.
+- `GET /api/portfolio/moments?limit=100` supplies owner gallery media; pagination is followed when more than 100 Moments exist.
+- `GET /api/portfolio/public/:slug` is unauthenticated and returns only public-ready content. Private and unknown slugs both return `404`.
+- Frontend routes: protected owner workspace `/portfolio`; unauthenticated public view `/p/:slug`.
+
 ## Response Shape
 
 Backend responses are expected to use:
