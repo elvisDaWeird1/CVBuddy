@@ -2,7 +2,7 @@ export const LANDING_HOME_HASH = '#home'
 
 export const landingNavItems = [
   { label: 'Home', hash: LANDING_HOME_HASH },
-  { label: 'About Us', hash: '#about-us' },
+  // { label: 'About Us', hash: '#about-us' },
   { label: 'Project', hash: '#project' },
   { label: 'AI Buddy', hash: '#ai-buddy' },
   { label: 'Portfolio', hash: '#portfolio' },

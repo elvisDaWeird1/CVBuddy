@@ -70,20 +70,35 @@ export function TranslationPanel({
                 : 'Create an English version for review without changing your original CV.'}
             </CardDescription>
           </div>
-          {hasVisibleResult ? (
-            <Button
-              aria-label="Copy translation"
-              disabled={!copyText}
-              iconLeft={copyState === 'copied' ? <CheckIcon className="h-4 w-4" /> : <FileTextIcon className="h-4 w-4" />}
-              onClick={() => void handleCopy()}
-              size="sm"
-              type="button"
-              variant="secondary"
-            >
-              {copyState === 'copied' ? 'Copied' : 'Copy translation'}
-            </Button>
-          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            {result?.source ? (
+              <span className="rounded-[var(--radius-full)] bg-[var(--color-bg-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-teal)]">
+                Source {result.source.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())}
+              </span>
+            ) : null}
+            {hasVisibleResult ? (
+              <Button
+                aria-label="Copy translation"
+                disabled={!copyText}
+                iconLeft={copyState === 'copied' ? <CheckIcon className="h-4 w-4" /> : <FileTextIcon className="h-4 w-4" />}
+                onClick={() => void handleCopy()}
+                size="sm"
+                type="button"
+                variant="secondary"
+              >
+                {copyState === 'copied' ? 'Copied' : 'Copy translation'}
+              </Button>
+            ) : null}
+          </div>
         </div>
+        {result?.model ? (
+          <details className="mt-3 text-xs text-[var(--color-text-muted)]">
+            <summary className="cursor-pointer font-medium text-[var(--color-teal)]">Technical details</summary>
+            <p className="mt-1 break-all">
+              Model {result.model}{result.language ? ` · Language ${result.language.toUpperCase()}` : ''}
+            </p>
+          </details>
+        ) : null}
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -164,6 +179,9 @@ export function TranslationPanel({
         ) : copyState === 'failed' ? (
           <p className="text-sm text-[var(--color-error)]" role="status">We could not copy the translation. Please select and copy it manually.</p>
         ) : null}
+        <span aria-live="polite" className="sr-only" role="status">
+          {copyState === 'copied' ? 'Translation copied to the clipboard.' : ''}
+        </span>
       </CardContent>
     </Card>
   )

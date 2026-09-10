@@ -266,16 +266,16 @@ export default function EditProfilePage() {
               <Input autoComplete="tel" inputMode="numeric" label="Phone" maxLength={12} placeholder="10 to 12 digits" size="lg" state={errors.phone ? 'error' : 'default'} error={errors.phone?.message} className={fieldClass} {...register('phone')} />
               <Input label="Location" size="lg" state={errors.location ? 'error' : 'default'} error={errors.location?.message} className={fieldClass} {...register('location')} />
               <TextAreaField id="summary" label="Bio / Summary" rows={5} className="md:col-span-2" error={errors.summary?.message} {...register('summary')} />
-              <TextAreaField id="careerGoal" label="Career Goal" rows={4} className="md:col-span-2" error={errors.careerGoal?.message} {...register('careerGoal')} />
+              {/* <TextAreaField id="careerGoal" label="Career Goal" rows={4} className="md:col-span-2" error={errors.careerGoal?.message} {...register('careerGoal')} /> */}
             </div>
           </FormCard>
 
-          <FormCard title="Education" icon={<GraduationCapIcon className="h-6 w-6" />}>
+          {/* <FormCard title="Education" icon={<GraduationCapIcon className="h-6 w-6" />}>
             <div className="grid gap-5 md:grid-cols-2">
               <Input label="University" size="lg" state={errors.university ? 'error' : 'default'} error={errors.university?.message} className={fieldClass} {...register('university')} />
               <Input label="Major" size="lg" state={errors.major ? 'error' : 'default'} error={errors.major?.message} className={fieldClass} {...register('major')} />
             </div>
-          </FormCard>
+          </FormCard> */}
         </div>
 
         <aside>

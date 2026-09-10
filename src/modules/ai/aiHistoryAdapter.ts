@@ -17,13 +17,12 @@ export interface AiHistoryItemViewModel {
   targetRole?: string
   createdAt: Date | null
   createdAtLabel: string
-  errorMessage?: string
 }
 
 const TYPE_LABELS: Record<AiHistoryType, string> = {
-  score: 'CV score',
+  score: 'Chấm điểm và review CV',
   feedback: 'CV feedback',
-  translation: 'English translation',
+  translation: 'Dịch CV sang tiếng Anh',
   unknown: 'AI result',
 }
 
@@ -107,9 +106,6 @@ export function adaptAiHistory(records: AiResultRecord[], cvs: CvDocument[]): Ai
     const status = normalizeStatus(record.status)
     const cvId = readCvId(record)
     const cv = cvId ? cvs.find((item) => item.id === cvId) : undefined
-    const errorMessage = status === 'failed'
-      ? readString(record.errorMessage) || 'This AI task could not be completed.'
-      : undefined
     const createdAt = normalizeDate(record.createdAt)
 
     return {
@@ -125,7 +121,6 @@ export function adaptAiHistory(records: AiResultRecord[], cvs: CvDocument[]): Ai
       targetRole: readString(record.targetRole),
       createdAt,
       createdAtLabel: formatDate(createdAt),
-      errorMessage,
     }
   })
 }

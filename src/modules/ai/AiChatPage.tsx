@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,17 +18,13 @@ import {
   getAiApiErrorStatus,
   getAiResultById,
   getAiResults,
-  reviewCv,
-  translateAndScoreCv,
+  scoreCv,
+  translateCv,
   type AiRequestPayload,
   type AiResultRecord,
-  type AiResultType,
-  type AiTranslateAndScoreWorkflow,
-  type AiWorkflowStep,
 } from './aiApi'
 import { adaptAiHistory, type AiHistoryItemViewModel } from './aiHistoryAdapter'
 import {
-  adaptFeedbackResult,
   adaptScoreResult,
   adaptTranslationResult,
 } from './aiResultAdapter'
@@ -36,7 +32,6 @@ import { AiCommentCard } from './components/AiCommentCard'
 import { AiProcessingState } from './components/AiProcessingState'
 import { AiResultHistory } from './components/AiResultHistory'
 import { AiResultHistoryDetail } from './components/AiResultHistoryDetail'
-import { FeedbackPanel } from './components/FeedbackPanel'
 import { ScoreOverview } from './components/ScoreOverview'
 import { TranslationPanel } from './components/TranslationPanel'
 
@@ -56,18 +51,18 @@ type FormErrors = {
   action?: string
 }
 
-type AiAction = 'translate-score' | 'review'
+type AiAction = 'analyze' | 'translate'
 
 const AI_ACTION_OPTIONS: Array<{ value: AiAction; title: string; description: string }> = [
   {
-    value: 'translate-score',
-    title: 'Translate and Score',
-    description: 'Translate your CV into English, then score the translated content for your career target.',
+    value: 'analyze',
+    title: 'Chấm điểm và review CV',
+    description: 'Đánh giá ATS, ngôn ngữ, từ khóa, độ phù hợp với vị trí và nhận gợi ý viết lại.',
   },
   {
-    value: 'review',
-    title: 'Review CV',
-    description: 'Receive structured feedback and practical improvement suggestions.',
+    value: 'translate',
+    title: 'Dịch CV sang tiếng Anh',
+    description: 'Dịch nội dung theo văn phong CV và nhận ghi chú để rà soát bản dịch.',
   },
 ]
 
@@ -76,26 +71,11 @@ type RequestError = {
   status?: number
 }
 
-function workflowStepToRecord(
-  workflow: AiTranslateAndScoreWorkflow,
-  step: AiWorkflowStep,
-  aiType: AiResultType,
-): AiResultRecord {
-  return {
-    id: step.resultId,
-    accountId: '',
-    cvDocumentId: workflow.cvId,
-    aiType,
-    status: step.status,
-    score: null,
-    createdAt: new Date().toISOString(),
-    result: step.result,
-    errorCode: step.errorCode,
-    errorMessage: step.errorMessage,
-    industrySlug: workflow.industrySlug,
-    targetRole: workflow.targetRole,
-    workflowId: workflow.id,
-  }
+type SubmittedRequest = {
+  action: AiAction
+  cvTitle: string
+  industryLabel?: string
+  targetRole?: string
 }
 
 function formatFileType(fileType?: string) {
@@ -134,7 +114,9 @@ function formatStatus(status?: string) {
   return status.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
-function ErrorMessage({ error }: { error: RequestError }) {
+function ErrorMessage({ error, onRetry }: { error: RequestError; onRetry: () => void }) {
+  const canRetry = !error.status || error.status === 408 || error.status === 429 || error.status >= 500
+
   return (
     <div className="space-y-2 rounded-[var(--radius-lg)] bg-[var(--color-error-bg)] px-4 py-3 text-sm" role="alert">
       <p className="font-semibold text-[var(--color-error)]">We could not complete this AI task.</p>
@@ -144,6 +126,11 @@ function ErrorMessage({ error }: { error: RequestError }) {
           Open CV workspace
           <ArrowRightIcon className="h-4 w-4" />
         </Link>
+      ) : null}
+      {canRetry ? (
+        <Button onClick={onRetry} size="sm" type="button" variant="secondary">
+          Run this task again
+        </Button>
       ) : null}
     </div>
   )
@@ -228,6 +215,7 @@ function CvSelectionList({
 }
 
 export default function AiChatPage() {
+  const actionFormRef = useRef<HTMLFormElement>(null)
   const [cvs, setCvs] = useState<CvDocument[]>([])
   const [loadingCvs, setLoadingCvs] = useState(true)
   const [listError, setListError] = useState<string | null>(null)
@@ -237,11 +225,8 @@ export default function AiChatPage() {
   const [selectedAction, setSelectedAction] = useState<AiAction | ''>('')
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [isScorePending, setIsScorePending] = useState(false)
-  const [isFeedbackPending, setIsFeedbackPending] = useState(false)
   const [scoreError, setScoreError] = useState<RequestError | null>(null)
-  const [feedbackError, setFeedbackError] = useState<RequestError | null>(null)
   const [scoreResult, setScoreResult] = useState<ReturnType<typeof adaptScoreResult> | null>(null)
-  const [feedbackResult, setFeedbackResult] = useState<ReturnType<typeof adaptFeedbackResult> | null>(null)
   const [translationResult, setTranslationResult] = useState<ReturnType<typeof adaptTranslationResult> | null>(null)
   const [translationError, setTranslationError] = useState<RequestError | null>(null)
   const [isTranslationPending, setIsTranslationPending] = useState(false)
@@ -253,19 +238,23 @@ export default function AiChatPage() {
   const [historyDetailLoading, setHistoryDetailLoading] = useState(false)
   const [historyDetailError, setHistoryDetailError] = useState<string | null>(null)
   const [activeResultSource, setActiveResultSource] = useState<'current' | 'history'>('current')
+  const [lastRequest, setLastRequest] = useState<SubmittedRequest | null>(null)
 
-  const isProcessing = isScorePending || isFeedbackPending
-  const isAnyAiPending = isProcessing || isTranslationPending
+  const isAnyAiPending = isScorePending || isTranslationPending
   const selectedCv = useMemo(() => cvs.find((cv) => cv.id === selectedCvId), [cvs, selectedCvId])
+  const requiresCareerTarget = selectedAction === 'analyze'
+  const hasCareerTarget = Boolean(industrySlug && targetRole.trim())
+  const canSubmit = Boolean(
+    selectedCv
+    && selectedAction
+    && (!requiresCareerTarget || hasCareerTarget),
+  )
   const history = useMemo(() => adaptAiHistory(historyRecords, cvs), [historyRecords, cvs])
   const selectedHistoryItem = useMemo(
     () => history.find((item) => item.id === selectedHistoryId) || null,
     [history, selectedHistoryId],
   )
-  const currentAiComment = scoreResult?.aiComment || feedbackResult?.aiComment
-  const hasCurrentAnalysisOutcome = !isProcessing && Boolean(
-    scoreResult || feedbackResult || scoreError || feedbackError,
-  )
+  const currentAiComment = scoreResult?.aiComment
 
   useEffect(() => {
     let active = true
@@ -363,11 +352,10 @@ export default function AiChatPage() {
     setHistoryDetail(null)
     setHistoryDetailError(null)
     setScoreError(null)
-    setFeedbackError(null)
     setScoreResult(null)
-    setFeedbackResult(null)
     setTranslationError(null)
     setTranslationResult(null)
+    setLastRequest(null)
   }
 
   const handleHistorySelect = async (item: AiHistoryItemViewModel) => {
@@ -405,14 +393,16 @@ export default function AiChatPage() {
     const trimmedRole = targetRole.trim()
     const nextErrors: FormErrors = {
       cv: !selectedCv || !isCvAvailable(selectedCv) ? 'Choose an available CV before analyzing.' : undefined,
-      industry: !industrySlug ? 'Choose an industry before analyzing.' : undefined,
-      targetRole: !trimmedRole
-        ? 'Target role is required.'
-        : trimmedRole.length < 2
-          ? 'Target role must contain at least 2 characters.'
-        : trimmedRole.length > 150
-          ? 'Target role must be 150 characters or fewer.'
-          : undefined,
+      industry: requiresCareerTarget && !industrySlug ? 'Choose an industry before analyzing.' : undefined,
+      targetRole: requiresCareerTarget
+        ? !trimmedRole
+          ? 'Target role is required.'
+          : trimmedRole.length < 2
+            ? 'Target role must contain at least 2 characters.'
+            : trimmedRole.length > 150
+              ? 'Target role must be 150 characters or fewer.'
+              : undefined
+        : undefined,
       action: !selectedAction ? 'Choose one AI action before continuing.' : undefined,
     }
     setFormErrors(nextErrors)
@@ -421,76 +411,51 @@ export default function AiChatPage() {
       return
     }
 
-    const payload: AiRequestPayload = { industrySlug, targetRole: trimmedRole }
-
     setActiveResultSource('current')
     setSelectedHistoryId(null)
     setHistoryDetail(null)
     setHistoryDetailError(null)
     setScoreError(null)
-    setFeedbackError(null)
     setTranslationError(null)
     setScoreResult(null)
-    setFeedbackResult(null)
     setTranslationResult(null)
-    let succeeded = false
+    setLastRequest({
+      action: selectedAction,
+      cvTitle: selectedCv.title || 'Untitled CV',
+      industryLabel: INDUSTRY_OPTIONS.find((option) => option.value === industrySlug)?.label,
+      targetRole: trimmedRole || undefined,
+    })
 
-    if (selectedAction === 'translate-score') {
+    if (selectedAction === 'analyze') {
+      const payload: AiRequestPayload = { industrySlug, targetRole: trimmedRole }
       setIsScorePending(true)
-      setIsTranslationPending(true)
       try {
-        const workflow = await translateAndScoreCv(selectedCv.id, payload)
-        const translationStep = workflow.steps.translation
-        const scoringStep = workflow.steps.scoring
-
-        if (translationStep.status === 'COMPLETED') {
-          setTranslationResult(adaptTranslationResult(
-            workflowStepToRecord(workflow, translationStep, 'CV_TRANSLATION'),
-          ))
-          succeeded = true
-        } else {
-          setTranslationError({
-            text: translationStep.errorMessage || 'The CV translation step failed.',
-          })
-        }
-
-        if (scoringStep.status === 'COMPLETED') {
-          setScoreResult(adaptScoreResult(
-            workflowStepToRecord(workflow, scoringStep, 'CV_SCORING'),
-          ))
-          succeeded = true
-        } else {
-          setScoreError({
-            text: scoringStep.errorMessage || 'The CV scoring step failed.',
-          })
-        }
+        setScoreResult(adaptScoreResult(await scoreCv(selectedCv.id, payload)))
       } catch (error) {
         setScoreError({
-          text: getAiApiErrorMessage(error, 'Unable to translate and score this CV. Please try again.'),
+          text: getAiApiErrorMessage(error, 'Unable to score and review this CV. Please try again.'),
           status: getAiApiErrorStatus(error),
         })
       } finally {
         setIsScorePending(false)
+      }
+    }
+
+    if (selectedAction === 'translate') {
+      setIsTranslationPending(true)
+      try {
+        setTranslationResult(adaptTranslationResult(await translateCv(selectedCv.id)))
+      } catch (error) {
+        setTranslationError({
+          text: getAiApiErrorMessage(error, 'Unable to translate this CV to English. Please try again.'),
+          status: getAiApiErrorStatus(error),
+        })
+      } finally {
         setIsTranslationPending(false)
       }
     }
 
-    if (selectedAction === 'review') {
-      setIsFeedbackPending(true)
-      try {
-        setFeedbackResult(adaptFeedbackResult(await reviewCv(selectedCv.id, payload)))
-        succeeded = true
-      } catch (error) {
-        setFeedbackError({
-          text: getAiApiErrorMessage(error, 'Unable to generate CV feedback. Please try again.'),
-          status: getAiApiErrorStatus(error),
-        })
-      } finally {
-        setIsFeedbackPending(false)
-      }
-    }
-
-    if (succeeded) void refreshHistory()
+    void refreshHistory()
   }
 
   return (
@@ -510,18 +475,23 @@ export default function AiChatPage() {
               Choose one verified AI task and review the saved result in the same workspace.
             </p>
           </div>
-          <Link className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-teal)] px-4 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]" to="/cv">
-            Manage CVs
-            <ArrowRightIcon className="h-4 w-4" />
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <a className="inline-flex h-10 shrink-0 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-teal)]" href="#ai-results">
+              View AI results
+            </a>
+            <Link className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-teal)] px-4 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]" to="/cv">
+              Manage CVs
+              <ArrowRightIcon className="h-4 w-4" />
+            </Link>
+          </div>
         </section>
 
         <ol className="grid gap-2 sm:grid-cols-4" aria-label="AI analysis steps">
           {[
             ['1', 'Select CV', Boolean(selectedCv)],
-            ['2', 'Career target', Boolean(industrySlug && targetRole.trim())],
-            ['3', 'Choose action', Boolean(selectedAction)],
-            ['4', 'Result', Boolean(scoreResult || feedbackResult || translationResult || selectedHistoryId)],
+            ['2', 'Choose action', Boolean(selectedAction)],
+            ['3', 'Career context', Boolean(selectedAction && (!requiresCareerTarget || hasCareerTarget))],
+            ['4', 'Result', Boolean(scoreResult || translationResult || selectedHistoryId)],
           ].map(([number, label, complete]) => (
             <li
               className={complete
@@ -576,44 +546,13 @@ export default function AiChatPage() {
           {cvs.length > 0 && !loadingCvs && !listError ? (
             <Card className="overflow-hidden shadow-[var(--shadow-lg)]">
               <CardHeader>
-                <CardTitle className="text-xl">Step 2 · Career Target</CardTitle>
-                <CardDescription>Industry and target role are required before you can continue.</CardDescription>
+                <CardTitle className="text-xl">Step 2 · Configure AI action</CardTitle>
+                <CardDescription>Choose one action. Career context is required only when scoring and reviewing a CV.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Form className="space-y-5" onSubmit={handleSubmit}>
-                  <div className="grid gap-5 md:grid-cols-2">
-                    <div>
-                      <Select
-                        aria-describedby={formErrors.industry ? 'ai-industry-error' : undefined}
-                        error={formErrors.industry}
-                        id="ai-industry"
-                        label="Industry"
-                        onChange={(event) => {
-                          setIndustrySlug(event.target.value)
-                          setFormErrors((current) => ({ ...current, industry: undefined }))
-                        }}
-                        options={INDUSTRY_OPTIONS}
-                        placeholder="Select an industry"
-                        value={industrySlug}
-                      />
-                      {formErrors.industry ? <span className="sr-only" id="ai-industry-error">{formErrors.industry}</span> : null}
-                    </div>
-                    <Input
-                      error={formErrors.targetRole}
-                      id="ai-target-role"
-                      label="Target role"
-                      maxLength={150}
-                      onChange={(event) => {
-                        setTargetRole(event.target.value)
-                        setFormErrors((current) => ({ ...current, targetRole: undefined }))
-                      }}
-                      placeholder="Marketing Intern, Frontend Developer, Event Coordinator"
-                      value={targetRole}
-                    />
-                  </div>
-
+                <Form className="space-y-5" onSubmit={handleSubmit} ref={actionFormRef}>
                   <fieldset aria-describedby={formErrors.action ? 'ai-action-error' : undefined}>
-                    <legend className="text-sm font-medium text-[var(--color-navy)]">Step 3 · Choose AI Action</legend>
+                    <legend className="text-sm font-medium text-[var(--color-navy)]">Choose AI Action</legend>
                     <div className="mt-2 grid gap-3 md:grid-cols-2">
                       {AI_ACTION_OPTIONS.map((option) => {
                         const selected = selectedAction === option.value
@@ -632,7 +571,12 @@ export default function AiChatPage() {
                                 name="ai-action"
                                 onChange={() => {
                                   setSelectedAction(option.value)
-                                  setFormErrors((current) => ({ ...current, action: undefined }))
+                                  setFormErrors((current) => ({
+                                    ...current,
+                                    action: undefined,
+                                    industry: option.value === 'translate' ? undefined : current.industry,
+                                    targetRole: option.value === 'translate' ? undefined : current.targetRole,
+                                  }))
                                 }}
                                 type="radio"
                                 value={option.value}
@@ -649,6 +593,49 @@ export default function AiChatPage() {
                     {formErrors.action ? <p className="mt-2 text-sm text-[var(--color-error)]" id="ai-action-error">{formErrors.action}</p> : null}
                   </fieldset>
 
+                  {selectedAction === 'analyze' ? (
+                    <section className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-main)] p-4" aria-labelledby="career-context-heading">
+                      <div>
+                        <h3 className="text-base font-semibold" id="career-context-heading">Step 3 · Career context</h3>
+                        <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Used to assess keyword coverage and target-role fit.</p>
+                      </div>
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div>
+                          <Select
+                            aria-describedby={formErrors.industry ? 'ai-industry-error' : undefined}
+                            error={formErrors.industry}
+                            id="ai-industry"
+                            label="Industry"
+                            onChange={(event) => {
+                              setIndustrySlug(event.target.value)
+                              setFormErrors((current) => ({ ...current, industry: undefined }))
+                            }}
+                            options={INDUSTRY_OPTIONS}
+                            placeholder="Select an industry"
+                            value={industrySlug}
+                          />
+                          {formErrors.industry ? <span className="sr-only" id="ai-industry-error">{formErrors.industry}</span> : null}
+                        </div>
+                        <Input
+                          error={formErrors.targetRole}
+                          id="ai-target-role"
+                          label="Target role"
+                          maxLength={150}
+                          onChange={(event) => {
+                            setTargetRole(event.target.value)
+                            setFormErrors((current) => ({ ...current, targetRole: undefined }))
+                          }}
+                          placeholder="Marketing Intern, Frontend Developer, Event Coordinator"
+                          value={targetRole}
+                        />
+                      </div>
+                    </section>
+                  ) : selectedAction === 'translate' ? (
+                    <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                      The selected CV will be translated directly to English. Industry and target role are not required.
+                    </div>
+                  ) : null}
+
                   <div className="flex flex-col gap-4 rounded-[var(--radius-lg)] bg-[var(--color-bg-main)] p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Selected CV</p>
@@ -656,12 +643,16 @@ export default function AiChatPage() {
                     </div>
                     <Button
                       className="w-full shrink-0 sm:w-auto"
-                      disabled={!selectedCv || !industrySlug || !targetRole.trim() || !selectedAction || isAnyAiPending}
+                      disabled={!canSubmit || isAnyAiPending}
                       iconRight={<ArrowRightIcon className="h-4 w-4" />}
                       loading={isAnyAiPending}
                       type="submit"
                     >
-                      Start AI action
+                      {selectedAction === 'analyze'
+                        ? 'Chấm điểm và review'
+                        : selectedAction === 'translate'
+                          ? 'Dịch CV'
+                          : 'Start AI action'}
                     </Button>
                   </div>
                 </Form>
@@ -669,7 +660,26 @@ export default function AiChatPage() {
             </Card>
           ) : null}
 
-          {isAnyAiPending ? <AiProcessingState /> : null}
+          {activeResultSource === 'current' && lastRequest ? (
+            <Card className="border-[var(--color-teal)] bg-[var(--color-bg-soft)]">
+              <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">Your request</p>
+                  <p className="mt-1 font-semibold text-[var(--color-text-primary)]">
+                    {lastRequest.action === 'analyze' ? 'Score and review this CV' : 'Translate this CV to English'}
+                  </p>
+                  {lastRequest.targetRole ? (
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                      {lastRequest.industryLabel} · {lastRequest.targetRole}
+                    </p>
+                  ) : null}
+                </div>
+                <p className="max-w-full truncate text-sm font-medium text-[var(--color-text-secondary)] sm:max-w-[45%]">{lastRequest.cvTitle}</p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {isAnyAiPending ? <AiProcessingState mode={isTranslationPending ? 'translation' : 'analysis'} /> : null}
 
           <div className="border-t border-[var(--color-border)] pt-6">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">Step 4</p>
@@ -687,16 +697,14 @@ export default function AiChatPage() {
             />
           ) : (
             <>
-              {scoreError ? <ErrorMessage error={scoreError} /> : null}
-              {feedbackError ? <ErrorMessage error={feedbackError} /> : null}
-              {translationError ? <ErrorMessage error={translationError} /> : null}
+              {scoreError ? <ErrorMessage error={scoreError} onRetry={() => actionFormRef.current?.requestSubmit()} /> : null}
+              {translationError ? <ErrorMessage error={translationError} onRetry={() => actionFormRef.current?.requestSubmit()} /> : null}
 
               {scoreResult ? <ScoreOverview result={scoreResult} /> : null}
-              {hasCurrentAnalysisOutcome ? <AiCommentCard comment={currentAiComment} /> : null}
-              {feedbackResult ? <FeedbackPanel result={feedbackResult} /> : null}
+              {currentAiComment ? <AiCommentCard comment={currentAiComment} /> : null}
 
               {translationResult ? <TranslationPanel result={translationResult} /> : null}
-              {!scoreResult && !feedbackResult && !translationResult && !scoreError && !feedbackError && !translationError && !isAnyAiPending ? (
+              {!scoreResult && !translationResult && !scoreError && !translationError && !isAnyAiPending ? (
                 <Card className="border-dashed">
                   <CardContent className="py-8 text-center text-sm text-[var(--color-text-secondary)]">
                     Your completed AI result will appear here. Saved results remain available in AI Results.
@@ -707,7 +715,7 @@ export default function AiChatPage() {
           )}
         </div>
 
-        <aside className="h-fit space-y-6 lg:sticky lg:top-6">
+        <aside className="h-fit scroll-mt-6 space-y-6 lg:sticky lg:top-6" id="ai-results">
           <div>
             <h2 className="text-2xl font-semibold">AI Results</h2>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Open completed, pending, or failed tasks without starting a new request.</p>

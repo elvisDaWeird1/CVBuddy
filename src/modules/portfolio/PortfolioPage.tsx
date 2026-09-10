@@ -66,7 +66,7 @@ export default function PortfolioPage() {
 
   return (
     <PageShell>
-      <PageHeading
+      {/* <PageHeading
         actions={(
           <>
             <Link to="/portfolio/edit"><Button iconLeft={<EditIcon className="h-4 w-4" />} variant="secondary">Edit profile</Button></Link>
@@ -79,14 +79,14 @@ export default function PortfolioPage() {
       />
 
       {portfolio.skills.length ? <div className="mb-6"><TagList items={portfolio.skills} /></div> : null}
-      {notice ? <div className="mb-6"><Notice kind={notice.kind}>{notice.text}</Notice></div> : null}
+      {notice ? <div className="mb-6"><Notice kind={notice.kind}>{notice.text}</Notice></div> : null} */}
 
-      <PortfolioVisibilityControl
+      {/* <PortfolioVisibilityControl
         busy={visibilityBusy}
         isPublic={portfolio.isPublic}
         onChange={(next) => void changeVisibility(next)}
         publicUrl={publicUrl}
-      />
+      /> */}
 
       <section className="mt-10" aria-labelledby="portfolio-gallery-title">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
