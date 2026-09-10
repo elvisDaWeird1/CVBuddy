@@ -24,12 +24,14 @@ type ProjectFeature = {
   inverted?: boolean
 }
 
+/* About Us is intentionally hidden for the initial deployment.
 type TeamMember = {
   id: number
   name: string
   role: string
   image: string | null
 }
+*/
 
 type LandingFeature = {
   title: string
@@ -38,6 +40,7 @@ type LandingFeature = {
   icon: ReactNode
 }
 
+/* Team data kept with the hidden About Us section.
 const teamMembers: TeamMember[] = [
   { id: 1, name: 'Member 1', role: 'Team role to be updated', image: null },
   { id: 2, name: 'Member 2', role: 'Team role to be updated', image: null },
@@ -46,6 +49,7 @@ const teamMembers: TeamMember[] = [
   { id: 5, name: 'Member 5', role: 'Team role to be updated', image: null },
   { id: 6, name: 'Member 6', role: 'Team role to be updated', image: null },
 ]
+*/
 
 const projectFeatures: ProjectFeature[] = [
   {
