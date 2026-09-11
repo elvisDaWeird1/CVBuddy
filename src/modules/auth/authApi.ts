@@ -24,6 +24,11 @@ export interface AuthSessionData {
   account?: AuthAccount
 }
 
+export interface CurrentAuthSessionData {
+  account: AuthAccount
+  profile?: Record<string, unknown> | null
+}
+
 export interface LoginPayload {
   email: string
   password: string
@@ -60,6 +65,11 @@ export async function logout() {
   return response.data
 }
 
+export async function getCurrentAuthSession() {
+  const response = await httpClient.get<BackendApiResponse<CurrentAuthSessionData>>('/auth/me')
+  return response.data
+}
+
 export function getAuthApiErrorMessage(error: unknown, fallback: string) {
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const responseData = (error as { response?: { data?: { message?: unknown } } }).response?.data
@@ -76,4 +86,10 @@ export function getAuthApiErrorCode(error: unknown) {
   if (typeof error !== 'object' || error === null || !('response' in error)) return undefined
   const responseData = (error as { response?: { data?: { code?: unknown } } }).response?.data
   return typeof responseData?.code === 'string' ? responseData.code : undefined
+}
+
+export function getAuthApiErrorStatus(error: unknown) {
+  if (typeof error !== 'object' || error === null || !('response' in error)) return undefined
+  const status = (error as { response?: { status?: unknown } }).response?.status
+  return typeof status === 'number' ? status : undefined
 }

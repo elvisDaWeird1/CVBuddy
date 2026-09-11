@@ -6,6 +6,7 @@ import { AuthAvatarMenu } from './AuthAvatarMenu'
 import { logout } from '@/modules/auth/authApi'
 import { clearAuthSession } from '@/modules/auth/authStorage'
 import { useAuthSession } from '@/modules/auth/useAuthSession'
+import { AUTH_ROLES, getAuthRole, getWorkspacePathForAccount } from '@/modules/auth/authPolicy'
 import {
   getLandingPath,
   LANDING_HOME_HASH,
@@ -21,6 +22,13 @@ export function Header() {
   const navigate = useNavigate()
   const { token, account } = useAuthSession()
   const isAuthenticated = Boolean(token)
+  const accountRole = getAuthRole(account)
+  const workspacePath = getWorkspacePathForAccount(account)
+  const workspaceLabel = accountRole === AUTH_ROLES.ADMIN
+    ? 'Admin workspace'
+    : accountRole === AUTH_ROLES.COMPANY
+      ? 'Company workspace'
+      : 'Profile'
   const isLandingRoute = location.pathname === '/'
 
   // Lưu hash trước đó để phát hiện thay đổi trong lúc render
@@ -159,12 +167,12 @@ export function Header() {
           {isAuthenticated ? (
             <>
               <Link
-                to="/profile"
+                to={workspacePath}
                 className="inline-flex h-9 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-teal)]"
               >
-                Explore -&gt;
+                Workspace -&gt;
               </Link>
-              <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
+              <AuthAvatarMenu account={account} profileLabel={workspaceLabel} profileTo={workspacePath} onLogout={handleLogout} />
             </>
           ) : (
             <>
@@ -226,18 +234,18 @@ export function Header() {
             })}
             {isAuthenticated && (
               <Link
-                to="/profile"
+                to={workspacePath}
                 className="rounded-[var(--radius-lg)] px-3 py-2 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Explore -&gt;
+                Workspace -&gt;
               </Link>
             )}
             <div className="mt-2">
               {isAuthenticated ? (
                 <div className="flex items-center justify-between rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-3">
                   <span className="text-sm font-medium text-[var(--color-text-secondary)]">Signed in</span>
-                  <AuthAvatarMenu account={account} profileTo="/profile" onLogout={handleLogout} />
+                  <AuthAvatarMenu account={account} profileLabel={workspaceLabel} profileTo={workspacePath} onLogout={handleLogout} />
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">

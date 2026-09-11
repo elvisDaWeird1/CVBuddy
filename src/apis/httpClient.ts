@@ -27,8 +27,8 @@ function isPublicRoute(pathname: string) {
 }
 
 function handleUnauthorized() {
-  clearAuthSession()
   setAuthMessage(AUTH_EXPIRED_MESSAGE)
+  clearAuthSession()
 
   if (!isRedirectingToLogin && !isPublicRoute(window.location.pathname)) {
     isRedirectingToLogin = true

@@ -7,6 +7,7 @@ import type { AuthAccount } from '@/modules/auth/authApi'
 interface AuthAvatarMenuProps {
   account: AuthAccount | null
   profileTo: string
+  profileLabel?: string
   onLogout: () => void
   className?: string
   buttonClassName?: string
@@ -30,6 +31,7 @@ function getInitials(account: AuthAccount | null) {
 export function AuthAvatarMenu({
   account,
   profileTo,
+  profileLabel = 'Profile',
   onLogout,
   className,
   buttonClassName,
@@ -103,7 +105,7 @@ export function AuthAvatarMenu({
             role="menuitem"
           >
             <UserIcon className="h-4 w-4" />
-            Profile
+            {profileLabel}
           </Link>
           <button
             type="button"
