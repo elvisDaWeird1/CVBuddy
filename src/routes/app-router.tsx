@@ -20,6 +20,7 @@ import PortfolioFormPage from '@/modules/portfolio/PortfolioFormPage'
 import { ExperienceDetailPage, ExperienceFormPage, ExperienceListPage } from '@/modules/portfolio/ExperiencePages'
 import { MomentCreatePage, MomentDetailPage, MomentListPage } from '@/modules/portfolio/MomentPages'
 import PublicPortfolioPage from '@/modules/portfolio/PublicPortfolioPage'
+import { PUBLIC_PORTFOLIO_ROUTE_PATH } from '@/modules/portfolio/portfolioApi'
 import AdminHome from '@/modules/admin/Home'
 import CompanyWorkspaceUnavailablePage from '@/modules/auth/CompanyWorkspaceUnavailablePage'
 
@@ -64,7 +65,7 @@ const appRoutes = [
       },
     ],
   },
-  { path: 'p/:slug', element: <PublicPortfolioPage /> },
+  { path: PUBLIC_PORTFOLIO_ROUTE_PATH, element: <PublicPortfolioPage /> },
   {
     element: <ProtectedRoute allowedRoles={APPLICANT_ONLY} />,
     children: [

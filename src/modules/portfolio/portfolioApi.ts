@@ -18,6 +18,12 @@ import type {
 
 type Wrapped<T, K extends string> = { [P in K]: T }
 
+export const PUBLIC_PORTFOLIO_ROUTE_PATH = 'p/:slug'
+
+export function getPublicPortfolioRoute(slug: string) {
+  return `/p/${encodeURIComponent(slug)}`
+}
+
 interface EvidenceListResponse {
   evidence: PortfolioEvidence[]
 }
