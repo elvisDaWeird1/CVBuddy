@@ -44,4 +44,9 @@ test('role guards reject access to another workspace', () => {
   assert.equal(applicantRole, AUTH_ROLES.APPLICANT)
   assert.equal(isRoleAllowed(applicantRole, [AUTH_ROLES.APPLICANT]), true)
   assert.equal(isRoleAllowed(applicantRole, [AUTH_ROLES.ADMIN]), false)
+
+  const adminRole = getAuthRole({ role: AUTH_ROLES.ADMIN })
+  assert.equal(adminRole, AUTH_ROLES.ADMIN)
+  assert.equal(isRoleAllowed(adminRole, [AUTH_ROLES.ADMIN]), true)
+  assert.equal(isRoleAllowed(adminRole, [AUTH_ROLES.APPLICANT]), false)
 })
