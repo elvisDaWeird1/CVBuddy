@@ -28,10 +28,10 @@ import {
 import { EXPERIENCE_STATUSES, EXPERIENCE_TYPES, EXPERIENCE_VISIBILITIES, EVIDENCE_TYPES, type EvidenceInput, type EvidenceType, type ExperienceType, type PortfolioEvidence, type PortfolioExperience, type PortfolioMoment } from './portfolioTypes'
 import { ConfirmButton, EmptyState, ExperienceCard, LoadingState, MediaPreview, Notice, PageHeading, PageShell, StatusBadge, TagList } from './PortfolioShared'
 import { formatDate, formatDateRange } from './portfolioFormat'
+import { validatePortfolioUploadFile } from './portfolioUploadPolicy'
 
 const typeOptions = EXPERIENCE_TYPES.map((value) => ({ value, label: value.replaceAll('-', ' ') }))
 const visibilityOptions = EXPERIENCE_VISIBILITIES.map((value) => ({ value, label: value === 'portfolio' ? 'Portfolio (public-ready)' : 'Private' }))
-const portfolioUploadMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
 
 export function ExperienceListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -189,8 +189,8 @@ function EvidenceManager({ evidence, busy, onDelete, onSave }: EvidenceManagerPr
     if (!title.trim()) { setError('Title is required.'); return }
     if (nextUrl && !/^https?:\/\//i.test(nextUrl)) { setError('Evidence URL must start with http:// or https://.'); return }
     if (!nextUrl && !file && !item.url && !item.asset) { setError('Evidence must keep an external URL or an uploaded file.'); return }
-    if (file && !portfolioUploadMimeTypes.includes(file.type)) { setError('Unsupported evidence file type. Use JPG, PNG, WEBP, MP4, PDF, DOC or DOCX.'); return }
-    if (file && file.size > 10 * 1024 * 1024) { setError('Evidence files must be 10 MB or smaller.'); return }
+    const fileError = file ? validatePortfolioUploadFile(file, 'evidence') : undefined
+    if (fileError) { setError(fileError); return }
     setError(null)
     try {
       await onSave(item.id, { type, title: title.trim(), description: description.trim() || undefined, url: nextUrl || item.url || undefined }, file)
@@ -269,15 +269,15 @@ export function ExperienceDetailPage() {
     event.preventDefault()
     if (!experienceId || !evidenceTitle.trim() || (!evidenceUrl.trim() && !evidenceFile)) { setMessage({ kind: 'error', text: 'Add a title and either an http(s) URL or a file.' }); return }
     if (evidenceUrl && !/^https?:\/\//i.test(evidenceUrl)) { setMessage({ kind: 'error', text: 'Evidence URL must start with http:// or https://.' }); return }
-    if (evidenceFile && !portfolioUploadMimeTypes.includes(evidenceFile.type)) { setMessage({ kind: 'error', text: 'Unsupported evidence file type. Use JPG, PNG, WEBP, MP4, PDF, DOC or DOCX.' }); return }
-    if (evidenceFile && evidenceFile.size > 10 * 1024 * 1024) { setMessage({ kind: 'error', text: 'Evidence files must be 10 MB or smaller.' }); return }
+    const fileError = validatePortfolioUploadFile(evidenceFile, 'evidence')
+    if (evidenceFile && fileError) { setMessage({ kind: 'error', text: fileError }); return }
     setBusy('evidence'); setMessage(null)
     try { const created = await createEvidence(experienceId, { type: evidenceType, title: evidenceTitle.trim(), description: evidenceDescription.trim() || undefined, url: evidenceUrl.trim() || undefined }, evidenceFile); if (created) setEvidence((current) => [created, ...current]); setEvidenceTitle(''); setEvidenceDescription(''); setEvidenceUrl(''); setEvidenceFile(undefined); setMessage({ kind: 'success', text: 'Evidence added.' }) } catch (error) { setMessage({ kind: 'error', text: getPortfolioErrorMessage(error, 'Unable to add evidence.') }) } finally { setBusy(null) }
   }
 
   const removeEvidence = async (id: string) => { if (!window.confirm('Delete this evidence? This cannot be undone.')) return; setBusy(`evidence-${id}`); try { await deleteEvidence(id); setEvidence((current) => current.filter((item) => item.id !== id)); setMessage({ kind: 'success', text: 'Evidence deleted.' }) } catch (error) { setMessage({ kind: 'error', text: getPortfolioErrorMessage(error, 'Unable to delete evidence.') }) } finally { setBusy(null) } }
   const saveEvidence = async (id: string, payload: EvidenceInput, file?: File) => { setBusy(`evidence-edit-${id}`); setMessage(null); try { const updated = await updateEvidence(id, payload, file); if (updated) setEvidence((current) => current.map((item) => item.id === id ? updated : item)); setMessage({ kind: 'success', text: 'Evidence updated.' }) } catch (error) { setMessage({ kind: 'error', text: getPortfolioErrorMessage(error, 'Unable to update evidence.') }); throw error } finally { setBusy(null) } }
-  const onCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file || !experienceId) return; if (!file.type.startsWith('image/')) { setMessage({ kind: 'error', text: 'Cover must be an image.' }); return } if (file.size > 10 * 1024 * 1024) { setMessage({ kind: 'error', text: 'Cover files must be 10 MB or smaller.' }); return } await runAction('cover', () => updateExperienceCover(experienceId, file)) }
+  const onCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file || !experienceId) return; const fileError = validatePortfolioUploadFile(file, 'cover'); if (fileError) { setMessage({ kind: 'error', text: fileError }); return } await runAction('cover', () => updateExperienceCover(experienceId, file)) }
 
   if (loading) return <PageShell><LoadingState label="Loading experience…" /></PageShell>
   if (!experience) return <PageShell>{message && <div className="mb-6"><Notice kind="error">{message.text}</Notice></div>}<EmptyState title="Experience not found" description="This experience may have been removed or you may not have access to it." action={<Link to="/portfolio/experiences"><Button>Back to experiences</Button></Link>} /></PageShell>

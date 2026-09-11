@@ -11,29 +11,14 @@ import { assignMoment, createMoment, deleteMoment, getExperiences, getMoment, ge
 import { EXPERIENCE_VISIBILITIES, MOMENT_STATUSES, type ExperienceVisibility, type PortfolioExperience, type PortfolioMoment } from './portfolioTypes'
 import { ConfirmButton, EmptyState, LoadingState, MediaPreview, Notice, PageHeading, PageShell, StatusBadge, TagList } from './PortfolioShared'
 import { formatDate } from './portfolioFormat'
-import { compressImageFile, validateImageFile } from '@/utils/imageUpload'
+import { compressImageFile } from '@/utils/imageUpload'
 import { cn } from '@/utils/cn'
+import { MAX_MOMENT_MEDIA_COUNT, momentMediaAccept, validateMomentMediaFiles } from './portfolioUploadPolicy'
 
-const validMediaTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4']
-const mediaAccept = 'image/jpeg,image/png,image/webp,video/mp4'
 const visibilityOptions = EXPERIENCE_VISIBILITIES.map((value) => ({ value, label: value === 'portfolio' ? 'Portfolio (public-ready)' : 'Private' }))
 
 function validateFiles(files: File[]) {
-  if (!files.length) return 'Choose at least one image or video.'
-  if (files.length > 5) return 'A moment can contain at most 5 media files.'
-  const invalid = files.find((file) => !validMediaTypes.includes(file.type))
-  if (invalid) return `${invalid.name} is not a supported media type.`
-
-  for (const file of files) {
-    if (file.type.startsWith('image/')) {
-      const imageError = validateImageFile(file, { maxBytes: 10 * 1024 * 1024 })
-      if (imageError) return `${file.name}: ${imageError}`
-    } else if (file.size <= 0 || file.size > 10 * 1024 * 1024) {
-      return `${file.name} must be a non-empty video within the 10 MB upload limit.`
-    }
-  }
-
-  return undefined
+  return validateMomentMediaFiles(files)
 }
 
 function formatBytes(bytes: number) {
@@ -157,17 +142,17 @@ export function MomentCreatePage() {
                 <p className="mt-3 font-semibold text-[var(--color-text-primary)]">
                   {preparingFiles ? 'Preparing images…' : 'Capture, choose, or drop media'}
                 </p>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">JPG, PNG, WEBP or MP4 · up to 5 files · 10 MB each</p>
+                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">JPG, PNG, WEBP or MP4 · up to {MAX_MOMENT_MEDIA_COUNT} files · 5 MB each</p>
                 <div className="mt-4 flex flex-wrap justify-center gap-3">
                   <label className={cn('inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-teal)] px-4 py-2 text-sm font-semibold text-white hover:brightness-95', (uploading || preparingFiles) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')}>
                     <CameraIcon className="h-4 w-4" />
                     Use camera
-                    <input className="sr-only" type="file" accept={mediaAccept} capture="environment" disabled={uploading || preparingFiles} onChange={chooseFiles} />
+                    <input className="sr-only" type="file" accept={momentMediaAccept} capture="environment" disabled={uploading || preparingFiles} onChange={chooseFiles} />
                   </label>
                   <label className={cn('inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-teal)] bg-[var(--color-white)] px-4 py-2 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]', (uploading || preparingFiles) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')}>
                     <UploadIcon className="h-4 w-4" />
                     Choose files
-                    <input className="sr-only" type="file" accept={mediaAccept} multiple disabled={uploading || preparingFiles} onChange={chooseFiles} />
+                    <input className="sr-only" type="file" accept={momentMediaAccept} multiple disabled={uploading || preparingFiles} onChange={chooseFiles} />
                   </label>
                 </div>
               </div>

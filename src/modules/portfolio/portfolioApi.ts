@@ -66,6 +66,10 @@ async function request<T>(call: () => Promise<{ data: BackendApiResponse<T> }>, 
 }
 
 export function getPortfolioErrorMessage(error: unknown, fallback: string) {
+  const code = getPortfolioErrorCode(error)
+  if (code === 'FILE_TOO_LARGE') return 'This file is larger than the 5 MB portfolio upload limit.'
+  if (code === 'INVALID_FILE_SIGNATURE') return 'This file content does not match its declared type. Choose the original file and try again.'
+  if (code === 'INVALID_PORTFOLIO_FILE') return 'This file type is not supported for this portfolio upload.'
   if (typeof error === 'object' && error !== null && 'message' in error) {
     const message = (error as { message?: unknown }).message
     if (typeof message === 'string' && message) return message
