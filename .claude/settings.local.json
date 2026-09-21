@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx vite *)",
+      "Bash(sed -i \"s|@/config|../config|g\" src/apis/axios.config.ts)",
+      "Bash(sed -i \"s|@/modules/admin/Home.tsx|../modules/admin/Home.tsx|g\" src/routes/index.tsx)",
+      "Bash(sed -i \"s|@/modules/admin/NotFound.tsx|../modules/admin/NotFound.tsx|g\" src/routes/index.tsx)",
+      "Bash(sed -i \"s|@/routes|./routes|g\" src/App.tsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(npm install *)",
+      "Bash(sed -i 's/{ className, variant, size, state, label, helperText, error, leftIcon, rightIcon, id, ...props }, ref/{ className, size, state, label, helperText, error, leftIcon, rightIcon, id, ...props }, ref/' src/components/ui/input.tsx)",
+      "Bash(sed -i \"s/inputVariants\\({ state, size, variant }\\)/inputVariants\\({ state, size }\\)/\" src/components/ui/input.tsx)",
+      "Bash(sed -i 's/forward_ref/forwardRef/g' src/components/ui/card.tsx)",
+      "Bash(sed -i '/import type { InputProps } from/d' src/components/ui/form.tsx)",
+      "Bash(sed -i 's/, { CheckIcon }//' src/components/ui/select.tsx)",
+      "Bash(C:\\\\Python313\\\\python.exe /tmp/gen_preview.py)",
+      "Bash(where python *)",
+      "Bash(where python3 *)",
+      "Bash(where node *)",
+      "Bash(ls D:/exe/frontend/run_gen.js D:/exe/frontend/public/gen.js D:/exe/frontend/public/gen_preview.js D:/exe/frontend/public/running D:/exe/frontend/public/creating D:/exe/frontend/public/preview_gen.js 2>&1; echo \"---\"; ls /tmp/gen_preview.py /tmp/run_gen.js 2>&1)"
+    ]
+  }
+}

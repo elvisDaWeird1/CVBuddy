@@ -1,0 +1,274 @@
+import { useState, useEffect, type MouseEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { ArrowRightIcon } from '@/components/ui/icons'
+import { cn } from '@/utils/cn'
+import { AuthAvatarMenu } from './AuthAvatarMenu'
+import { logout } from '@/modules/auth/authApi'
+import { clearAuthSession } from '@/modules/auth/authStorage'
+import { useAuthSession } from '@/modules/auth/useAuthSession'
+import { AUTH_ROLES, getAuthRole, getWorkspacePathForAccount } from '@/modules/auth/authPolicy'
+import {
+  getLandingPath,
+  LANDING_HOME_HASH,
+  landingNavItems,
+  scrollToLandingSection,
+} from '@/modules/pages/landingNavigation'
+
+export function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [activeSection, setActiveSection] = useState('#home')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { token, account } = useAuthSession()
+  const isAuthenticated = Boolean(token)
+  const accountRole = getAuthRole(account)
+  const workspacePath = getWorkspacePathForAccount(account)
+  const workspaceLabel = accountRole === AUTH_ROLES.ADMIN
+    ? 'Admin workspace'
+    : accountRole === AUTH_ROLES.COMPANY
+      ? 'Company workspace'
+      : 'Profile'
+  const isLandingRoute = location.pathname === '/'
+
+  // Lưu hash trước đó để phát hiện thay đổi trong lúc render
+  const [prevHash, setPrevHash] = useState(location.hash)
+
+  // Adjust state during render thay vì trong effect
+  if (isLandingRoute && location.hash && location.hash !== prevHash) {
+    setPrevHash(location.hash)
+    setActiveSection(location.hash)
+  }
+
+  // Effect theo dõi scroll giữ nguyên (đây là hợp lệ vì setState
+  // nằm trong callback của observer, không nằm trực tiếp trong thân effect)
+  useEffect(() => {
+    if (!isLandingRoute) return
+
+    const sectionIds = landingNavItems.map((item) => item.hash.slice(1))
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null)
+
+    if (sections.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting)
+        if (visible.length > 0) {
+          const closest = visible.reduce((prev, curr) =>
+            curr.boundingClientRect.top < prev.boundingClientRect.top ? curr : prev,
+          )
+          setActiveSection(`#${closest.target.id}`)
+        }
+      },
+      {
+        root: null,
+        rootMargin: '-20% 0px -70% 0px',
+        threshold: 0,
+      },
+    )
+
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [isLandingRoute])
+
+  const handleLandingNavClick = (event: MouseEvent<HTMLAnchorElement>, hash: string) => {
+    event.preventDefault()
+    setIsMenuOpen(false)
+    setActiveSection(hash) // feedback ngay khi click, không chờ observer
+
+    if (isLandingRoute) {
+      navigate({ pathname: '/', hash }, { replace: location.hash === hash })
+      window.setTimeout(() => scrollToLandingSection(hash), 0)
+      return
+    }
+
+    navigate({ pathname: '/', hash })
+  }
+
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    setIsMenuOpen(false)
+    setActiveSection(LANDING_HOME_HASH)
+
+    if (isLandingRoute) {
+      navigate(
+        { pathname: '/', hash: LANDING_HOME_HASH },
+        { replace: location.hash === LANDING_HOME_HASH },
+      )
+      window.setTimeout(() => scrollToLandingSection(LANDING_HOME_HASH), 0)
+      return
+    }
+
+    navigate(getLandingPath(LANDING_HOME_HASH))
+  }
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+
+    setIsMenuOpen(false)
+    setIsLoggingOut(true)
+
+    try {
+      await logout()
+    } catch {
+      // Local cleanup and redirect are still required when the server rejects the token.
+    } finally {
+      clearAuthSession()
+      navigate('/login', { replace: true })
+      setIsLoggingOut(false)
+    }
+  }
+
+  return (
+    <header className="sticky top-0 z-[200] w-full border-b border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <Link
+          aria-label="Go to the top of the CVBuddy landing page"
+          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-[var(--radius-md)]"
+          onClick={handleLogoClick}
+          to={getLandingPath(LANDING_HOME_HASH)}
+        >
+          <img
+            src="/logo.png"
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-8"
+          />
+          <span className="text-lg font-bold tracking-tight text-[var(--color-navy)]">
+            CV Buddy
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-6 md:flex" aria-label="Landing sections">
+          {landingNavItems.map((item) => {
+            const isActive = isLandingRoute && activeSection === item.hash
+
+            return (
+              <a
+                key={item.hash}
+                href={getLandingPath(item.hash)}
+                onClick={(event) => handleLandingNavClick(event, item.hash)}
+                className={cn(
+                  'border-b-2 py-1 text-sm font-semibold transition-colors duration-150',
+                  isActive
+                    ? 'border-[var(--color-teal)] text-[var(--color-teal)]'
+                    : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-teal)]',
+                )}
+              >
+                {item.label}
+              </a>
+            )
+          })}
+        </nav>
+
+        <div className="hidden items-center gap-3 md:flex">
+          {isAuthenticated ? (
+            <>
+              <Link
+                to={workspacePath}
+                className="inline-flex h-9 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-soft)] hover:text-[var(--color-teal)]"
+              >
+                Workspace -&gt;
+              </Link>
+              <AuthAvatarMenu account={account} profileLabel={workspaceLabel} profileTo={workspacePath} onLogout={handleLogout} />
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="inline-flex h-9 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-teal)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-teal)]"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-teal)] px-4 text-sm font-semibold text-[var(--color-text-on-teal)] transition-all hover:brightness-95"
+              >
+                Create account
+                <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+            </>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)] md:hidden"
+          onClick={() => setIsMenuOpen((current) => !current)}
+          aria-label="Toggle navigation menu"
+          aria-expanded={isMenuOpen}
+          aria-controls="landing-mobile-navigation"
+        >
+          <span className="sr-only">Toggle navigation menu</span>
+          <span className="flex flex-col gap-1.5">
+            <span className="h-0.5 w-5 rounded-full bg-current" />
+            <span className="h-0.5 w-5 rounded-full bg-current" />
+            <span className="h-0.5 w-5 rounded-full bg-current" />
+          </span>
+        </button>
+      </div>
+
+      {isMenuOpen && (
+        <div className="border-t border-[var(--color-border)] bg-[var(--color-white)] px-4 py-4 shadow-[var(--shadow-lg)] md:hidden">
+          <nav id="landing-mobile-navigation" className="mx-auto flex max-w-[1200px] flex-col gap-2" aria-label="Mobile landing sections">
+            {landingNavItems.map((item) => {
+              const isActive = isLandingRoute && activeSection === item.hash
+
+              return (
+                <a
+                  key={item.hash}
+                  href={getLandingPath(item.hash)}
+                  onClick={(event) => handleLandingNavClick(event, item.hash)}
+                  className={cn(
+                    'rounded-[var(--radius-lg)] px-3 py-2 text-sm font-semibold transition-colors',
+                    isActive
+                      ? 'bg-[var(--color-bg-soft)] text-[var(--color-teal)]'
+                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-teal)]',
+                  )}
+                >
+                  {item.label}
+                </a>
+              )
+            })}
+            {isAuthenticated && (
+              <Link
+                to={workspacePath}
+                className="rounded-[var(--radius-lg)] px-3 py-2 text-sm font-semibold text-[var(--color-teal)] transition-colors hover:bg-[var(--color-bg-soft)]"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Workspace -&gt;
+              </Link>
+            )}
+            <div className="mt-2">
+              {isAuthenticated ? (
+                <div className="flex items-center justify-between rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-3">
+                  <span className="text-sm font-medium text-[var(--color-text-secondary)]">Signed in</span>
+                  <AuthAvatarMenu account={account} profileLabel={workspaceLabel} profileTo={workspacePath} onLogout={handleLogout} />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    to="/login"
+                    className="inline-flex h-10 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--color-border)] text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-teal)] hover:text-[var(--color-teal)]"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="inline-flex h-10 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--color-teal)] text-sm font-semibold text-[var(--color-text-on-teal)] hover:brightness-95"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
+          </nav>
+        </div>
+      )}
+    </header>
+  )
+}

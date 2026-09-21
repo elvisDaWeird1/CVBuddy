@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CVBuddy – Người bạn AI giúp bạn hiểu và cải thiện CV</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-background": "#111c2d",
+                        "secondary-container": "#d5e4f8",
+                        "surface-dim": "#cfdaf2",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#434655",
+                        "tertiary-container": "#6b6e70",
+                        "outline": "#737686",
+                        "on-primary": "#ffffff",
+                        "secondary": "#516070",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c3c6d7",
+                        "tertiary": "#525657",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#d8e3fb",
+                        "secondary-fixed": "#d5e4f8",
+                        "inverse-primary": "#b4c5ff",
+                        "on-tertiary-container": "#eff1f3",
+                        "error-container": "#ffdad6",
+                        "primary": "#004ac6",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-container-high": "#dee8ff",
+                        "on-secondary-fixed": "#0e1d2b",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-container": "#e7eeff",
+                        "surface-tint": "#0053db",
+                        "surface": "#f9f9ff",
+                        "inverse-on-surface": "#ecf1ff",
+                        "surface-bright": "#f9f9ff",
+                        "primary-container": "#2563eb",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-primary-container": "#eeefff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#d8e3fb",
+                        "on-secondary-container": "#576676",
+                        "inverse-surface": "#263143",
+                        "secondary-fixed-dim": "#b9c8db",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-surface": "#111c2d",
+                        "background": "#f9f9ff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#3a4858",
+                        "tertiary-fixed": "#e0e3e5",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed": "#00174b",
+                        "surface-container-low": "#f0f3ff"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "section-padding-desktop": "120px",
+                        "stack-gap": "16px",
+                        "section-padding-mobile": "64px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "container-max": "1200px"
+                    },
+                    fontFamily: {
+                        "body-lg": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "button": ["Be Vietnam Pro"],
+                        "headline-sm": ["Be Vietnam Pro"],
+                        "display-lg": ["Be Vietnam Pro"],
+                        "label-md": ["Be Vietnam Pro"],
+                        "display-lg-mobile": ["Be Vietnam Pro"],
+                        "headline-md": ["Be Vietnam Pro"]
+                    },
+                    fontSize: {
+                        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "button": ["16px", { lineHeight: "1", fontWeight: "600" }],
+                        "headline-sm": ["24px", { lineHeight: "1.4", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500" }],
+                        "display-lg-mobile": ["32px", { lineHeight: "1.25", fontWeight: "700" }],
+                        "headline-md": ["30px", { lineHeight: "1.3", fontWeight: "600" }]
+                    },
+                    boxShadow: {
+                        'soft-1': '0 4px 20px rgba(30, 41, 59, 0.05)',
+                        'soft-2': '0 12px 30px rgba(30, 41, 59, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; background-color: #f9f9ff; color: #111c2d; }
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="antialiased">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md shadow-sm border-b-0 border-transparent transition-all duration-300" id="navbar">
+<div class="max-w-container-max mx-auto px-gutter flex justify-between items-center h-20">
+<a class="text-headline-sm font-headline-sm font-bold text-primary flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
+                CVBuddy
+            </a>
+<nav class="hidden md:flex space-x-8">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#home">Trang chủ</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#about">Về chúng tôi</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#project">Dự án</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#ai-buddy">AI Buddy</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#survey">Khảo sát</a>
+</nav>
+<div class="hidden md:block">
+<a class="bg-primary-container text-on-primary px-6 py-3 rounded-full font-button text-button hover:bg-primary transition-colors shadow-soft-1 hover:shadow-soft-2 inline-flex items-center gap-2" href="#survey">
+                    Bắt đầu ngay <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+<!-- Mobile Menu Button -->
+<button aria-label="Menu" class="md:hidden text-on-surface p-2 rounded-lg hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="py-section-padding-mobile md:py-section-padding-desktop px-gutter relative overflow-hidden bg-gradient-to-b from-surface-container to-background" id="home">
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+<div class="space-y-8 animate-[fade-in-up_0.8s_ease-out]">
+<div class="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-primary rounded-full font-label-md text-label-md">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</span>
+                        Trí tuệ nhân tạo mới nhất
+                    </div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background">
+                        CVBuddy – Người bạn AI giúp bạn hiểu và cải thiện CV
+                    </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                        Công cụ đánh giá và tối ưu hóa hồ sơ năng lực dành riêng cho sinh viên và người tìm việc. Tự tin bước vào thị trường lao động với một CV ấn tượng.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-4 pt-4">
+<a class="bg-primary-container text-on-primary px-8 py-4 rounded-full font-button text-button text-center hover:bg-primary transition-colors shadow-soft-1 hover:shadow-soft-2 flex items-center justify-center gap-2" href="#survey">
+                            Bắt đầu khảo sát
+                        </a>
+<a class="bg-surface text-primary border border-primary/20 px-8 py-4 rounded-full font-button text-button text-center hover:bg-surface-container transition-colors flex items-center justify-center gap-2" href="#ai-buddy">
+                            Tìm hiểu AI Buddy
+                        </a>
+</div>
+</div>
+<div class="relative w-full h-[400px] md:h-[600px] rounded-3xl overflow-hidden shadow-soft-2 group">
+<!-- Placeholder for Hero Image (as requested, but instructions say MUST include images from list. No list provided, using standard placeholder logic as fallback to instructions) -->
+<img alt="CVBuddy Hero Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A modern, high-quality photograph or digital illustration of a young, confident professional or student looking at a laptop screen, smiling. The setting is a bright, contemporary co-working space or cafe with soft, natural lighting. The overall color palette features soft blues and warm whites, aligning with a light-mode, optimistic tech aesthetic. The mood is encouraging and successful." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtyN_SYS_Chqe9NAzbo31qIPDzRI5ZQ2R5dyx9JvjUlUw7aRgjC30RfT7qgA-MgUnxM4OhvnnNqbEtYzzQezauwgpi6eU_hoIN7sGicwn2__JkiktQQlEMJCoTVKpbBUNVxWwqvOutCfsNNZFKjGhwYROtQut40GIVMdb_KGBpQchYUNH9ySR523gteegFgNoN6GboXPqAFrnrOfOTJRjJLHWYLkk20tIYQCMG3C6LP4o14yTK2fWLfsAYJht_K5bENeKV6Fbezqs"/>
+<!-- Floating UI Element -->
+<div class="absolute bottom-8 left-8 right-8 glass-card rounded-2xl p-6 animate-[float_4s_ease-in-out_infinite]">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm text-on-surface">Điểm CV: 92/100</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Sẵn sàng ứng tuyển!</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Decorative Elements -->
+<div class="absolute top-1/4 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2"></div>
+<div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary-container/20 rounded-full blur-3xl -z-10 -translate-x-1/2 translate-y-1/2"></div>
+</section>
+<!-- About Us Section -->
+<section class="py-section-padding-mobile md:py-section-padding-desktop px-gutter bg-surface-lowest" id="about">
+<div class="max-w-container-max mx-auto">
+<div class="text-center max-w-2xl mx-auto mb-16">
+<h2 class="font-headline-md text-headline-md text-on-background mb-4">Về chúng tôi</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        CVBuddy được xây dựng với sứ mệnh xóa bỏ rào cản giữa ứng viên và nhà tuyển dụng thông qua sức mạnh của trí tuệ nhân tạo, mang đến giải pháp đánh giá CV khách quan và sâu sắc.
+                    </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Card 1 -->
+<div class="bg-surface rounded-2xl p-8 shadow-soft-1 hover:shadow-soft-2 transition-shadow duration-300 border border-surface-variant relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary-container/5 rounded-bl-full transition-transform duration-300 group-hover:scale-110"></div>
+<div class="w-14 h-14 bg-surface-container rounded-xl flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-3xl">touch_app</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-3">Dễ sử dụng</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Giao diện trực quan, chỉ cần tải CV của bạn lên và nhận kết quả phân tích trong vài giây. Không cần kiến thức kỹ thuật.</p>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface rounded-2xl p-8 shadow-soft-1 hover:shadow-soft-2 transition-shadow duration-300 border border-surface-variant relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary-container/5 rounded-bl-full transition-transform duration-300 group-hover:scale-110"></div>
+<div class="w-14 h-14 bg-surface-container rounded-xl flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-3xl">person</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-3">Cá nhân hóa</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Nhận xét và góp ý được tinh chỉnh dựa trên ngành nghề, kinh nghiệm và mục tiêu công việc cụ thể của riêng bạn.</p>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface rounded-2xl p-8 shadow-soft-1 hover:shadow-soft-2 transition-shadow duration-300 border border-surface-variant relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary-container/5 rounded-bl-full transition-transform duration-300 group-hover:scale-110"></div>
+<div class="w-14 h-14 bg-surface-container rounded-xl flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-3xl">explore</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-3">Định hướng thực tế</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">So sánh kỹ năng của bạn với yêu cầu thực tế của thị trường lao động để chỉ ra những điểm cần trau dồi thêm.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Project Section (Bento Grid Style) -->
+<section class="py-section-padding-mobile md:py-section-padding-desktop px-gutter bg-surface-container-low" id="project">
+<div class="max-w-container-max mx-auto">
+<div class="mb-16">
+<h2 class="font-headline-md text-headline-md text-on-background mb-4">Dự án CVBuddy</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                        Nền tảng toàn diện giúp bạn quản lý và phát triển thương hiệu cá nhân chuyên nghiệp.
+                    </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[240px]">
+<!-- Bento Item 1: Large -->
+<div class="md:col-span-8 bg-surface rounded-3xl p-8 shadow-soft-1 border border-surface-variant flex flex-col justify-between overflow-hidden relative group">
+<div class="relative z-10 max-w-md">
+<span class="material-symbols-outlined text-primary mb-4 text-4xl">fact_check</span>
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-2">Đánh giá CV AI</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Thuật toán phân tích ngữ nghĩa sâu giúp phát hiện các lỗi định dạng, từ khóa thiếu sót và cấu trúc chưa tối ưu.</p>
+</div>
+<div class="absolute bottom-0 right-0 w-2/3 h-2/3 bg-gradient-to-tl from-surface-container-high to-transparent rounded-tl-3xl opacity-50 transition-opacity duration-300 group-hover:opacity-100"></div>
+</div>
+<!-- Bento Item 2: Small -->
+<div class="md:col-span-4 bg-primary-container text-on-primary rounded-3xl p-8 shadow-soft-1 flex flex-col justify-between relative overflow-hidden group">
+<div class="relative z-10">
+<span class="material-symbols-outlined mb-4 text-4xl text-on-primary" style="font-variation-settings: 'FILL' 1;">tips_and_updates</span>
+<h3 class="font-headline-sm text-headline-sm mb-2">Gợi ý cải thiện</h3>
+<p class="font-body-md text-body-md opacity-90">Đề xuất từ ngữ mạnh mẽ (action verbs) thay thế.</p>
+</div>
+<div class="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+</div>
+<!-- Bento Item 3: Small -->
+<div class="md:col-span-4 bg-surface rounded-3xl p-8 shadow-soft-1 border border-surface-variant flex flex-col justify-between relative group">
+<div class="relative z-10">
+<span class="material-symbols-outlined text-primary mb-4 text-4xl">contact_page</span>
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-2">Hồ sơ cá nhân</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Lưu trữ nhiều phiên bản CV cho các vị trí khác nhau.</p>
+</div>
+</div>
+<!-- Bento Item 4: Medium -->
+<div class="md:col-span-8 bg-surface rounded-3xl p-8 shadow-soft-1 border border-surface-variant flex items-center justify-between overflow-hidden relative group">
+<div class="relative z-10 max-w-sm">
+<span class="material-symbols-outlined text-primary mb-4 text-4xl">collections</span>
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-2">Portfolio hình ảnh</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Tích hợp các dự án thực tế vào CV một cách mượt mà và chuyên nghiệp.</p>
+</div>
+<!-- Decorative Abstract Shape -->
+<div class="hidden sm:block absolute right-8 w-32 h-32 bg-secondary-container rounded-full opacity-50 blur-2xl"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- AI Buddy Section -->
+<section class="py-section-padding-mobile md:py-section-padding-desktop px-gutter relative overflow-hidden bg-surface" id="ai-buddy">
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<!-- Chat UI Mockup -->
+<div class="order-2 lg:order-1 bg-surface-container-low rounded-3xl p-6 md:p-8 shadow-soft-2 border border-outline-variant/30 relative">
+<div class="flex items-center gap-3 mb-8 border-b border-outline-variant/20 pb-4">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<div>
+<h4 class="font-button text-button text-on-background">AI Buddy</h4>
+<span class="font-label-md text-label-md text-primary flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-green-500"></span> Online
+                            </span>
+</div>
+</div>
+<div class="space-y-6">
+<!-- User Message -->
+<div class="flex justify-end">
+<div class="bg-primary text-on-primary rounded-2xl rounded-tr-sm px-5 py-3 max-w-[80%] shadow-sm">
+<p class="font-body-md text-body-md">CV của mình còn yếu ở đâu?</p>
+</div>
+</div>
+<!-- AI Message -->
+<div class="flex justify-start">
+<div class="bg-white text-on-background border border-outline-variant/30 rounded-2xl rounded-tl-sm px-5 py-4 max-w-[90%] shadow-soft-1">
+<p class="font-body-md text-body-md mb-3">Chào bạn! Dựa trên phân tích, CV của bạn đang có phần Kinh nghiệm khá tốt, tuy nhiên:</p>
+<ul class="space-y-2 mb-3">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-error text-[18px] mt-0.5">remove_circle_outline</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Phần Kỹ năng còn chung chung (chưa có dẫn chứng số liệu).</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-error text-[18px] mt-0.5">remove_circle_outline</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Mục tiêu nghề nghiệp chưa rõ ràng cho vị trí Marketing.</span>
+</li>
+</ul>
+<p class="font-body-md text-body-md font-medium text-primary">Gợi ý: Hãy thử dùng cấu trúc "Đạt được [X] bằng cách thực hiện [Y]" nhé!</p>
+</div>
+</div>
+</div>
+<!-- Input Mock -->
+<div class="mt-8 bg-white border border-outline-variant/30 rounded-full px-6 py-3 flex items-center justify-between text-on-surface-variant shadow-inner">
+<span class="font-body-md text-body-md opacity-50">Nhập tin nhắn...</span>
+<span class="material-symbols-outlined text-primary cursor-pointer hover:scale-110 transition-transform">send</span>
+</div>
+</div>
+<!-- Text Content -->
+<div class="order-1 lg:order-2 space-y-6">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-high rounded-full font-label-md text-label-md text-secondary">
+<span class="material-symbols-outlined text-[16px]">forum</span> Tương tác trực tiếp
+                    </div>
+<h2 class="font-headline-md text-headline-md text-on-background">AI Buddy có thể giúp gì cho bạn?</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                        Trò chuyện trực tiếp với AI chuyên gia tuyển dụng. Hỏi bất cứ điều gì về cách viết CV, cách trả lời phỏng vấn hay lộ trình phát triển sự nghiệp.
+                    </p>
+<ul class="space-y-4 pt-4">
+<li class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">done</span>
+</div>
+<span class="font-body-md text-body-md text-on-background">Phản hồi theo thời gian thực 24/7.</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">done</span>
+</div>
+<span class="font-body-md text-body-md text-on-background">Gợi ý từ khóa chuyên ngành chuẩn ATS.</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">done</span>
+</div>
+<span class="font-body-md text-body-md text-on-background">Đóng vai nhà tuyển dụng mô phỏng phỏng vấn.</span>
+</li>
+</ul>
+<div class="pt-6">
+<a class="inline-flex items-center gap-2 bg-primary-container text-on-primary px-8 py-4 rounded-full font-button text-button hover:bg-primary transition-colors shadow-soft-1" href="#">
+                            Khám phá AI Buddy <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Survey Form Section -->
+<section class="py-section-padding-mobile md:py-section-padding-desktop px-gutter bg-surface-container" id="survey">
+<div class="max-w-3xl mx-auto bg-surface rounded-3xl p-8 md:p-12 shadow-soft-2 border border-surface-variant">
+<div class="text-center mb-10">
+<h2 class="font-headline-md text-headline-md text-on-background mb-4">Khảo sát nhu cầu người dùng</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Giúp chúng tôi hoàn thiện CVBuddy bằng cách chia sẻ những khó khăn bạn đang gặp phải.
+                    </p>
+</div>
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Name -->
+<div>
+<label class="block font-label-md text-label-md text-on-background mb-2" for="name">Họ và tên</label>
+<input class="w-full bg-surface-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all" id="name" placeholder="Nhập tên của bạn" type="text"/>
+</div>
+<!-- Email -->
+<div>
+<label class="block font-label-md text-label-md text-on-background mb-2" for="email">Email</label>
+<input class="w-full bg-surface-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all" id="email" placeholder="example@email.com" type="email"/>
+</div>
+</div>
+<!-- Role -->
+<div>
+<label class="block font-label-md text-label-md text-on-background mb-3">Bạn đang là:</label>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+<label class="flex items-center gap-2 cursor-pointer p-3 border border-outline-variant rounded-lg hover:bg-surface-variant transition-colors has-[:checked]:bg-primary-container/10 has-[:checked]:border-primary">
+<input class="text-primary focus:ring-primary border-outline" name="role" type="radio" value="student"/>
+<span class="font-body-md text-body-md">Sinh viên</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer p-3 border border-outline-variant rounded-lg hover:bg-surface-variant transition-colors has-[:checked]:bg-primary-container/10 has-[:checked]:border-primary">
+<input class="text-primary focus:ring-primary border-outline" name="role" type="radio" value="graduate"/>
+<span class="font-body-md text-body-md">Mới tốt nghiệp</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer p-3 border border-outline-variant rounded-lg hover:bg-surface-variant transition-colors has-[:checked]:bg-primary-container/10 has-[:checked]:border-primary">
+<input class="text-primary focus:ring-primary border-outline" name="role" type="radio" value="jobseeker"/>
+<span class="font-body-md text-body-md">Người tìm việc</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer p-3 border border-outline-variant rounded-lg hover:bg-surface-variant transition-colors has-[:checked]:bg-primary-container/10 has-[:checked]:border-primary">
+<input class="text-primary focus:ring-primary border-outline" name="role" type="radio" value="employed"/>
+<span class="font-body-md text-body-md">Đã đi làm</span>
+</label>
+</div>
+</div>
+<!-- Difficulty -->
+<div>
+<label class="block font-label-md text-label-md text-on-background mb-3">Khó khăn khi viết CV (chọn nhiều):</label>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="rounded text-primary focus:ring-primary border-outline h-5 w-5" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface-variant">Không biết viết mục tiêu nghề nghiệp sao cho hay.</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="rounded text-primary focus:ring-primary border-outline h-5 w-5" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface-variant">Thiếu kinh nghiệm làm việc thực tế để ghi vào.</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="rounded text-primary focus:ring-primary border-outline h-5 w-5" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface-variant">Thiết kế form mẫu lộn xộn, không chuyên nghiệp.</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="rounded text-primary focus:ring-primary border-outline h-5 w-5" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface-variant">Không biết CV đã chuẩn ATS chưa.</span>
+</label>
+</div>
+</div>
+<!-- Interest in AI -->
+<div>
+<label class="block font-label-md text-label-md text-on-background mb-3">Bạn có sẵn sàng sử dụng AI để sửa CV không?</label>
+<select class="w-full bg-surface-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all text-on-surface-variant">
+<option value="">Chọn một câu trả lời</option>
+<option value="yes">Chắc chắn có</option>
+<option value="maybe">Có thể thử</option>
+<option value="no">Không hứng thú</option>
+</select>
+</div>
+<!-- Textarea -->
+<div>
+<label class="block font-label-md text-label-md text-on-background mb-2" for="feedback">Chia sẻ thêm ý kiến của bạn</label>
+<textarea class="w-full bg-surface-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all resize-none" id="feedback" placeholder="Bạn mong chờ tính năng gì nhất từ CVBuddy?" rows="4"></textarea>
+</div>
+<button class="w-full bg-primary-container text-on-primary py-4 rounded-xl font-button text-button hover:bg-primary transition-colors shadow-soft-1 hover:shadow-soft-2 mt-4" type="submit">
+                        Gửi khảo sát
+                    </button>
+</form>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-on-background border-t border-outline-variant dark:border-outline w-full py-section-padding-mobile md:py-section-padding-desktop">
+<div class="max-w-container-max mx-auto px-gutter grid grid-cols-1 md:grid-cols-4 gap-stack-gap">
+<div class="col-span-1 md:col-span-2 space-y-4 pr-8">
+<a class="text-headline-sm font-headline-sm font-bold text-primary dark:text-primary-fixed-dim flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">description</span>
+                    CVBuddy
+                </a>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant max-w-sm">
+                    Trợ lý ảo thông minh đồng hành cùng bạn trên con đường xây dựng sự nghiệp thành công.
+                </p>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant pt-4">
+                    © 2026 CVBuddy. Tất cả quyền được bảo lưu.
+                </p>
+</div>
+<div class="col-span-1 space-y-4">
+<h4 class="font-button text-button text-on-background">Pháp lý</h4>
+<ul class="space-y-3">
+<li><a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary underline transition-all" href="#">Điều khoản</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary underline transition-all" href="#">Bảo mật</a></li>
+</ul>
+</div>
+<div class="col-span-1 space-y-4">
+<h4 class="font-button text-button text-on-background">Hỗ trợ</h4>
+<ul class="space-y-3">
+<li><a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary underline transition-all" href="#">Liên hệ</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary underline transition-all" href="#">Trợ giúp</a></li>
+</ul>
+</div>
+</div>
+</footer>
+<script>
+        // Simple Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-md');
+            } else {
+                nav.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body></html>

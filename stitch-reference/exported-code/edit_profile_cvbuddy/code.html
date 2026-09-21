@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Profile - CVBuddy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed-variant": "#004786",
+                      "surface-container-high": "#e7e8e9",
+                      "primary-fixed-dim": "#9ecaff",
+                      "on-tertiary-fixed": "#001c3a",
+                      "secondary-fixed-dim": "#bac9d3",
+                      "background": "#f8f9fa",
+                      "on-secondary-fixed-variant": "#3b4951",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#0061a4",
+                      "inverse-surface": "#2e3132",
+                      "surface-variant": "#e1e3e4",
+                      "outline-variant": "#bfc7d4",
+                      "secondary": "#526069",
+                      "tertiary-fixed": "#d4e3ff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-container": "#edeeef",
+                      "on-error": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "error": "#ba1a1a",
+                      "tertiary": "#005faf",
+                      "secondary-container": "#d3e2ed",
+                      "on-secondary-container": "#56656e",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-primary-container": "#002c4f",
+                      "on-primary-fixed-variant": "#00497d",
+                      "on-secondary-fixed": "#0f1d25",
+                      "primary-container": "#2196f3",
+                      "on-tertiary-container": "#002b55",
+                      "tertiary-fixed-dim": "#a5c8ff",
+                      "tertiary-container": "#4593f1",
+                      "on-primary-fixed": "#001d36",
+                      "primary": "#0061a4",
+                      "outline": "#707883",
+                      "primary-fixed": "#d1e4ff",
+                      "on-background": "#191c1d",
+                      "surface-dim": "#d9dadb",
+                      "inverse-primary": "#9ecaff",
+                      "surface-bright": "#f8f9fa",
+                      "surface": "#f8f9fa",
+                      "on-surface-variant": "#404752",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed": "#d6e5ef",
+                      "error-container": "#ffdad6",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f3f4f5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "16px",
+                      "xs": "8px",
+                      "md": "24px",
+                      "lg": "40px",
+                      "base": "4px",
+                      "container-max": "1200px",
+                      "gutter": "24px",
+                      "xl": "64px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "caption": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-sm": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "28px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar component -->
+<nav class="bg-surface-container-lowest dark:bg-surface-container-low shadow-[0_4px_20px_rgba(33,150,243,0.08)] shadow-sm dark:shadow-none docked full-width top-0 sticky z-50 transition-colors duration-200">
+<div class="flex justify-between items-center w-full px-md md:px-lg max-w-container-max mx-auto h-16">
+<div class="flex items-center gap-md">
+<a class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim hover:text-primary-container transition-colors" href="#">CVBuddy</a>
+<div class="hidden md:flex items-center gap-sm ml-lg">
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-body-md text-body-md translate-y-[-2px] transition-transform duration-200" href="#">Profile</a>
+<a class="text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200 font-body-md text-body-md" href="#">Applications</a>
+<a class="text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200 font-body-md text-body-md" href="#">Settings</a>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="hidden md:block px-md py-xs rounded-lg text-primary hover:bg-primary-container/10 transition-colors font-label-md text-label-md">Logout</button>
+<div class="w-10 h-10 rounded-full bg-secondary-container overflow-hidden ring-2 ring-primary-container/20">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="A professional headshot of a young professional smiling confidently in a bright, modern office space. Soft, natural lighting. High key aesthetic with calm blue and gray tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADVX_gmGtl1rgOzDh33RzsPSRtNHyXMKMcivkNzj-mUEG9eOVCqNCOBSAuMzbwkJ7sI-sGh3yvKcI9aGSqbX3Y6g4fLcRsulpTxGt4LnjK58WVfY1dFj5_eqgsddyEYup-RxeK8_KbEJPBFRCXokjp2SGE420x0Yq0FMePebOaLaiL8muxq_eQUR6wb8ae5d2-cZzvBv5Ymf5--sl0vX0QzcLjiq0Y_uC__ZWQ0FzWpDFtGE4gqi41z-ReMBt1HIs0_KehbecpZVU"/>
+</div>
+<!-- Mobile menu toggle placeholder -->
+<button class="md:hidden text-secondary p-xs rounded-lg hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-sm md:px-lg py-lg space-y-lg">
+<!-- Header & Breadcrumbs -->
+<div class="space-y-sm">
+<nav class="flex items-center text-secondary text-caption font-caption gap-xs">
+<a class="hover:text-primary transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[16px]">person</span>
+                    Profile
+                </a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface">Edit Profile</span>
+</nav>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-sm">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Edit Profile</h1>
+<p class="text-secondary mt-xs font-body-md text-body-md">Update your professional details to keep your applications strong.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-xs rounded-lg border-2 border-primary text-primary hover:bg-primary-container/10 transition-colors font-label-md text-label-md bg-surface-container-lowest">Cancel</button>
+<button class="px-md py-xs rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors font-label-md text-label-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] hover:translate-y-[-2px] duration-200">Save Changes</button>
+</div>
+</div>
+</div>
+<!-- Form Sections Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-md">
+<!-- Left Column: Main Form -->
+<div class="lg:col-span-2 space-y-md">
+<!-- Personal Info Card -->
+<section class="bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] transition-shadow duration-300">
+<div class="border-b border-primary-fixed/30 pb-sm mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary-container filled-icon">badge</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Personal Information</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">First Name</label>
+<input class="w-full bg-background border border-outline-variant rounded-lg px-sm py-xs text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-container/20 transition-all font-body-md text-body-md placeholder:text-secondary-fixed-dim" type="text" value="Jane"/>
+</div>
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">Last Name</label>
+<input class="w-full bg-background border border-outline-variant rounded-lg px-sm py-xs text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-container/20 transition-all font-body-md text-body-md placeholder:text-secondary-fixed-dim" type="text" value="Doe"/>
+</div>
+<div class="space-y-xs md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface-variant">Professional Headline</label>
+<input class="w-full bg-background border border-outline-variant rounded-lg px-sm py-xs text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-container/20 transition-all font-body-md text-body-md placeholder:text-secondary-fixed-dim" type="text" value="Product Designer &amp; UX Specialist"/>
+</div>
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">Email</label>
+<input class="w-full bg-background border border-outline-variant rounded-lg px-sm py-xs text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-container/20 transition-all font-body-md text-body-md placeholder:text-secondary-fixed-dim" type="email" value="jane.doe@example.com"/>
+</div>
+<div class="space-y-xs">
+<label class="block font-label-md text-label-md text-on-surface-variant">Phone</label>
+<input class="w-full bg-background border border-outline-variant rounded-lg px-sm py-xs text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-container/20 transition-all font-body-md text-body-md placeholder:text-secondary-fixed-dim" type="tel" value="+1 (555) 123-4567"/>
+</div>
+<div class="space-y-xs md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface-variant">Bio / Summary</label>
+<textarea class="w-full bg-background border border-outline-variant rounded-lg px-sm py-xs text-on-surface focus:border-primary focus:ring-2 focus:ring-primary-container/20 transition-all font-body-md text-body-md placeholder:text-secondary-fixed-dim resize-none" rows="4">Passionate product designer with 3 years of experience creating user-centric digital experiences. Strong focus on accessibility and clean interfaces.</textarea>
+</div>
+</div>
+</section>
+<!-- Experience Card -->
+<section class="bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] transition-shadow duration-300">
+<div class="border-b border-primary-fixed/30 pb-sm mb-md flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary-container filled-icon">work</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Experience</h2>
+</div>
+<button class="text-primary-container hover:text-primary transition-colors flex items-center gap-xs font-label-md text-label-md bg-primary-fixed/10 px-sm py-xs rounded-full">
+<span class="material-symbols-outlined text-[18px]">add</span> Add
+                        </button>
+</div>
+<div class="space-y-md">
+<!-- Experience Item 1 -->
+<div class="p-sm bg-background rounded-lg border border-outline-variant/50 relative group">
+<div class="absolute top-sm right-sm opacity-0 group-hover:opacity-100 transition-opacity flex gap-xs">
+<button class="text-secondary hover:text-primary bg-surface-container-lowest p-xs rounded-full shadow-sm"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="text-secondary hover:text-error bg-surface-container-lowest p-xs rounded-full shadow-sm"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface">Junior UX Designer</h3>
+<p class="font-body-md text-body-md text-secondary">TechCorp Inc. • Jan 2022 - Present</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs line-clamp-2">Assisted in wireframing and prototyping for the main user dashboard. Conducted user research sessions and synthesized findings.</p>
+</div>
+<!-- Experience Item 2 -->
+<div class="p-sm bg-background rounded-lg border border-outline-variant/50 relative group">
+<div class="absolute top-sm right-sm opacity-0 group-hover:opacity-100 transition-opacity flex gap-xs">
+<button class="text-secondary hover:text-primary bg-surface-container-lowest p-xs rounded-full shadow-sm"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="text-secondary hover:text-error bg-surface-container-lowest p-xs rounded-full shadow-sm"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface">Design Intern</h3>
+<p class="font-body-md text-body-md text-secondary">Creative Agency • Jun 2021 - Dec 2021</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs line-clamp-2">Supported senior designers in creating marketing assets and updating brand guidelines.</p>
+</div>
+</div>
+</section>
+<!-- Education Card -->
+<section class="bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] transition-shadow duration-300">
+<div class="border-b border-primary-fixed/30 pb-sm mb-md flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary-container filled-icon">school</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Education</h2>
+</div>
+<button class="text-primary-container hover:text-primary transition-colors flex items-center gap-xs font-label-md text-label-md bg-primary-fixed/10 px-sm py-xs rounded-full">
+<span class="material-symbols-outlined text-[18px]">add</span> Add
+                        </button>
+</div>
+<div class="space-y-md">
+<div class="p-sm bg-background rounded-lg border border-outline-variant/50">
+<h3 class="font-label-md text-label-md text-on-surface">BFA in Interaction Design</h3>
+<p class="font-body-md text-body-md text-secondary">State University • 2017 - 2021</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Graduated with Honors. Focus on human-computer interaction and accessible design principles.</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Sidebar / Meta Info -->
+<div class="space-y-md">
+<!-- Profile Picture Card -->
+<section class="bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] flex flex-col items-center text-center">
+<div class="w-32 h-32 rounded-full overflow-hidden mb-sm ring-4 ring-primary-fixed relative group cursor-pointer">
+<img alt="User profile photo large" class="w-full h-full object-cover group-hover:opacity-75 transition-opacity" data-alt="A professional headshot of a young professional smiling confidently in a bright, modern office space. Soft, natural lighting. High key aesthetic with calm blue and gray tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAthPcdZfvdPMi4hWqpCjo0SiayUeU6ldIZbAWBeyHq0qywgQ5Q09RCaG6ys-PAp8BG2i6jnGy4Ql-_8h4sxrMPfzC-7qF-Yz9TMynpSP3j1okXlFTJhvWG9FSRYaCx_r3shDycXd2aI70SrOb39Cuthh7KokiKGXvTReI47w2pQin_3tjiUCzm6-pP3Pgx602grzioDmT4xveVo7kCPug9-0qEo4M_2R5qy8YQoC_4uUgHTplO24soNNgqdRxNdC4j51-0pgXF7m0"/>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-on-surface/20">
+<span class="material-symbols-outlined text-surface-container-lowest text-[32px] drop-shadow-md">photo_camera</span>
+</div>
+</div>
+<button class="text-primary hover:text-primary-container font-label-md text-label-md transition-colors underline-offset-4 hover:underline">Change Photo</button>
+<p class="text-secondary font-caption text-caption mt-xs">JPG, GIF or PNG. Max size of 5MB.</p>
+</section>
+<!-- Skills Card (Chips) -->
+<section class="bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] transition-shadow duration-300">
+<div class="border-b border-primary-fixed/30 pb-sm mb-md flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary-container filled-icon">psychology</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Skills</h2>
+</div>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-xs">
+<span class="px-sm py-base bg-primary-fixed/30 text-primary-container rounded-full font-label-md text-label-md flex items-center gap-xs">Figma <button class="hover:text-error"><span class="material-symbols-outlined text-[14px]">close</span></button></span>
+<span class="px-sm py-base bg-primary-fixed/30 text-primary-container rounded-full font-label-md text-label-md flex items-center gap-xs">Prototyping <button class="hover:text-error"><span class="material-symbols-outlined text-[14px]">close</span></button></span>
+<span class="px-sm py-base bg-primary-fixed/30 text-primary-container rounded-full font-label-md text-label-md flex items-center gap-xs">User Research <button class="hover:text-error"><span class="material-symbols-outlined text-[14px]">close</span></button></span>
+<span class="px-sm py-base bg-primary-fixed/30 text-primary-container rounded-full font-label-md text-label-md flex items-center gap-xs">HTML/CSS <button class="hover:text-error"><span class="material-symbols-outlined text-[14px]">close</span></button></span>
+<button class="px-sm py-base border border-dashed border-primary/50 text-primary rounded-full font-label-md text-label-md hover:bg-primary-fixed/10 transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">add</span> Add Skill
+                        </button>
+</div>
+</section>
+<!-- Links Card -->
+<section class="bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(33,150,243,0.08)] hover:shadow-[0_8px_30px_rgba(33,150,243,0.12)] transition-shadow duration-300">
+<div class="border-b border-primary-fixed/30 pb-sm mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary-container filled-icon">link</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Links</h2>
+</div>
+<div class="space-y-sm">
+<div class="flex items-center gap-sm bg-background p-xs rounded-lg border border-outline-variant/50">
+<span class="material-symbols-outlined text-secondary">language</span>
+<input class="flex-1 bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface" placeholder="Website" type="url" value="janedoe.design"/>
+</div>
+<div class="flex items-center gap-sm bg-background p-xs rounded-lg border border-outline-variant/50">
+<span class="material-symbols-outlined text-secondary">share</span>
+<input class="flex-1 bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface" placeholder="LinkedIn" type="url" value="linkedin.com/in/janedoe"/>
+</div>
+<button class="w-full py-xs border border-dashed border-primary/50 text-primary rounded-lg font-label-md text-label-md hover:bg-primary-fixed/10 transition-colors flex items-center justify-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-[16px]">add</span> Add Link
+                        </button>
+</div>
+</section>
+</div>
+</div>
+<!-- Mobile Bottom CTA (Sticky) -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 p-sm bg-surface-container-lowest border-t border-surface-variant shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40">
+<button class="w-full py-sm rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors font-label-md text-label-md shadow-[0_4px_20px_rgba(33,150,243,0.08)]">Save Changes</button>
+</div>
+</main>
+<!-- Footer component -->
+<footer class="bg-surface-container dark:bg-surface-container-high w-full py-lg px-md md:px-lg max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-sm flat no shadows mt-xl pb-24 md:pb-lg">
+<div class="flex flex-col items-center md:items-start gap-xs">
+<span class="font-label-md text-label-md font-bold text-on-surface dark:text-on-surface-variant">CVBuddy</span>
+<span class="font-caption text-caption text-primary dark:text-primary-fixed-dim">© 2024 CVBuddy. Guided Clarity for Your Career.</span>
+</div>
+<div class="flex flex-wrap justify-center gap-md">
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Help Center</a>
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Terms of Service</a>
+<a class="font-caption text-caption text-on-secondary-fixed-variant dark:text-on-secondary-fixed hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all opacity-90 hover:opacity-100" href="#">Contact Us</a>
+</div>
+</footer>
+</body></html>

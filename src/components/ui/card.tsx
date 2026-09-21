@@ -3,7 +3,7 @@ import { cn } from '@/utils/cn'
 
 const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('rounded-xl border border-[var(--color-border)] bg-white shadow-sm', className)} {...props} />
+    <div ref={ref} className={cn('rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]', className)} {...props} />
   )
 )
 Card.displayName = 'Card'
@@ -38,7 +38,7 @@ CardContent.displayName = 'CardContent'
 
 const CardFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-gray-50)] rounded-b-xl', className)} {...props} />
+    <div ref={ref} className={cn('px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-gray-50)] rounded-b-[var(--radius-xl)]', className)} {...props} />
   )
 )
 CardFooter.displayName = 'CardFooter'

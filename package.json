@@ -1,5 +1,5 @@
 {
-  "name": "mock-project-ojt",
+  "name": "cv-buddy",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --experimental-strip-types --test tests/authPolicy.test.ts tests/adminMetrics.test.ts tests/adminMetricsComponent.test.ts tests/cvUploadPolicy.test.ts tests/portfolioUploadPolicy.test.ts",
+    "test:auth": "node --experimental-strip-types --test tests/authPolicy.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

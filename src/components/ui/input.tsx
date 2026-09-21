@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/utils/cn'
 
 const inputVariants = cva(
-  'w-full rounded-lg border bg-white px-3 py-2 text-sm text-[var(--color-navy)] placeholder:text-[var(--color-gray-400)] ' +
+  'w-full rounded-[var(--radius-lg)] border bg-[var(--color-white)] px-3 py-2 text-sm text-[var(--color-navy)] placeholder:text-[var(--color-gray-400)] ' +
   'transition-all duration-200 outline-none ' +
   'hover:border-[var(--color-border-hover)] ' +
   'focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)] ' +
@@ -12,7 +12,7 @@ const inputVariants = cva(
     variants: {
       state: {
         default: 'border-[var(--color-border)]',
-        error: 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]',
+        error: 'border-[var(--color-error)] focus:border-[var(--color-error)] focus:shadow-[var(--focus-ring)]',
         success: 'border-[var(--color-success)] focus:border-[var(--color-success)]',
       },
       size: {
