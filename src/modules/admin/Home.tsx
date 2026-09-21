@@ -19,7 +19,7 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, description }: MetricCardProps) {
   return (
-    <Card className="h-full">
+    <Card className="h-full transition-shadow duration-200 hover:shadow-[var(--shadow-md)]">
       <CardContent className="p-5 sm:p-6">
         <p className="text-sm font-medium text-[var(--color-text-secondary)]">{label}</p>
         <p className="mt-3 text-3xl font-bold tabular-nums text-[var(--color-navy)]">{value.toLocaleString()}</p>
@@ -31,8 +31,8 @@ function MetricCard({ label, value, description }: MetricCardProps) {
 
 function LoadingGrid() {
   return (
-    <div aria-hidden="true" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 4 }, (_, index) => (
+    <div aria-hidden="true" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      {Array.from({ length: 5 }, (_, index) => (
         <Card className="animate-pulse" key={index}>
           <CardContent className="p-5 sm:p-6">
             <div className="h-4 w-24 rounded bg-[var(--color-gray-200)]" />
@@ -61,7 +61,7 @@ function MetricsGrid({ metrics }: { metrics: AdminMetricsOverview }) {
   ]
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2">
       {cards.map((metric) => <MetricCard key={metric.label} {...metric} />)}
     </div>
   )
@@ -79,14 +79,14 @@ export function AdminMetricsDashboardView({ state, onRefresh }: AdminMetricsDash
     <main
       aria-busy={isLoading}
       aria-labelledby="admin-dashboard-title"
-      className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
+      className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-10 lg:px-8"
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">Admin metrics</p>
-          <h1 className="mt-2 text-3xl font-bold text-[var(--color-navy)] sm:text-4xl" id="admin-dashboard-title">User overview</h1>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--color-teal)]">Admin dashboard</p>
+          <h1 className="mt-2 text-3xl font-bold text-[var(--color-navy)] sm:text-4xl" id="admin-dashboard-title">User Overview</h1>
           <p className="mt-3 max-w-2xl leading-relaxed text-[var(--color-text-secondary)]">
-            Read-only account totals for CVBuddy. Total users excludes admin accounts.
+            Monitor CVBuddy user accounts and activity. Total users excludes admin accounts.
           </p>
         </div>
         <Button loading={isLoading} onClick={onRefresh} type="button" variant="outline">
@@ -121,20 +121,23 @@ export function AdminMetricsDashboardView({ state, onRefresh }: AdminMetricsDash
 
         {(state.status === 'ready' || state.status === 'empty') && (
           <>
-            <Card className="mb-4 overflow-hidden border-[var(--color-teal)] shadow-[var(--shadow-md)]">
-              <CardContent className="bg-[var(--color-bg-soft)] p-6 sm:flex sm:items-end sm:justify-between sm:p-8">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-teal)]">Total users</p>
-                  <p className="mt-2 text-5xl font-bold tabular-nums text-[var(--color-navy)]">{state.data.totalUsers.toLocaleString()}</p>
-                  <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Applicants and companies; admin accounts are excluded.</p>
-                </div>
-                <p className="mt-5 text-sm text-[var(--color-text-muted)] sm:mt-0">
-                  Updated <time dateTime={state.data.generatedAt}>{formatGeneratedAt(state.data.generatedAt)}</time>
-                </p>
-              </CardContent>
-            </Card>
-
-            <MetricsGrid metrics={state.data} />
+            <div className="grid gap-4 xl:grid-cols-5">
+              <Card className="overflow-hidden border-[var(--color-teal)] shadow-[var(--shadow-md)] xl:col-span-2">
+                <CardContent className="flex h-full flex-col justify-between bg-[var(--color-bg-soft)] p-6 sm:p-8">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--color-teal)]">Total users</p>
+                    <p className="mt-2 text-5xl font-bold tabular-nums text-[var(--color-navy)]">{state.data.totalUsers.toLocaleString()}</p>
+                    <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Applicants and companies; admin accounts are excluded.</p>
+                  </div>
+                  <p className="mt-8 text-sm text-[var(--color-text-muted)]">
+                    Updated <time dateTime={state.data.generatedAt}>{formatGeneratedAt(state.data.generatedAt)}</time>
+                  </p>
+                </CardContent>
+              </Card>
+              <div className="grid gap-4 sm:grid-cols-2 xl:col-span-3 xl:grid-cols-2">
+                <MetricsGrid metrics={state.data} />
+              </div>
+            </div>
 
             {state.status === 'empty' && (
               <Card className="mt-4 border-dashed">
