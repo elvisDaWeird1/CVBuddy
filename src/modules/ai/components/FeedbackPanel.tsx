@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { type AiFeedbackViewModel } from '@/modules/ai/aiResultAdapter'
+import { AiRichText } from './AiRichText'
 
 function FeedbackList({ title, items }: { title: string; items: string[] }) {
   if (items.length === 0) {
@@ -37,7 +38,7 @@ export function FeedbackPanel({ result }: { result: AiFeedbackViewModel }) {
         {result.summary ? (
           <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] p-4">
             <p className="text-sm font-semibold text-[var(--color-text-primary)]">Overall feedback</p>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{result.summary}</p>
+            <div className="mt-2"><AiRichText text={result.summary} /></div>
           </div>
         ) : null}
 
@@ -64,7 +65,7 @@ export function FeedbackPanel({ result }: { result: AiFeedbackViewModel }) {
         {result.targetRoleFit ? (
           <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] p-4">
             <h4 className="text-base font-semibold text-[var(--color-text-primary)]">Target-role fit</h4>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{result.targetRoleFit}</p>
+            <div className="mt-2"><AiRichText text={result.targetRoleFit} /></div>
           </section>
         ) : null}
 
@@ -88,7 +89,7 @@ export function FeedbackPanel({ result }: { result: AiFeedbackViewModel }) {
         {result.fallbackText ? (
           <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-main)] p-4">
             <p className="text-sm font-semibold text-[var(--color-text-primary)]">AI feedback</p>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--color-text-secondary)]">{result.fallbackText}</p>
+            <div className="mt-2"><AiRichText text={result.fallbackText} /></div>
           </div>
         ) : null}
 

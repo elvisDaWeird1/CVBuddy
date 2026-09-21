@@ -24,12 +24,14 @@ type ProjectFeature = {
   inverted?: boolean
 }
 
+/* About Us is intentionally hidden for the initial deployment.
 type TeamMember = {
   id: number
   name: string
   role: string
   image: string | null
 }
+*/
 
 type LandingFeature = {
   title: string
@@ -38,6 +40,7 @@ type LandingFeature = {
   icon: ReactNode
 }
 
+/* Team data kept with the hidden About Us section.
 const teamMembers: TeamMember[] = [
   { id: 1, name: 'Member 1', role: 'Team role to be updated', image: null },
   { id: 2, name: 'Member 2', role: 'Team role to be updated', image: null },
@@ -46,6 +49,7 @@ const teamMembers: TeamMember[] = [
   { id: 5, name: 'Member 5', role: 'Team role to be updated', image: null },
   { id: 6, name: 'Member 6', role: 'Team role to be updated', image: null },
 ]
+*/
 
 const projectFeatures: ProjectFeature[] = [
   {
@@ -288,7 +292,7 @@ export function LandingPage() {
                       </p>
                     </div>
                     <div className="rounded-[var(--radius-lg)] bg-[var(--color-teal)] p-4 text-[var(--color-text-on-teal)] shadow-[var(--shadow-sm)]">
-                      <p className="text-sm font-semibold">Next suggestion</p>
+                      <p className="text-sm font-semibold text-white">Next suggestion</p>
                       <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-on-teal)]">
                         Add measurable outcomes to one project bullet.
                       </p>
@@ -301,7 +305,7 @@ export function LandingPage() {
         </div>
       </SectionShell>
 
-      <SectionShell id="about-us" className="bg-[var(--color-white)]">
+      {/* <SectionShell id="about-us" className="bg-[var(--color-white)]">
         <div className="grid items-stretch gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <SectionIntro
             className="mb-0 self-center"
@@ -355,7 +359,7 @@ export function LandingPage() {
             </article>
           ))}
         </div>
-      </SectionShell>
+      </SectionShell> */}
 
       <SectionShell id="project" className="bg-[var(--color-bg-soft)]">
         <SectionIntro eyebrow="Project" title="One workspace for your applicant story">

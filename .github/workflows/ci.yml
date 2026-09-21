@@ -1,0 +1,37 @@
+name: Frontend CI
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-lint-build:
+    name: Test, lint, build, and package frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install from lockfile
+        run: npm ci
+      - name: Run regression suite
+        run: npm test
+      - name: Run lint
+        run: npm run lint
+      - name: Build web bundle
+        run: npm run build
+      - name: Build production image
+        run: docker build --target prod --build-arg VITE_API_URL=/api --tag cvbuddy-frontend:ci .
+      - name: Upload npm diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-npm-diagnostics
+          path: npm-debug.log*
+          if-no-files-found: ignore

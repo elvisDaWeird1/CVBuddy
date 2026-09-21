@@ -5,23 +5,45 @@ export interface AiDimensionViewModel {
   label: string
   score: number | null
   description?: string
+  issues: string[]
+  fixes: string[]
+  missingKeywords: string[]
+  suggestedBullets: string[]
+  gaps: string[]
 }
 
 export interface AiScoreViewModel {
   overallScore: number | null
   assessmentLabel: string
   dimensions: AiDimensionViewModel[]
+  missingKeywords: string[]
+  suggestedBullets: string[]
+  roleFitGaps: string[]
+  rewrites: AiRewriteViewModel[]
+  confidence: number | null
+  meta?: AiResultMetaViewModel
   aiComment?: string
   note?: string
+  disclaimer?: string
   fallbackText?: string
   partial: boolean
   malformed: boolean
 }
 
 export interface AiRewriteViewModel {
+  section?: string
   original?: string
   suggested: string
+  suggestedVi?: string
+  suggestedEn?: string
   reason?: string
+  needsUserFact?: boolean
+}
+
+export interface AiResultMetaViewModel {
+  source?: string
+  model?: string
+  language?: string
 }
 
 export interface AiFeedbackViewModel {
@@ -87,6 +109,19 @@ function readNumberFrom(value: unknown, keys: string[]) {
   }
 
   return null
+}
+
+function readBoolean(value: unknown) {
+  if (typeof value === 'boolean') {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    if (value.toLowerCase() === 'true') return true
+    if (value.toLowerCase() === 'false') return false
+  }
+
+  return undefined
 }
 
 function readText(value: unknown, keys: string[] = []): string | undefined {
@@ -207,7 +242,7 @@ function resolveResult(result: AiResultRecord) {
         ...parsedResultText.structured,
         ...parsedResult.structured,
       },
-      fallbackText: undefined,
+      fallbackText: parsedResult.fallbackText || parsedResultText.fallbackText,
     }
   }
 
@@ -215,6 +250,17 @@ function resolveResult(result: AiResultRecord) {
     structured: undefined,
     fallbackText: parsedResult.fallbackText || parsedResultText.fallbackText,
   }
+}
+
+export function hasStructuredAnalysisResult(result: AiResultRecord) {
+  const structured = resolveResult(result).structured
+  if (!structured || readNumber(structured.overall_score) === null || !isRecord(structured.dimensions)) {
+    return false
+  }
+
+  const dimensions = structured.dimensions
+  return ['layout_ats', 'language', 'keywords', 'jd_fit']
+    .every((key) => isRecord(dimensions[key]))
 }
 
 function formatDimensionLabel(key: string) {
@@ -248,19 +294,48 @@ function readDimensions(result: RecordValue): AiDimensionViewModel[] {
       'recommendation',
       'notes',
       'message',
-      'issues',
-      'fixes',
-      'missing',
-      'gaps',
-      'suggested_bullets',
-      'suggestedBullets',
     ])
+    const valueRecord = isRecord(value) ? value : undefined
+    const issues = valueRecord ? readStringList(valueRecord.issues) : []
+    const fixes = valueRecord ? readStringList(valueRecord.fixes) : []
+    const missingKeywords = valueRecord
+      ? uniqueStrings([
+          ...readStringList(valueRecord.missing),
+          ...readStringList(valueRecord.missing_keywords),
+          ...readStringList(valueRecord.missingKeywords),
+        ])
+      : []
+    const suggestedBullets = valueRecord
+      ? uniqueStrings([
+          ...readStringList(valueRecord.suggested_bullets),
+          ...readStringList(valueRecord.suggestedBullets),
+        ])
+      : []
+    const gaps = valueRecord ? readStringList(valueRecord.gaps) : []
 
-    if (score === null && !description) {
+    if (
+      score === null
+      && !description
+      && issues.length === 0
+      && fixes.length === 0
+      && missingKeywords.length === 0
+      && suggestedBullets.length === 0
+      && gaps.length === 0
+    ) {
       return []
     }
 
-    return [{ key, label: formatDimensionLabel(key), score, description }]
+    return [{
+      key,
+      label: formatDimensionLabel(key),
+      score,
+      description,
+      issues,
+      fixes,
+      missingKeywords,
+      suggestedBullets,
+      gaps,
+    }]
   })
 }
 
@@ -286,27 +361,83 @@ export function adaptScoreResult(result: AiResultRecord): AiScoreViewModel {
   const structured = source.structured
   const overallScore = result.score ?? (structured ? readNumberFrom(structured.overall_score ?? structured.overallScore ?? structured.score, []) : null)
   const dimensions = structured ? readDimensions(structured) : []
+  const keywordDimension = structured && isRecord(structured.dimensions)
+    ? structured.dimensions.keywords
+    : undefined
+  const missingKeywords = structured
+    ? uniqueStrings([
+        ...readStringList(structured.missingKeywords),
+        ...readStringList(structured.missing_keywords),
+        ...(isRecord(keywordDimension) ? readStringList(keywordDimension.missing) : []),
+        ...(isRecord(keywordDimension) ? readStringList(keywordDimension.gaps) : []),
+      ])
+    : []
+  const suggestedBullets = isRecord(keywordDimension)
+    ? uniqueStrings([
+        ...readStringList(keywordDimension.suggested_bullets),
+        ...readStringList(keywordDimension.suggestedBullets),
+      ])
+    : []
+  const jdFitDimension = structured && isRecord(structured.dimensions)
+    ? structured.dimensions.jd_fit
+    : undefined
+  const roleFitGaps = isRecord(jdFitDimension) ? readStringList(jdFitDimension.gaps) : []
+  const rewrites = structured ? readRewrites(structured.rewrites) : []
+  const rawConfidence = structured ? readNumberFrom(structured.confidence, []) : null
+  const confidence = rawConfidence === null
+    ? null
+    : Math.min(1, Math.max(0, rawConfidence > 1 ? rawConfidence / 100 : rawConfidence))
+  const metaValue = structured?.meta
+  const meta = isRecord(metaValue)
+    ? {
+        source: readText(metaValue.source, []),
+        model: readText(metaValue.model, []),
+        language: readText(metaValue.language, []),
+      }
+    : undefined
+  const hasMeta = Boolean(meta?.source || meta?.model || meta?.language)
   const aiComment = structured
     ? readFirstText(structured, ['company_model_feedback', 'companyModelFeedback'])
     : undefined
   const noteCandidate = structured
-    ? readFirstText(structured, ['disclaimer', 'explanation', 'overallFeedback'])
+    ? readFirstText(structured, ['explanation', 'overallFeedback'])
     : undefined
   const note = noteCandidate === aiComment ? undefined : noteCandidate
+  const disclaimer = structured ? readFirstText(structured, ['disclaimer']) : undefined
   const hasVisibleResult = overallScore !== null
     || dimensions.length > 0
     || Boolean(aiComment)
     || Boolean(note)
+    || missingKeywords.length > 0
+    || suggestedBullets.length > 0
+    || roleFitGaps.length > 0
+    || rewrites.length > 0
+    || confidence !== null
+    || hasMeta
     || Boolean(source.fallbackText)
+  const contractDimensions = structured && isRecord(structured.dimensions)
+    ? structured.dimensions
+    : undefined
+  const hasAllContractDimensions = contractDimensions
+    ? ['layout_ats', 'language', 'keywords', 'jd_fit']
+        .every((key) => isRecord(contractDimensions[key]))
+    : false
 
   return {
     overallScore,
     assessmentLabel: getAssessmentLabel(overallScore),
     dimensions,
+    missingKeywords,
+    suggestedBullets,
+    roleFitGaps,
+    rewrites,
+    confidence,
+    meta: hasMeta ? meta : undefined,
     aiComment,
     note,
+    disclaimer,
     fallbackText: source.fallbackText,
-    partial: !hasVisibleResult || dimensions.length === 0,
+    partial: !hasVisibleResult || !hasAllContractDimensions,
     malformed: !hasVisibleResult,
   }
 }
@@ -325,28 +456,30 @@ function readRewrites(value: unknown): AiRewriteViewModel[] {
       return []
     }
 
+    const suggestedVi = readFirstText(item, ['suggested_vi', 'suggestedVi'])
+    const suggestedEn = readFirstText(item, ['suggested_en', 'suggestedEn'])
     const suggested = readFirstText(item, [
       'suggested',
       'suggestion',
-      'suggested_en',
-      'suggestedEn',
-      'suggested_vi',
-      'suggestedVi',
       'rewrite',
       'rewritten',
       'after',
       'improved',
       'replacement',
       'recommended',
-    ])
+    ]) || suggestedEn || suggestedVi
     if (!suggested) {
       return []
     }
 
     return [{
+      section: readFirstText(item, ['section', 'section_name', 'sectionName']),
       original: readFirstText(item, ['original', 'original_ref', 'originalRef', 'before', 'current']),
       suggested,
+      suggestedVi,
+      suggestedEn,
       reason: readFirstText(item, ['reason', 'change_reason', 'changeReason', 'why', 'explanation']),
+      needsUserFact: readBoolean(item.needs_user_fact ?? item.needsUserFact),
     }]
   })
 }
@@ -415,6 +548,9 @@ export interface AiTranslationViewModel {
   text: string
   sections: AiTranslationSectionViewModel[]
   notes: string[]
+  source?: string
+  model?: string
+  language?: string
   partial: boolean
   malformed: boolean
 }
@@ -442,7 +578,8 @@ function resolveTranslationSource(result: AiResultRecord): unknown {
   try {
     return JSON.parse(resultText) as unknown
   } catch {
-    return resultText
+    const looksLikeRawJson = resultText.startsWith('{') || resultText.startsWith('[')
+    return looksLikeRawJson ? undefined : resultText
   }
 }
 
@@ -560,12 +697,18 @@ export function adaptTranslationResult(result: AiResultRecord): AiTranslationVie
     ...readStringList(source.notes),
     ...readStringList(source.warnings),
   ])
+  const metaSource = isRecord(source.meta) ? readText(source.meta.source, []) : undefined
+  const metaModel = isRecord(source.meta) ? readText(source.meta.model, []) : undefined
+  const metaLanguage = isRecord(source.meta) ? readText(source.meta.language, []) : undefined
   const visible = Boolean(text) || sectionResult.sections.length > 0
 
   return {
     text,
     sections: sectionResult.sections,
     notes,
+    source: metaSource,
+    model: metaModel,
+    language: metaLanguage,
     partial: visible && sectionResult.invalidCount > 0,
     malformed: !visible,
   }

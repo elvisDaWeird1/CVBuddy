@@ -3,6 +3,28 @@ import { httpClient } from '@/apis'
 import { type BackendApiResponse } from '@/modules/auth/authApi'
 
 export interface AiRequestPayload {
+  industrySlug?: string
+  targetRole?: string
+  cvText?: string
+  verticalSlug?: string
+  companyModel?: 'corporate' | 'startup_agency'
+  language?: 'vi' | 'en' | 'both'
+  tier?: 'free' | 'subscription'
+  jdExtract?: {
+    role_title?: string
+    company_name?: string
+    required_keywords?: string[]
+    preferred_keywords?: string[]
+    responsibilities?: string[]
+  }
+  llmModel?: string
+  extractionMode?: 'local' | 'ai' | 'hybrid'
+  strictIndustryMatch?: boolean
+  sourceLang?: string
+  translationMode?: 'literal' | 'cv_native'
+}
+
+export type AiCareerTargetPayload = AiRequestPayload & {
   industrySlug: string
   targetRole: string
 }
@@ -25,7 +47,6 @@ export interface AiResultRecord {
   score: number | null
   createdAt: string
   completedAt?: string
-  updatedAt?: string
   inputText?: string
   resultText?: string
   result?: unknown
@@ -72,6 +93,9 @@ interface AiWorkflowData {
   workflow: AiTranslateAndScoreWorkflow
 }
 
+const AI_ACTION_TIMEOUT_MS = 130_000
+const AI_WORKFLOW_TIMEOUT_MS = 190_000
+
 export interface AiResultsQuery {
   aiType?: AiResultType
   status?: AiResultStatus
@@ -79,13 +103,20 @@ export interface AiResultsQuery {
 
 function normalizePayload(payload: AiRequestPayload): AiRequestPayload {
   return {
-    industrySlug: payload.industrySlug.trim(),
-    targetRole: payload.targetRole.trim(),
+    ...payload,
+    industrySlug: payload.industrySlug?.trim(),
+    targetRole: payload.targetRole?.trim(),
+    cvText: payload.cvText?.trim(),
+    verticalSlug: payload.verticalSlug?.trim(),
+    llmModel: payload.llmModel?.trim(),
+    sourceLang: payload.sourceLang?.trim(),
   }
 }
 
 async function runAiAction(path: string, body: unknown) {
-  const response = await httpClient.post<BackendApiResponse<AiActionData>>(path, body)
+  const response = await httpClient.post<BackendApiResponse<AiActionData>>(path, body, {
+    timeout: AI_ACTION_TIMEOUT_MS,
+  })
 
   if (!response.data.success || !response.data.data?.aiResult) {
     throw new Error(response.data.message || 'The AI result was not returned.')
@@ -106,10 +137,11 @@ export function translateCv(cvId: string) {
   return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/translate-to-english`, {})
 }
 
-export async function translateAndScoreCv(cvId: string, payload: AiRequestPayload) {
+export async function translateAndScoreCv(cvId: string, payload: AiCareerTargetPayload) {
   const response = await httpClient.post<BackendApiResponse<AiWorkflowData>>(
     `/ai/cvs/${encodeURIComponent(cvId)}/translate-and-score`,
     normalizePayload(payload),
+    { timeout: AI_WORKFLOW_TIMEOUT_MS },
   )
 
   if (!response.data.success || !response.data.data?.workflow) {
@@ -119,7 +151,7 @@ export async function translateAndScoreCv(cvId: string, payload: AiRequestPayloa
   return response.data.data.workflow
 }
 
-export function reviewCv(cvId: string, payload: AiRequestPayload) {
+export function reviewCv(cvId: string, payload: AiCareerTargetPayload) {
   return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/review`, normalizePayload(payload))
 }
 
@@ -155,6 +187,14 @@ export function getAiApiErrorStatus(error: unknown) {
 }
 
 export function getAiApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
+    return 'The AI request took too long to finish. Check AI Results before retrying because the server may still complete it.'
+  }
+
+  if (axios.isAxiosError(error) && error.code === 'ERR_NETWORK') {
+    return 'The AI service could not be reached. Check your connection and try again.'
+  }
+
   const status = getAiApiErrorStatus(error)
 
   switch (status) {
@@ -162,6 +202,8 @@ export function getAiApiErrorMessage(error: unknown, fallback: string) {
       return 'The AI request data is invalid. Please check your selections and try again.'
     case 401:
       return 'Your session has expired. Please sign in again.'
+    case 403:
+      return 'Your account does not have access to this AI workspace.'
     case 404:
       return 'This CV is no longer available or you do not have access to it.'
     case 409:
@@ -171,6 +213,8 @@ export function getAiApiErrorMessage(error: unknown, fallback: string) {
       return 'Use a PDF or DOCX file within the allowed file size.'
     case 429:
       return 'You are sending requests too quickly or have reached the usage limit. Please try again later.'
+    case 422:
+      return 'AI could not read or validate this CV. Use a readable PDF or DOCX and check the selected career context.'
     case 502:
       return 'AI returned a result that could not be displayed safely. Please try again.'
     case 503:

@@ -1,7 +1,12 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { type AiResultRecord } from '@/modules/ai/aiApi'
-import { adaptFeedbackResult, adaptScoreResult, adaptTranslationResult } from '@/modules/ai/aiResultAdapter'
+import {
+  adaptFeedbackResult,
+  adaptScoreResult,
+  adaptTranslationResult,
+  hasStructuredAnalysisResult,
+} from '@/modules/ai/aiResultAdapter'
 import { type AiHistoryItemViewModel } from '@/modules/ai/aiHistoryAdapter'
 import { AiCommentCard } from './AiCommentCard'
 import { FeedbackPanel } from './FeedbackPanel'
@@ -38,8 +43,18 @@ export function AiResultHistoryDetail({
   onRetry,
   onBack,
 }: AiResultHistoryDetailProps) {
-  const scoreResult = record && item.type === 'score' ? adaptScoreResult(record) : null
-  const feedbackResult = record && item.type === 'feedback' ? adaptFeedbackResult(record) : null
+  const analysisResult = record && (
+    item.type === 'score'
+    || (item.type === 'feedback' && hasStructuredAnalysisResult(record))
+  ) ? adaptScoreResult(record) : null
+  const feedbackResult = record && item.type === 'feedback' && !hasStructuredAnalysisResult(record)
+    ? adaptFeedbackResult(record)
+    : null
+  const effectiveStatus = record?.status === 'FAILED'
+    ? 'failed'
+    : record?.status === 'PENDING'
+      ? 'processing'
+      : item.status
 
   return (
     <section className="space-y-4" aria-labelledby="ai-history-detail-heading">
@@ -60,28 +75,33 @@ export function AiResultHistoryDetail({
         <p className="rounded-[var(--radius-lg)] bg-[var(--color-warning-bg)] px-4 py-3 text-sm" role="status">
           This saved result is not available anymore.
         </p>
-      ) : item.status === 'failed' ? (
+      ) : effectiveStatus === 'failed' ? (
         <Card>
           <CardHeader><CardTitle>AI result failed</CardTitle></CardHeader>
           <CardContent>
             <p className="rounded-[var(--radius-lg)] bg-[var(--color-error-bg)] px-4 py-3 text-sm leading-relaxed text-[var(--color-error)]" role="alert">
-              {item.errorMessage || 'This AI task could not be completed.'}
+              {record.errorMessage || 'This AI task could not be completed.'}
             </p>
+            {record.errorCode ? <p className="mt-2 text-xs text-[var(--color-text-muted)]">Reference: {record.errorCode}</p> : null}
+            <Button className="mt-3" onClick={onRetry} size="sm" type="button" variant="secondary">Refresh detail</Button>
           </CardContent>
         </Card>
-      ) : item.status === 'processing' ? (
+      ) : effectiveStatus === 'processing' ? (
         <Card role="status" aria-live="polite">
           <CardHeader><CardTitle>AI result is still processing</CardTitle></CardHeader>
-          <CardContent><p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">Try opening this result again in a moment.</p></CardContent>
+          <CardContent>
+            <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">This task was saved as pending. Refresh its detail to check whether processing finished.</p>
+            <Button className="mt-3" onClick={onRetry} size="sm" type="button" variant="secondary">Refresh status</Button>
+          </CardContent>
         </Card>
-      ) : scoreResult ? (
+      ) : analysisResult ? (
         <div className="space-y-4">
-          <ScoreOverview result={scoreResult} />
-          <AiCommentCard comment={scoreResult.aiComment} />
+          <ScoreOverview result={analysisResult} />
+          {analysisResult.aiComment ? <AiCommentCard comment={analysisResult.aiComment} /> : null}
         </div>
       ) : feedbackResult ? (
         <div className="space-y-4">
-          <AiCommentCard comment={feedbackResult.aiComment} />
+          {feedbackResult.aiComment ? <AiCommentCard comment={feedbackResult.aiComment} /> : null}
           <FeedbackPanel result={feedbackResult} />
         </div>
       ) : item.type === 'translation' ? (

@@ -55,7 +55,7 @@ export function AiResultHistory({
           <FileTextIcon className="h-5 w-5 text-[var(--color-teal)]" />
           Recent AI results
         </CardTitle>
-        <CardDescription>Open a saved score, feedback result, or English translation.</CardDescription>
+        <CardDescription>Open a saved score and review result, translation, or legacy feedback result.</CardDescription>
       </CardHeader>
       <CardContent>
         {!loading && !error && items.length > 0 ? (
@@ -65,8 +65,8 @@ export function AiResultHistory({
               onChange={(event) => setTypeFilter(event.target.value)}
               options={[
                 { value: 'all', label: 'All types' },
-                { value: 'translation', label: 'Translation' },
-                { value: 'score', label: 'Scoring' },
+                { value: 'translation', label: 'Translate to English' },
+                { value: 'score', label: 'Score and review' },
                 { value: 'feedback', label: 'Feedback' },
               ]}
               value={typeFilter}
@@ -113,37 +113,38 @@ export function AiResultHistory({
         ) : (
           <div className="space-y-3" role="list" aria-label="Recent AI results">
             {filteredItems.map((item) => (
-              <button
-                aria-pressed={selectedId === item.id}
-                className={selectedId === item.id
-                  ? 'w-full rounded-[var(--radius-lg)] border border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'
-                  : 'w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-main)] p-4 text-left transition-colors hover:border-[var(--color-border-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'}
-                key={item.id}
-                onClick={() => onSelect(item)}
-                type="button"
-              >
-                <span className="flex items-start justify-between gap-3">
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-[var(--color-text-primary)]">{item.typeLabel}</span>
-                    <span className="mt-1 block truncate text-xs text-[var(--color-text-secondary)]">{item.cvName}</span>
+              <div key={item.id} role="listitem">
+                <button
+                  aria-pressed={selectedId === item.id}
+                  className={selectedId === item.id
+                    ? 'w-full rounded-[var(--radius-lg)] border border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'
+                    : 'w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-main)] p-4 text-left transition-colors hover:border-[var(--color-border-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'}
+                  onClick={() => onSelect(item)}
+                  type="button"
+                >
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-[var(--color-text-primary)]">{item.typeLabel}</span>
+                      <span className="mt-1 block truncate text-xs text-[var(--color-text-secondary)]">{item.cvName}</span>
+                    </span>
+                    <span className={'shrink-0 rounded-[var(--radius-full)] px-2 py-1 text-xs font-semibold ' + statusClass(item.status)}>
+                      {item.statusLabel}
+                    </span>
                   </span>
-                  <span className={'shrink-0 rounded-[var(--radius-full)] px-2 py-1 text-xs font-semibold ' + statusClass(item.status)}>
-                    {item.statusLabel}
+                  <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)]">
+                    <span>{item.createdAtLabel}</span>
+                    {item.type === 'score' && item.score !== null ? <span className="font-semibold text-[var(--color-teal)]">Score {item.score}/100</span> : null}
                   </span>
-                </span>
-                <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)]">
-                  <span>{item.createdAtLabel}</span>
-                  {item.type === 'score' && item.score !== null ? <span className="font-semibold text-[var(--color-teal)]">Score {item.score}/100</span> : null}
-                </span>
-                {item.targetRole || item.industrySlug ? (
-                  <span className="mt-2 block truncate text-xs text-[var(--color-text-secondary)]">
-                    {[item.targetRole, item.industrySlug?.replace(/_/g, ' ')].filter(Boolean).join(' · ')}
-                  </span>
-                ) : null}
-                {item.status === 'failed' && item.errorMessage ? (
-                  <span className="mt-2 block text-xs leading-relaxed text-[var(--color-error)]">{item.errorMessage}</span>
-                ) : null}
-              </button>
+                  {item.targetRole || item.industrySlug ? (
+                    <span className="mt-2 block truncate text-xs text-[var(--color-text-secondary)]">
+                      {[item.targetRole, item.industrySlug?.replace(/_/g, ' ')].filter(Boolean).join(' · ')}
+                    </span>
+                  ) : null}
+                  {item.status === 'failed' ? (
+                    <span className="mt-2 block text-xs leading-relaxed text-[var(--color-error)]">Open this result to view the saved error details.</span>
+                  ) : null}
+                </button>
+              </div>
             ))}
           </div>
         )}

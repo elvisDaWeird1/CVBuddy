@@ -2,7 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { MainLayout } from '@/layouts/ClientLayout/ClientLayout'
 import { AuthShell } from '@/layouts/ClientLayout/AuthShell'
 import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
-import { ProtectedRoute } from '@/modules/auth/ProtectedRoute'
+import { ProtectedRoute, PublicOnlyRoute } from '@/modules/auth/ProtectedRoute'
+import { AUTH_ROLES } from '@/modules/auth/authPolicy'
 import LandingPage from '@/modules/pages/LandingPage'
 import ComingSoonPage from '@/modules/pages/ComingSoon'
 import LoginPage from '@/modules/auth/LoginPage'
@@ -19,10 +20,13 @@ import PortfolioFormPage from '@/modules/portfolio/PortfolioFormPage'
 import { ExperienceDetailPage, ExperienceFormPage, ExperienceListPage } from '@/modules/portfolio/ExperiencePages'
 import { MomentCreatePage, MomentDetailPage, MomentListPage } from '@/modules/portfolio/MomentPages'
 import PublicPortfolioPage from '@/modules/portfolio/PublicPortfolioPage'
-import {
-  PortfolioCollectionDetailPage,
-  PortfolioCollectionFormPage,
-} from '@/modules/portfolio/PortfolioCollectionPages'
+import { PUBLIC_PORTFOLIO_ROUTE_PATH } from '@/modules/portfolio/portfolioApi'
+import AdminHome from '@/modules/admin/Home'
+import CompanyWorkspaceUnavailablePage from '@/modules/auth/CompanyWorkspaceUnavailablePage'
+
+const APPLICANT_ONLY = [AUTH_ROLES.APPLICANT] as const
+const ADMIN_ONLY = [AUTH_ROLES.ADMIN] as const
+const COMPANY_ONLY = [AUTH_ROLES.COMPANY] as const
 
 const appRoutes = [
   {
@@ -34,20 +38,36 @@ const appRoutes = [
       { path: 'project', element: <Navigate to="/#project" replace /> },
       { path: 'ai-buddy', element: <Navigate to="/#ai-buddy" replace /> },
       { path: 'coming-soon', element: <ComingSoonPage /> },
+      {
+        element: <ProtectedRoute allowedRoles={ADMIN_ONLY} />,
+        children: [
+          { path: 'admin', element: <AdminHome /> },
+        ],
+      },
+      {
+        element: <ProtectedRoute allowedRoles={COMPANY_ONLY} />,
+        children: [
+          { path: 'company', element: <CompanyWorkspaceUnavailablePage /> },
+        ],
+      },
     ],
   },
   {
-    element: <AuthShell />,
+    element: <PublicOnlyRoute />,
     children: [
-      { path: 'login', element: <LoginPage /> },
-      { path: 'register', element: <RegisterApplicantPage /> },
-      { path: 'register/applicant', element: <RegisterApplicantPage /> },
+      {
+        element: <AuthShell />,
+        children: [
+          { path: 'login', element: <LoginPage /> },
+          { path: 'register', element: <RegisterApplicantPage /> },
+          { path: 'register/applicant', element: <RegisterApplicantPage /> },
+        ],
+      },
     ],
   },
-  { path: 'p/:slug', element: <PublicPortfolioPage /> },
-  { path: 'portfolio/:slug', element: <PublicPortfolioPage /> },
+  { path: PUBLIC_PORTFOLIO_ROUTE_PATH, element: <PublicPortfolioPage /> },
   {
-    element: <ProtectedRoute />,
+    element: <ProtectedRoute allowedRoles={APPLICANT_ONLY} />,
     children: [
       {
         element: <ApplicantShell />,
@@ -70,9 +90,6 @@ const appRoutes = [
           { path: 'cv', element: <CvPage /> },
           { path: 'ai-chat', element: <AiChatPage /> },
           { path: 'portfolio', element: <PortfolioPage /> },
-          { path: 'portfolio/new', element: <PortfolioCollectionFormPage /> },
-          { path: 'portfolio/manage/:portfolioId', element: <PortfolioCollectionDetailPage /> },
-          { path: 'portfolio/manage/:portfolioId/edit', element: <PortfolioCollectionFormPage /> },
           { path: 'portfolio/edit', element: <PortfolioFormPage /> },
           { path: 'portfolio/experiences', element: <ExperienceListPage /> },
           { path: 'portfolio/experiences/new', element: <ExperienceFormPage /> },

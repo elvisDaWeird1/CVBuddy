@@ -26,17 +26,7 @@ import {
   type CvDocument,
   type CvLanguage,
 } from './cvApi'
-
-const MAX_CV_SIZE_BYTES = 5 * 1024 * 1024
-const ALLOWED_CV_MIME_BY_EXTENSION: Record<string, string[]> = {
-  '.pdf': ['application/pdf'],
-  '.doc': ['application/msword', 'application/octet-stream'],
-  '.docx': [
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/octet-stream',
-  ],
-}
-const CV_ACCEPT = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+import { CV_ACCEPT, validateCvFile } from './cvUploadPolicy'
 
 const languageOptions = [
   { value: 'VI', label: 'Vietnamese' },
@@ -46,24 +36,6 @@ const languageOptions = [
 function getFileExtension(fileName: string) {
   const lastDotIndex = fileName.lastIndexOf('.')
   return lastDotIndex >= 0 ? fileName.slice(lastDotIndex).toLowerCase() : ''
-}
-
-function validateCvFile(file: File | null) {
-  if (!file || file.size <= 0) return 'Choose a valid CV file before uploading.'
-
-  const extension = getFileExtension(file.name)
-  const allowedMimeTypes = ALLOWED_CV_MIME_BY_EXTENSION[extension]
-  const hasAllowedMime = file.type ? allowedMimeTypes?.includes(file.type) : true
-
-  if (!allowedMimeTypes || !hasAllowedMime) {
-    return 'Only PDF, DOC and DOCX CV files are supported.'
-  }
-
-  if (file.size > MAX_CV_SIZE_BYTES) {
-    return 'CV file size must not exceed 5 MB.'
-  }
-
-  return undefined
 }
 
 function formatFileSize(bytes?: number) {
@@ -185,6 +157,11 @@ function CvListItem({
             {cv.language} · {type} · {formatFileSize(cv.fileSize)}
           </p>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">Uploaded {formatDate(cv.uploadedAt || cv.createdAt)}</p>
+          {type === 'DOC' ? (
+            <p className="mt-1 text-xs font-medium text-[var(--color-warning)]">
+              Legacy DOC file: download remains available, but preview and new DOC uploads are unsupported.
+            </p>
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <CvActionButton
@@ -418,7 +395,7 @@ export default function CvPage() {
               <UploadIcon className="h-5 w-5 text-[var(--color-teal)]" />
               Upload a CV
             </CardTitle>
-            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">PDF, DOC or DOCX · up to 5 MB · the file name becomes the CV title.</p>
+            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">PDF or DOCX · up to 5 MB · the file name becomes the CV title.</p>
           </div>
         </CardHeader>
         <CardContent>
@@ -446,7 +423,7 @@ export default function CvPage() {
                       {selectedFile?.name || 'Drop a CV here or choose a file'}
                     </p>
                     <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-                      {selectedFile ? formatFileSize(selectedFile.size) : 'PDF, DOC and DOCX only'}
+                      {selectedFile ? formatFileSize(selectedFile.size) : 'PDF and DOCX only'}
                     </p>
                     <button
                       className="mt-2 text-sm font-semibold text-[var(--color-teal)] hover:underline disabled:cursor-not-allowed disabled:opacity-50"

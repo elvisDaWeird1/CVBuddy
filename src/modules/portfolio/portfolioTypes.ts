@@ -17,7 +17,6 @@ export const EXPERIENCE_VISIBILITIES = ['private', 'portfolio'] as const
 export const MOMENT_STATUSES = ['draft', 'ready'] as const
 export const EVIDENCE_TYPES = ['file', 'certificate', 'github', 'website', 'article', 'video', 'other'] as const
 export const VERIFICATION_STATUSES = ['unverified', 'document-provided'] as const
-export const PORTFOLIO_VISIBILITIES = ['PRIVATE', 'PUBLIC'] as const
 
 export type ExperienceType = (typeof EXPERIENCE_TYPES)[number]
 export type ExperienceStatus = (typeof EXPERIENCE_STATUSES)[number]
@@ -25,27 +24,6 @@ export type ExperienceVisibility = (typeof EXPERIENCE_VISIBILITIES)[number]
 export type MomentStatus = (typeof MOMENT_STATUSES)[number]
 export type EvidenceType = (typeof EVIDENCE_TYPES)[number]
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number]
-export type PortfolioVisibility = (typeof PORTFOLIO_VISIBILITIES)[number]
-
-export interface PortfolioCollection {
-  id: string
-  title: string
-  description: string
-  coverImageUrl: string
-  visibility: PortfolioVisibility
-  slug: string
-  publicUrl: string
-  publishedAt: string | null
-  momentCount: number
-  experienceCount: number
-  createdAt?: string
-  updatedAt: string
-}
-
-export interface PortfolioCollectionInput {
-  title: string
-  description?: string
-}
 
 export interface PaginationMeta {
   page: number
@@ -142,7 +120,7 @@ export interface PublicPortfolio {
   title?: string
   description?: string
   coverImageUrl?: string
-  visibility?: PortfolioVisibility
+  visibility?: 'PRIVATE' | 'PUBLIC'
   publicUrl?: string
   publishedAt?: string | null
   headline?: string

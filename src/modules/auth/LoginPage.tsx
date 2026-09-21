@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ArrowRightIcon, LockIcon, MailIcon } from '@/components/ui/icons'
 import { getAuthApiErrorMessage, login } from './authApi'
+import { getAuthRole, getWorkspacePathForRole } from './authPolicy'
 import { clearAuthMessage, getAuthMessage, saveAuthSession } from './authStorage'
 
 const loginSchema = z.object({
   email: z.string().trim().email('Enter a valid email address.'),
   password: z.string().min(1, 'Password is required.'),
-  remember: z.boolean().optional(),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -49,7 +49,6 @@ export default function LoginPage() {
     defaultValues: {
       email: '',
       password: '',
-      remember: false,
     },
   })
 
@@ -59,12 +58,13 @@ export default function LoginPage() {
     try {
       const response = await login({ email, password })
 
-      if (!response.success || !response.data?.token) {
+      const role = getAuthRole(response.data?.account)
+      if (!response.success || !response.data?.token || !response.data.account || !role) {
         throw new Error(response.message || 'Unable to sign in. Please check your credentials.')
       }
 
       saveAuthSession(response.data)
-      navigate('/profile', { replace: true })
+      navigate(getWorkspacePathForRole(role), { replace: true })
     } catch (error) {
       setFormStatus({
         type: 'error',
@@ -112,15 +112,6 @@ export default function LoginPage() {
             className="border-transparent bg-[var(--color-bg-main)] text-base focus:border-[var(--color-border-focus)] focus:shadow-[var(--focus-ring)]"
             {...register('password')}
           />
-
-          <label className="flex items-center gap-3 text-sm text-[var(--color-text-secondary)]">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-[var(--color-gray-500)] text-[var(--color-teal)] focus:ring-[var(--color-teal)]"
-              {...register('remember')}
-            />
-            Remember me for 30 days
-          </label>
 
           {formStatus && (
             <p

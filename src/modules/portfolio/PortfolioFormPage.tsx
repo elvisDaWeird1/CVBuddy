@@ -57,6 +57,7 @@ export default function PortfolioFormPage() {
   const [pageError, setPageError] = useState<string | null>(null)
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
   const [serverError, setServerError] = useState<unknown>(null)
+  const [isCreating, setIsCreating] = useState(false)
   const { register, control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PortfolioFormValues>({
     resolver: zodResolver(portfolioSchema),
     defaultValues: { headline: '', about: '', desiredRole: '', slug: '', skills: '', socialLinks: '' },
@@ -69,6 +70,7 @@ export default function PortfolioFormPage() {
       try {
         const portfolio = await getPortfolio()
         if (active && portfolio) reset({ headline: portfolio.headline, about: portfolio.about, desiredRole: portfolio.desiredRole, slug: portfolio.slug, skills: portfolio.skills.join(', '), socialLinks: serializeSocialLinks(portfolio.socialLinks) })
+        if (active) setIsCreating(!portfolio)
       } catch (error) {
         if (active && getPortfolioErrorStatus(error) !== 404) setPageError(getPortfolioErrorMessage(error, 'Unable to load your portfolio.'))
       } finally {
@@ -115,7 +117,7 @@ export default function PortfolioFormPage() {
 
   return (
     <PageShell>
-      <PageHeading eyebrow="Portfolio settings" title="Edit portfolio profile" description="Shape the profile visitors will see when you decide to publish. Saving does not publish the portfolio." actions={<Link to="/portfolio" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-teal)]">Back to workspace <ArrowRightIcon className="h-4 w-4" /></Link>} />
+      <PageHeading eyebrow="Portfolio settings" title={isCreating ? 'Create your Portfolio' : 'Edit Portfolio profile'} description="Shape the profile visitors will see when you decide to publish. Saving does not publish the Portfolio." actions={<Link to="/portfolio" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-teal)]">Back to Portfolio <ArrowRightIcon className="h-4 w-4" /></Link>} />
       {pageError && <div className="mb-6"><Notice>{getPortfolioErrorStatus(serverError) === 409 ? 'That slug is already in use. Choose a different public URL.' : pageError}</Notice></div>}
       {savedMessage && <div className="mb-6"><Notice kind="success">{savedMessage}</Notice></div>}
       <form className="grid gap-6 lg:grid-cols-[1.5fr_1fr]" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -137,7 +139,7 @@ export default function PortfolioFormPage() {
             <CardHeader><CardTitle>Social links</CardTitle></CardHeader>
             <CardContent><FormGroup helperText="One per line in the format platform|https://example.com"><textarea className="min-h-28 w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-white)] px-3 py-2 text-sm text-[var(--color-navy)] outline-none focus:border-[var(--color-teal)] focus:shadow-[var(--focus-ring)]" placeholder={'github|https://github.com/you\nlinkedin|https://linkedin.com/in/you'} {...register('socialLinks')} /></FormGroup></CardContent>
           </Card>
-          <div className="flex justify-end gap-3"><Link to="/portfolio"><Button type="button" variant="secondary">Cancel</Button></Link><Button type="submit" loading={isSubmitting}>Save profile</Button></div>
+          <div className="flex justify-end gap-3"><Link to="/portfolio"><Button type="button" variant="secondary">Cancel</Button></Link><Button type="submit" loading={isSubmitting}>{isCreating ? 'Create Portfolio' : 'Save Portfolio profile'}</Button></div>
         </div>
       </form>
     </PageShell>
