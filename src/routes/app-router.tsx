@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { MainLayout } from '@/layouts/ClientLayout/ClientLayout'
 import { AuthShell } from '@/layouts/ClientLayout/AuthShell'
 import { ApplicantShell } from '@/layouts/ClientLayout/ApplicantShell'
+import { AdminLayout } from '@/layouts/AdminLayout/AdminLayout'
 import { ProtectedRoute, PublicOnlyRoute } from '@/modules/auth/ProtectedRoute'
 import { AUTH_ROLES } from '@/modules/auth/authPolicy'
 import LandingPage from '@/modules/pages/LandingPage'
@@ -39,15 +40,20 @@ const appRoutes = [
       { path: 'ai-buddy', element: <Navigate to="/#ai-buddy" replace /> },
       { path: 'coming-soon', element: <ComingSoonPage /> },
       {
-        element: <ProtectedRoute allowedRoles={ADMIN_ONLY} />,
-        children: [
-          { path: 'admin', element: <AdminHome /> },
-        ],
-      },
-      {
         element: <ProtectedRoute allowedRoles={COMPANY_ONLY} />,
         children: [
           { path: 'company', element: <CompanyWorkspaceUnavailablePage /> },
+        ],
+      },
+    ],
+  },
+  {
+    element: <ProtectedRoute allowedRoles={ADMIN_ONLY} />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [
+          { path: 'admin', element: <AdminHome /> },
         ],
       },
     ],
