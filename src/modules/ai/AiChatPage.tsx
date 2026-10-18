@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { getMyCvs, type CvDocument } from '@/modules/applicant/cvApi'
 import {
+  createAiIdempotencyKey,
+  getAiApiErrorCode,
   getAiApiErrorMessage,
   getAiApiErrorStatus,
   getAiResultById,
@@ -23,6 +25,7 @@ import {
   type AiRequestPayload,
   type AiResultRecord,
 } from './aiApi'
+import { canRetryAiRequest, shouldReuseAiIdempotencyKey } from './aiRetryPolicy'
 import { adaptAiHistory, type AiHistoryItemViewModel } from './aiHistoryAdapter'
 import {
   adaptScoreResult,
@@ -69,11 +72,15 @@ const AI_ACTION_OPTIONS: Array<{ value: AiAction; title: string; description: st
 type RequestError = {
   text: string
   status?: number
+  code?: string
 }
 
 type SubmittedRequest = {
   action: AiAction
+  cvId: string
   cvTitle: string
+  idempotencyKey: string
+  industrySlug?: string
   industryLabel?: string
   targetRole?: string
 }
@@ -115,7 +122,7 @@ function formatStatus(status?: string) {
 }
 
 function ErrorMessage({ error, onRetry }: { error: RequestError; onRetry: () => void }) {
-  const canRetry = !error.status || error.status === 408 || error.status === 429 || error.status >= 500
+  const canRetry = canRetryAiRequest(error)
 
   return (
     <div className="space-y-2 rounded-[var(--radius-lg)] bg-[var(--color-error-bg)] px-4 py-3 text-sm" role="alert">
@@ -419,9 +426,26 @@ export default function AiChatPage() {
     setTranslationError(null)
     setScoreResult(null)
     setTranslationResult(null)
+    const retryError = selectedAction === 'analyze' ? scoreError : translationError
+    const canReuseIdempotencyKey = Boolean(
+      retryError
+      && lastRequest
+      && lastRequest.action === selectedAction
+      && lastRequest.cvId === selectedCv.id
+      && lastRequest.industrySlug === (industrySlug || undefined)
+      && lastRequest.targetRole === (trimmedRole || undefined)
+      && shouldReuseAiIdempotencyKey(retryError),
+    )
+    const idempotencyKey = canReuseIdempotencyKey && lastRequest
+      ? lastRequest.idempotencyKey
+      : createAiIdempotencyKey()
+
     setLastRequest({
       action: selectedAction,
+      cvId: selectedCv.id,
       cvTitle: selectedCv.title || 'Untitled CV',
+      idempotencyKey,
+      industrySlug: industrySlug || undefined,
       industryLabel: INDUSTRY_OPTIONS.find((option) => option.value === industrySlug)?.label,
       targetRole: trimmedRole || undefined,
     })
@@ -430,11 +454,12 @@ export default function AiChatPage() {
       const payload: AiRequestPayload = { industrySlug, targetRole: trimmedRole }
       setIsScorePending(true)
       try {
-        setScoreResult(adaptScoreResult(await scoreCv(selectedCv.id, payload)))
+        setScoreResult(adaptScoreResult(await scoreCv(selectedCv.id, payload, idempotencyKey)))
       } catch (error) {
         setScoreError({
           text: getAiApiErrorMessage(error, 'Unable to score and review this CV. Please try again.'),
           status: getAiApiErrorStatus(error),
+            code: getAiApiErrorCode(error),
         })
       } finally {
         setIsScorePending(false)
@@ -444,11 +469,12 @@ export default function AiChatPage() {
     if (selectedAction === 'translate') {
       setIsTranslationPending(true)
       try {
-        setTranslationResult(adaptTranslationResult(await translateCv(selectedCv.id)))
+        setTranslationResult(adaptTranslationResult(await translateCv(selectedCv.id, idempotencyKey)))
       } catch (error) {
         setTranslationError({
           text: getAiApiErrorMessage(error, 'Unable to translate this CV to English. Please try again.'),
           status: getAiApiErrorStatus(error),
+            code: getAiApiErrorCode(error),
         })
       } finally {
         setIsTranslationPending(false)
