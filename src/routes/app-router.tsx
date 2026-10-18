@@ -24,6 +24,7 @@ import PublicPortfolioPage from '@/modules/portfolio/PublicPortfolioPage'
 import { PUBLIC_PORTFOLIO_ROUTE_PATH } from '@/modules/portfolio/portfolioApi'
 import AdminHome from '@/modules/admin/Home'
 import CompanyWorkspaceUnavailablePage from '@/modules/auth/CompanyWorkspaceUnavailablePage'
+import { BillingPage, PaymentStatusPage, PricingPage } from '@/modules/billing/BillingPages'
 
 const APPLICANT_ONLY = [AUTH_ROLES.APPLICANT] as const
 const ADMIN_ONLY = [AUTH_ROLES.ADMIN] as const
@@ -95,6 +96,10 @@ const appRoutes = [
           { path: 'applicant/profile', element: <ApplicantProfilePage /> },
           { path: 'cv', element: <CvPage /> },
           { path: 'ai-chat', element: <AiChatPage /> },
+          { path: 'pricing', element: <PricingPage /> },
+          { path: 'billing', element: <BillingPage /> },
+          { path: 'billing/return', element: <PaymentStatusPage cancelled={false} /> },
+          { path: 'billing/cancel', element: <PaymentStatusPage cancelled /> },
           { path: 'portfolio', element: <PortfolioPage /> },
           { path: 'portfolio/edit', element: <PortfolioFormPage /> },
           { path: 'portfolio/experiences', element: <ExperienceListPage /> },
