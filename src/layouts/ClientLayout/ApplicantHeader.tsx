@@ -12,6 +12,7 @@ const applicantNavItems = [
   { label: 'CV', to: '/cv' },
   { label: 'AI Chatting', to: '/ai-chat' },
   { label: 'Portfolio', to: '/portfolio' },
+  { label: 'Billing', to: '/billing' },
 ] as const
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
