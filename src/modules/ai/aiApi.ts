@@ -9,7 +9,6 @@ export interface AiRequestPayload {
   verticalSlug?: string
   companyModel?: 'corporate' | 'startup_agency'
   language?: 'vi' | 'en' | 'both'
-  tier?: 'free' | 'subscription'
   jdExtract?: {
     role_title?: string
     company_name?: string
@@ -96,6 +95,13 @@ interface AiWorkflowData {
 const AI_ACTION_TIMEOUT_MS = 130_000
 const AI_WORKFLOW_TIMEOUT_MS = 190_000
 
+export function createAiIdempotencyKey() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `ai-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+}
+
 export interface AiResultsQuery {
   aiType?: AiResultType
   status?: AiResultStatus
@@ -103,19 +109,25 @@ export interface AiResultsQuery {
 
 function normalizePayload(payload: AiRequestPayload): AiRequestPayload {
   return {
-    ...payload,
     industrySlug: payload.industrySlug?.trim(),
     targetRole: payload.targetRole?.trim(),
     cvText: payload.cvText?.trim(),
     verticalSlug: payload.verticalSlug?.trim(),
+    companyModel: payload.companyModel,
+    language: payload.language,
+    jdExtract: payload.jdExtract,
     llmModel: payload.llmModel?.trim(),
+    extractionMode: payload.extractionMode,
+    strictIndustryMatch: payload.strictIndustryMatch,
     sourceLang: payload.sourceLang?.trim(),
+    translationMode: payload.translationMode,
   }
 }
 
-async function runAiAction(path: string, body: unknown) {
+async function runAiAction(path: string, body: unknown, idempotencyKey = createAiIdempotencyKey()) {
   const response = await httpClient.post<BackendApiResponse<AiActionData>>(path, body, {
     timeout: AI_ACTION_TIMEOUT_MS,
+    headers: { 'Idempotency-Key': idempotencyKey },
   })
 
   if (!response.data.success || !response.data.data?.aiResult) {
@@ -125,23 +137,26 @@ async function runAiAction(path: string, body: unknown) {
   return response.data.data.aiResult
 }
 
-export function scoreCv(cvId: string, payload: AiRequestPayload) {
-  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/score`, normalizePayload(payload))
+export function scoreCv(cvId: string, payload: AiRequestPayload, idempotencyKey?: string) {
+  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/score`, normalizePayload(payload), idempotencyKey)
 }
 
-export function getFeedback(cvId: string, payload: AiRequestPayload) {
-  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/feedback`, normalizePayload(payload))
+export function getFeedback(cvId: string, payload: AiRequestPayload, idempotencyKey?: string) {
+  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/feedback`, normalizePayload(payload), idempotencyKey)
 }
 
-export function translateCv(cvId: string) {
-  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/translate-to-english`, {})
+export function translateCv(cvId: string, idempotencyKey?: string) {
+  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/translate-to-english`, {}, idempotencyKey)
 }
 
-export async function translateAndScoreCv(cvId: string, payload: AiCareerTargetPayload) {
+export async function translateAndScoreCv(cvId: string, payload: AiCareerTargetPayload, idempotencyKey = createAiIdempotencyKey()) {
   const response = await httpClient.post<BackendApiResponse<AiWorkflowData>>(
     `/ai/cvs/${encodeURIComponent(cvId)}/translate-and-score`,
     normalizePayload(payload),
-    { timeout: AI_WORKFLOW_TIMEOUT_MS },
+    {
+      timeout: AI_WORKFLOW_TIMEOUT_MS,
+      headers: { 'Idempotency-Key': idempotencyKey },
+    },
   )
 
   if (!response.data.success || !response.data.data?.workflow) {
@@ -151,8 +166,8 @@ export async function translateAndScoreCv(cvId: string, payload: AiCareerTargetP
   return response.data.data.workflow
 }
 
-export function reviewCv(cvId: string, payload: AiCareerTargetPayload) {
-  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/review`, normalizePayload(payload))
+export function reviewCv(cvId: string, payload: AiCareerTargetPayload, idempotencyKey?: string) {
+  return runAiAction(`/ai/cvs/${encodeURIComponent(cvId)}/review`, normalizePayload(payload), idempotencyKey)
 }
 
 export async function getAiResults(query: AiResultsQuery = {}) {

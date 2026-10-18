@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { getMyCvs, type CvDocument } from '@/modules/applicant/cvApi'
 import {
+  createAiIdempotencyKey,
   getAiApiErrorMessage,
   getAiApiErrorStatus,
   getAiResultById,
@@ -73,7 +74,10 @@ type RequestError = {
 
 type SubmittedRequest = {
   action: AiAction
+  cvId: string
   cvTitle: string
+  idempotencyKey: string
+  industrySlug?: string
   industryLabel?: string
   targetRole?: string
 }
@@ -419,9 +423,25 @@ export default function AiChatPage() {
     setTranslationError(null)
     setScoreResult(null)
     setTranslationResult(null)
+    const retryError = selectedAction === 'analyze' ? scoreError : translationError
+    const canReuseIdempotencyKey = Boolean(
+      retryError
+      && lastRequest
+      && lastRequest.action === selectedAction
+      && lastRequest.cvId === selectedCv.id
+      && lastRequest.industrySlug === (industrySlug || undefined)
+      && lastRequest.targetRole === (trimmedRole || undefined),
+    )
+    const idempotencyKey = canReuseIdempotencyKey && lastRequest
+      ? lastRequest.idempotencyKey
+      : createAiIdempotencyKey()
+
     setLastRequest({
       action: selectedAction,
+      cvId: selectedCv.id,
       cvTitle: selectedCv.title || 'Untitled CV',
+      idempotencyKey,
+      industrySlug: industrySlug || undefined,
       industryLabel: INDUSTRY_OPTIONS.find((option) => option.value === industrySlug)?.label,
       targetRole: trimmedRole || undefined,
     })
@@ -430,7 +450,7 @@ export default function AiChatPage() {
       const payload: AiRequestPayload = { industrySlug, targetRole: trimmedRole }
       setIsScorePending(true)
       try {
-        setScoreResult(adaptScoreResult(await scoreCv(selectedCv.id, payload)))
+        setScoreResult(adaptScoreResult(await scoreCv(selectedCv.id, payload, idempotencyKey)))
       } catch (error) {
         setScoreError({
           text: getAiApiErrorMessage(error, 'Unable to score and review this CV. Please try again.'),
@@ -444,7 +464,7 @@ export default function AiChatPage() {
     if (selectedAction === 'translate') {
       setIsTranslationPending(true)
       try {
-        setTranslationResult(adaptTranslationResult(await translateCv(selectedCv.id)))
+        setTranslationResult(adaptTranslationResult(await translateCv(selectedCv.id, idempotencyKey)))
       } catch (error) {
         setTranslationError({
           text: getAiApiErrorMessage(error, 'Unable to translate this CV to English. Please try again.'),
