@@ -203,6 +203,14 @@ export function getAiApiErrorStatus(error: unknown) {
   return axios.isAxiosError(error) ? error.response?.status : undefined
 }
 
+export function getAiApiErrorCode(error: unknown) {
+  if (!axios.isAxiosError(error)) return undefined
+  const data = error.response?.data
+  return data && typeof data === 'object' && 'code' in data && typeof data.code === 'string'
+    ? data.code
+    : undefined
+}
+
 export function getAiApiErrorMessage(error: unknown, fallback: string) {
   if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
     return 'The AI request took too long to finish. Check AI Results before retrying because the server may still complete it.'
@@ -224,7 +232,16 @@ export function getAiApiErrorMessage(error: unknown, fallback: string) {
     case 404:
       return 'This CV is no longer available or you do not have access to it.'
     case 409:
-      return 'The saved CV file is no longer available. Upload a current CV to continue.'
+      switch (getAiApiErrorCode(error)) {
+        case 'IDEMPOTENCY_RETRY_REQUIRED':
+          return 'The previous AI attempt failed and its credit was returned. Run the task again to start a new attempt.'
+        case 'IDEMPOTENCY_PAYLOAD_MISMATCH':
+          return 'This retry does not match the original AI request. Start a new attempt instead of reusing its request key.'
+        case 'AI_REQUEST_IN_PROGRESS':
+          return 'This AI request is still processing. Check AI Results before trying again.'
+        default:
+          return 'This AI request conflicts with a previous attempt. Check AI Results or start a new attempt.'
+      }
     case 413:
     case 415:
       return 'Use a PDF or DOCX file within the allowed file size.'

@@ -15,6 +15,7 @@ import { Select } from '@/components/ui/select'
 import { getMyCvs, type CvDocument } from '@/modules/applicant/cvApi'
 import {
   createAiIdempotencyKey,
+  getAiApiErrorCode,
   getAiApiErrorMessage,
   getAiApiErrorStatus,
   getAiResultById,
@@ -24,6 +25,7 @@ import {
   type AiRequestPayload,
   type AiResultRecord,
 } from './aiApi'
+import { canRetryAiRequest, shouldReuseAiIdempotencyKey } from './aiRetryPolicy'
 import { adaptAiHistory, type AiHistoryItemViewModel } from './aiHistoryAdapter'
 import {
   adaptScoreResult,
@@ -63,6 +65,7 @@ const AI_ACTION_OPTIONS: Array<{ value: AiAction; title: string; description: st
 type RequestError = {
   text: string
   status?: number
+  code?: string
 }
 
 type SubmittedRequest = {
@@ -114,7 +117,7 @@ function formatStatus(status?: string) {
 }
 
 function ErrorMessage({ error, onRetry }: { error: RequestError; onRetry: () => void }) {
-  const canRetry = !error.status || error.status === 408 || error.status === 429 || error.status >= 500
+  const canRetry = canRetryAiRequest(error)
 
   return (
     <div className="space-y-2 rounded-[var(--radius-lg)] bg-[var(--color-error-bg)] px-4 py-3 text-sm" role="alert">
@@ -432,7 +435,8 @@ export default function AiChatPage() {
       && lastRequest.cvId === selectedCv.id
       && lastRequest.industrySlug === (industrySlug || undefined)
       && lastRequest.verticalSlug === (verticalSlug || undefined)
-      && lastRequest.targetRole === (trimmedRole || undefined),
+      && lastRequest.targetRole === (trimmedRole || undefined)
+      && shouldReuseAiIdempotencyKey(retryError),
     )
     const idempotencyKey = canReuseIdempotencyKey && lastRequest
       ? lastRequest.idempotencyKey
@@ -459,6 +463,7 @@ export default function AiChatPage() {
         setScoreError({
           text: getAiApiErrorMessage(error, 'Unable to score and review this CV. Please try again.'),
           status: getAiApiErrorStatus(error),
+            code: getAiApiErrorCode(error),
         })
       } finally {
         setIsScorePending(false)
@@ -473,6 +478,7 @@ export default function AiChatPage() {
         setTranslationError({
           text: getAiApiErrorMessage(error, 'Unable to translate this CV to English. Please try again.'),
           status: getAiApiErrorStatus(error),
+            code: getAiApiErrorCode(error),
         })
       } finally {
         setIsTranslationPending(false)
