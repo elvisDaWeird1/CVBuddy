@@ -37,19 +37,12 @@ import { AiResultHistory } from './components/AiResultHistory'
 import { AiResultHistoryDetail } from './components/AiResultHistoryDetail'
 import { ScoreOverview } from './components/ScoreOverview'
 import { TranslationPanel } from './components/TranslationPanel'
-
-const INDUSTRY_OPTIONS = [
-  { value: 'ai_software', label: 'AI & Software' },
-  { value: 'business_administration', label: 'Business Administration' },
-  { value: 'computer_science', label: 'Information Technology' },
-  { value: 'language', label: 'Language' },
-  { value: 'law', label: 'Law' },
-  { value: 'marketing', label: 'Marketing' },
-]
+import { CAREER_CATALOG, getIndustry, getVertical } from './aiCareerCatalog'
 
 type FormErrors = {
   cv?: string
   industry?: string
+  vertical?: string
   targetRole?: string
   action?: string
 }
@@ -82,6 +75,8 @@ type SubmittedRequest = {
   idempotencyKey: string
   industrySlug?: string
   industryLabel?: string
+  verticalSlug?: string
+  verticalLabel?: string
   targetRole?: string
 }
 
@@ -228,7 +223,9 @@ export default function AiChatPage() {
   const [listError, setListError] = useState<string | null>(null)
   const [selectedCvId, setSelectedCvId] = useState('')
   const [industrySlug, setIndustrySlug] = useState('')
+  const [verticalSlug, setVerticalSlug] = useState('')
   const [targetRole, setTargetRole] = useState('')
+  const [customTargetRole, setCustomTargetRole] = useState('')
   const [selectedAction, setSelectedAction] = useState<AiAction | ''>('')
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [isScorePending, setIsScorePending] = useState(false)
@@ -250,7 +247,10 @@ export default function AiChatPage() {
   const isAnyAiPending = isScorePending || isTranslationPending
   const selectedCv = useMemo(() => cvs.find((cv) => cv.id === selectedCvId), [cvs, selectedCvId])
   const requiresCareerTarget = selectedAction === 'analyze'
-  const hasCareerTarget = Boolean(industrySlug && targetRole.trim())
+  const selectedVertical = getVertical(industrySlug, verticalSlug)
+  const isOtherRole = targetRole === '__other__'
+  const resolvedTargetRole = isOtherRole ? customTargetRole.trim() : targetRole
+  const hasCareerTarget = Boolean(industrySlug && verticalSlug && resolvedTargetRole)
   const canSubmit = Boolean(
     selectedCv
     && selectedAction
@@ -397,10 +397,11 @@ export default function AiChatPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const trimmedRole = targetRole.trim()
+    const trimmedRole = resolvedTargetRole
     const nextErrors: FormErrors = {
       cv: !selectedCv || !isCvAvailable(selectedCv) ? 'Choose an available CV before analyzing.' : undefined,
       industry: requiresCareerTarget && !industrySlug ? 'Choose an industry before analyzing.' : undefined,
+      vertical: requiresCareerTarget && !verticalSlug ? 'Choose a specialization before analyzing.' : undefined,
       targetRole: requiresCareerTarget
         ? !trimmedRole
           ? 'Target role is required.'
@@ -414,7 +415,7 @@ export default function AiChatPage() {
     }
     setFormErrors(nextErrors)
 
-    if (nextErrors.cv || nextErrors.industry || nextErrors.targetRole || nextErrors.action || !selectedCv || !selectedAction || isAnyAiPending) {
+    if (nextErrors.cv || nextErrors.industry || nextErrors.vertical || nextErrors.targetRole || nextErrors.action || !selectedCv || !selectedAction || isAnyAiPending) {
       return
     }
 
@@ -433,6 +434,7 @@ export default function AiChatPage() {
       && lastRequest.action === selectedAction
       && lastRequest.cvId === selectedCv.id
       && lastRequest.industrySlug === (industrySlug || undefined)
+      && lastRequest.verticalSlug === (verticalSlug || undefined)
       && lastRequest.targetRole === (trimmedRole || undefined)
       && shouldReuseAiIdempotencyKey(retryError),
     )
@@ -446,12 +448,14 @@ export default function AiChatPage() {
       cvTitle: selectedCv.title || 'Untitled CV',
       idempotencyKey,
       industrySlug: industrySlug || undefined,
-      industryLabel: INDUSTRY_OPTIONS.find((option) => option.value === industrySlug)?.label,
+      industryLabel: getIndustry(industrySlug)?.label,
+      verticalSlug: verticalSlug || undefined,
+      verticalLabel: selectedVertical?.label,
       targetRole: trimmedRole || undefined,
     })
 
     if (selectedAction === 'analyze') {
-      const payload: AiRequestPayload = { industrySlug, targetRole: trimmedRole }
+      const payload: AiRequestPayload = { industrySlug, verticalSlug, targetRole: trimmedRole }
       setIsScorePending(true)
       try {
         setScoreResult(adaptScoreResult(await scoreCv(selectedCv.id, payload, idempotencyKey)))
@@ -625,7 +629,7 @@ export default function AiChatPage() {
                         <h3 className="text-base font-semibold" id="career-context-heading">Step 3 · Career context</h3>
                         <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Used to assess keyword coverage and target-role fit.</p>
                       </div>
-                      <div className="grid gap-5 md:grid-cols-2">
+                      <div className="grid gap-5 md:grid-cols-3">
                         <div>
                           <Select
                             aria-describedby={formErrors.industry ? 'ai-industry-error' : undefined}
@@ -634,27 +638,25 @@ export default function AiChatPage() {
                             label="Industry"
                             onChange={(event) => {
                               setIndustrySlug(event.target.value)
-                              setFormErrors((current) => ({ ...current, industry: undefined }))
+                              setVerticalSlug('')
+                              setTargetRole('')
+                              setCustomTargetRole('')
+                              setFormErrors((current) => ({ ...current, industry: undefined, vertical: undefined, targetRole: undefined }))
                             }}
-                            options={INDUSTRY_OPTIONS}
+                            options={CAREER_CATALOG.map((industry) => ({ value: industry.slug, label: industry.label }))}
                             placeholder="Select an industry"
                             value={industrySlug}
                           />
                           {formErrors.industry ? <span className="sr-only" id="ai-industry-error">{formErrors.industry}</span> : null}
                         </div>
-                        <Input
-                          error={formErrors.targetRole}
-                          id="ai-target-role"
-                          label="Target role"
-                          maxLength={150}
-                          onChange={(event) => {
-                            setTargetRole(event.target.value)
-                            setFormErrors((current) => ({ ...current, targetRole: undefined }))
-                          }}
-                          placeholder="Marketing Intern, Frontend Developer, Event Coordinator"
-                          value={targetRole}
-                        />
+                        <div>
+                          <Select aria-describedby={formErrors.vertical ? 'ai-vertical-error' : undefined} disabled={!industrySlug} error={formErrors.vertical} id="ai-vertical" label="Specialization" onChange={(event) => { setVerticalSlug(event.target.value); setTargetRole(''); setCustomTargetRole(''); setFormErrors((current) => ({ ...current, vertical: undefined, targetRole: undefined })) }} options={(getIndustry(industrySlug)?.verticals || []).map((item) => ({ value: item.slug, label: item.label }))} placeholder="Select a specialization" value={verticalSlug} />
+                          {formErrors.vertical ? <span className="sr-only" id="ai-vertical-error">{formErrors.vertical}</span> : null}
+                        </div>
+                        <Select aria-describedby={formErrors.targetRole ? 'ai-target-role-error' : undefined} disabled={!verticalSlug} error={formErrors.targetRole} id="ai-target-role" label="Target role" onChange={(event) => { setTargetRole(event.target.value); setCustomTargetRole(''); setFormErrors((current) => ({ ...current, targetRole: undefined })) }} options={(selectedVertical?.targetRoles || []).map((role) => ({ value: role.value, label: role.label }))} placeholder="Select a target role" value={targetRole} />
                       </div>
+                      {isOtherRole ? <Input aria-describedby={formErrors.targetRole ? 'ai-target-role-error' : undefined} error={formErrors.targetRole} id="ai-custom-target-role" label="Enter another target role" maxLength={150} onChange={(event) => { setCustomTargetRole(event.target.value); setFormErrors((current) => ({ ...current, targetRole: undefined })) }} placeholder="e.g. Junior Product Analyst" value={customTargetRole} /> : null}
+                      {formErrors.targetRole ? <span className="sr-only" id="ai-target-role-error">{formErrors.targetRole}</span> : null}
                     </section>
                   ) : selectedAction === 'translate' ? (
                     <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
