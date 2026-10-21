@@ -14,6 +14,7 @@ export interface AiHistoryItemViewModel {
   statusLabel: string
   score: number | null
   industrySlug?: string
+  verticalSlug?: string
   targetRole?: string
   createdAt: Date | null
   createdAtLabel: string
@@ -118,6 +119,7 @@ export function adaptAiHistory(records: AiResultRecord[], cvs: CvDocument[]): Ai
       statusLabel: STATUS_LABELS[status],
       score: normalizeScore(record.score),
       industrySlug: readString(record.industrySlug),
+      verticalSlug: readString(record.verticalSlug),
       targetRole: readString(record.targetRole),
       createdAt,
       createdAtLabel: formatDate(createdAt),
