@@ -25,6 +25,7 @@ export interface AiRequestPayload {
 
 export type AiCareerTargetPayload = AiRequestPayload & {
   industrySlug: string
+  verticalSlug: string
   targetRole: string
 }
 
@@ -52,6 +53,7 @@ export interface AiResultRecord {
   errorCode?: string | null
   errorMessage?: string | null
   industrySlug?: string
+  verticalSlug?: string
   targetRole?: string
   workflowId?: string
 }

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FileTextIcon } from '@/components/ui/icons'
 import { Select } from '@/components/ui/select'
 import { type AiHistoryItemViewModel } from '@/modules/ai/aiHistoryAdapter'
+import { formatCareerContext } from '@/modules/ai/aiCareerCatalog'
 
 interface AiResultHistoryProps {
   items: AiHistoryItemViewModel[]
@@ -137,7 +138,7 @@ export function AiResultHistory({
                   </span>
                   {item.targetRole || item.industrySlug ? (
                     <span className="mt-2 block truncate text-xs text-[var(--color-text-secondary)]">
-                      {[item.targetRole, item.industrySlug?.replace(/_/g, ' ')].filter(Boolean).join(' · ')}
+                      {formatCareerContext(item.industrySlug, item.verticalSlug, item.targetRole) || [item.targetRole, item.industrySlug?.replace(/_/g, ' ')].filter(Boolean).join(' · ')}
                     </span>
                   ) : null}
                   {item.status === 'failed' ? (
