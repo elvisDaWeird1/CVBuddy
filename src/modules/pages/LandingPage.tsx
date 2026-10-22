@@ -104,7 +104,7 @@ const portfolioSteps: LandingFeature[] = [
   {
     title: 'Capture',
     label: '01',
-    body: 'Use the CVBuddy mobile app to photograph projects, events, campaigns, and work in progress.',
+    body: 'Capture projects, events, campaigns, and work in progress from your browser or the CVBuddy mobile app.',
     icon: <CameraIcon className="h-5 w-5" />,
   },
   {
@@ -444,7 +444,7 @@ export function LandingPage() {
               eyebrow="Portfolio"
               title="Build Your Portfolio Anywhere"
             >
-              Capture your work with the CVBuddy mobile app and publish it directly to your personal portfolio.
+              Capture your work in the browser or with the CVBuddy mobile app, then publish it directly to your personal portfolio.
             </SectionIntro>
 
             <p className="mb-6 max-w-2xl text-base leading-relaxed text-[var(--color-text-secondary)]">
