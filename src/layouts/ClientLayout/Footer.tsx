@@ -39,7 +39,7 @@ export function Footer() {
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-normal text-[var(--color-text-on-navy)]">From CV to proof</h3>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--color-text-on-navy)]/70">
-              Review your CV with AI, capture real work from your phone, and shape it into a portfolio employers can understand.
+              Review your CV with AI, capture real work from the web or your phone, and shape it into a portfolio employers can understand.
             </p>
           </div>
         </div>

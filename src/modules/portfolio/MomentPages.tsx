@@ -6,20 +6,17 @@ import { FormGroup } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { UploadProgress } from '@/components/ui/upload-progress'
-import { ArrowRightIcon, CameraIcon, TrashIcon, UploadIcon, XIcon } from '@/components/ui/icons'
+import { ArrowRightIcon, TrashIcon, UploadIcon } from '@/components/ui/icons'
 import { assignMoment, createMoment, deleteMoment, getExperiences, getMoment, getMoments, getPortfolioErrorMessage, unassignMoment, updateMoment } from './portfolioApi'
 import { EXPERIENCE_VISIBILITIES, MOMENT_STATUSES, type ExperienceVisibility, type PortfolioExperience, type PortfolioMoment } from './portfolioTypes'
 import { ConfirmButton, EmptyState, LoadingState, MediaPreview, Notice, PageHeading, PageShell, StatusBadge, TagList } from './PortfolioShared'
 import { formatDate } from './portfolioFormat'
 import { compressImageFile } from '@/utils/imageUpload'
-import { cn } from '@/utils/cn'
-import { MAX_MOMENT_MEDIA_COUNT, momentMediaAccept, validateMomentMediaFiles } from './portfolioUploadPolicy'
+import { appendMomentMediaFiles, validateMomentMediaFiles } from './portfolioUploadPolicy'
+import { MomentMediaPicker } from './MomentMediaPicker'
+import { toLocalDateTimeInputValue } from './cameraUtils'
 
 const visibilityOptions = EXPERIENCE_VISIBILITIES.map((value) => ({ value, label: value === 'portfolio' ? 'Portfolio (public-ready)' : 'Private' }))
-
-function validateFiles(files: File[]) {
-  return validateMomentMediaFiles(files)
-}
 
 function formatBytes(bytes: number) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
@@ -29,8 +26,11 @@ function formatBytes(bytes: number) {
 export function MomentCreatePage() {
   const navigate = useNavigate()
   const [files, setFiles] = useState<File[]>([])
+  const filesRef = useRef<File[]>([])
+  const preparingRef = useRef(false)
   const [caption, setCaption] = useState('')
   const [capturedAt, setCapturedAt] = useState(() => new Date().toISOString().slice(0, 16))
+  const [capturedAtEdited, setCapturedAtEdited] = useState(false)
   const [location, setLocation] = useState('')
   const [skills, setSkills] = useState('')
   const [experienceId, setExperienceId] = useState('')
@@ -51,43 +51,62 @@ export function MomentCreatePage() {
   useEffect(() => () => previews.forEach(({ url }) => URL.revokeObjectURL(url)), [previews])
 
   const prepareFiles = async (next: File[]) => {
-    if (uploading || preparingFiles) return
-    const validationError = validateFiles(next)
-    setErrorMessage(validationError ?? null)
-    if (validationError) return
+    if (uploading || preparingRef.current) return false
+    const merge = appendMomentMediaFiles(filesRef.current, next)
+    setErrorMessage(merge.error ?? null)
+    if (merge.error) return false
+    if (!next.length) return true
 
+    preparingRef.current = true
     setPreparingFiles(true)
     setUploadProgress(0)
 
     try {
-      const prepared: File[] = []
+      const preparedNewFiles: File[] = []
       for (const file of next) {
-        prepared.push(file.type.startsWith('image/')
+        preparedNewFiles.push(file.type.startsWith('image/')
           ? await compressImageFile(file, { maxDimension: 1600, quality: 0.82 })
           : file)
       }
-      setFiles(prepared)
+      const preparedMerge = appendMomentMediaFiles(filesRef.current, preparedNewFiles)
+      if (preparedMerge.error) {
+        setErrorMessage(preparedMerge.error)
+        return false
+      }
+      filesRef.current = preparedMerge.files as File[]
+      setFiles(filesRef.current)
+      setErrorMessage(null)
+      return true
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to prepare these files for upload.')
+      return false
     } finally {
+      preparingRef.current = false
       setPreparingFiles(false)
     }
   }
 
-  const chooseFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const next = Array.from(event.target.files ?? [])
-    event.target.value = ''
-    void prepareFiles(next)
+  const removeFile = (index: number) => {
+    filesRef.current = filesRef.current.filter((_, currentIndex) => currentIndex !== index)
+    setFiles(filesRef.current)
+    setErrorMessage(null)
   }
 
-  const removeFile = (index: number) => {
-    setFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))
+  const clearFiles = () => {
+    filesRef.current = []
+    setFiles([])
     setErrorMessage(null)
+  }
+
+  const useCapturedPhoto = async (file: File, captureTime: number) => {
+    const added = await prepareFiles([file])
+    if (added && !capturedAtEdited) setCapturedAt(toLocalDateTimeInputValue(new Date(captureTime)))
+    return added
   }
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
-    const fileError = validateFiles(files)
+    const fileError = validateMomentMediaFiles(files)
     if (fileError) { setErrorMessage(fileError); return }
     if (new Date(capturedAt).getTime() > Date.now() + 5 * 60 * 1000) { setErrorMessage('Captured date cannot be more than 5 minutes in the future.'); return }
     if (uploading || preparingFiles) return
@@ -119,90 +138,23 @@ export function MomentCreatePage() {
       <PageHeading
         eyebrow="Capture proof quickly"
         title="New moment"
-        description="Choose media, review the prepared files, then confirm the upload. Images are resized in your browser before they are sent."
+        description="Take a photo in your browser, choose media, or drop files. Review the prepared files before uploading."
         actions={<Link to="/portfolio" className="text-sm font-semibold text-[var(--color-teal)]">Back to Portfolio</Link>}
       />
       {errorMessage && <div className="mb-6"><Notice>{errorMessage}</Notice></div>}
 
       <form className="grid gap-6 lg:grid-cols-[1.1fr_1fr]" onSubmit={(event) => void submit(event)}>
         <div className="space-y-6">
-          <Card>
-            <CardHeader><CardTitle>Media</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div
-                aria-busy={preparingFiles}
-                className="rounded-[var(--radius-xl)] border-2 border-dashed border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-6 text-center"
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  event.preventDefault()
-                  if (!uploading && !preparingFiles) void prepareFiles(Array.from(event.dataTransfer.files))
-                }}
-              >
-                <CameraIcon className="mx-auto h-10 w-10 text-[var(--color-teal)]" />
-                <p className="mt-3 font-semibold text-[var(--color-text-primary)]">
-                  {preparingFiles ? 'Preparing images…' : 'Capture, choose, or drop media'}
-                </p>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">JPG, PNG, WEBP or MP4 · up to {MAX_MOMENT_MEDIA_COUNT} files · 5 MB each</p>
-                <div className="mt-4 flex flex-wrap justify-center gap-3">
-                  <label className={cn('inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-teal)] px-4 py-2 text-sm font-semibold text-white hover:brightness-95', (uploading || preparingFiles) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')}>
-                    <CameraIcon className="h-4 w-4" />
-                    Use camera
-                    <input className="sr-only" type="file" accept={momentMediaAccept} capture="environment" disabled={uploading || preparingFiles} onChange={chooseFiles} />
-                  </label>
-                  <label className={cn('inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-teal)] bg-[var(--color-white)] px-4 py-2 text-sm font-semibold text-[var(--color-teal)] hover:bg-[var(--color-bg-soft)]', (uploading || preparingFiles) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')}>
-                    <UploadIcon className="h-4 w-4" />
-                    Choose files
-                    <input className="sr-only" type="file" accept={momentMediaAccept} multiple disabled={uploading || preparingFiles} onChange={chooseFiles} />
-                  </label>
-                </div>
-              </div>
-
-              {preparingFiles ? (
-                <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-soft)] px-4 py-3 text-sm text-[var(--color-teal)]" role="status" aria-live="polite">
-                  Resizing and compressing images. You can keep editing the rest of the page.
-                </div>
-              ) : null}
-
-              {files.length ? (
-                <>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {previews.map(({ file, url }, index) => (
-                      <div key={`${file.name}-${file.lastModified}-${index}`} className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)]">
-                        <div className="relative aspect-square bg-[var(--color-gray-100)]">
-                          {file.type.startsWith('video/')
-                            ? <video className="h-full w-full object-cover" src={url} controls />
-                            : <img className="h-full w-full object-cover" src={url} alt={file.name} />}
-                        </div>
-                        <div className="p-2">
-                          <p className="truncate text-xs font-medium">{file.name}</p>
-                          <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">{file.type} · {formatBytes(file.size)}</p>
-                          <button
-                            type="button"
-                            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-error)] disabled:opacity-50"
-                            disabled={uploading || preparingFiles}
-                            onClick={() => removeFile(index)}
-                            aria-label={`Remove ${file.name}`}
-                          >
-                            <XIcon className="h-3.5 w-3.5" />Remove
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    className="text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-error)] disabled:opacity-50"
-                    disabled={uploading || preparingFiles}
-                    onClick={() => setFiles([])}
-                    type="button"
-                  >
-                    Clear selection
-                  </button>
-                </>
-              ) : (
-                <p className="text-center text-sm text-[var(--color-text-muted)]">Your media preview will appear here before upload.</p>
-              )}
-            </CardContent>
-          </Card>
+          <MomentMediaPicker
+            files={files}
+            previews={previews}
+            disabled={uploading || preparingFiles}
+            preparing={preparingFiles}
+            onAddFiles={prepareFiles}
+            onUsePhoto={useCapturedPhoto}
+            onRemoveFile={removeFile}
+            onClear={clearFiles}
+          />
         </div>
 
         <div className="space-y-6">
@@ -212,7 +164,7 @@ export function MomentCreatePage() {
               <FormGroup label="Caption" helperText="Up to 500 characters.">
                 <textarea className="min-h-24 w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] px-3 py-2 text-sm outline-none focus:border-[var(--color-teal)]" maxLength={500} value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="What happened here?" />
               </FormGroup>
-              <Input type="datetime-local" label="Captured at" value={capturedAt} onChange={(event) => setCapturedAt(event.target.value)} />
+              <Input type="datetime-local" label="Captured at" value={capturedAt} onChange={(event) => { setCapturedAtEdited(true); setCapturedAt(event.target.value) }} />
               <Input label="Location" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Optional" />
               <Input label="Skills" value={skills} onChange={(event) => setSkills(event.target.value)} placeholder="Optional, comma separated" />
               <Select label="Experience" value={experienceId} onChange={(event) => setExperienceId(event.target.value)} placeholder="Leave unassigned" options={experiences.filter((item) => item.status !== 'archived').map((item) => ({ value: item.id, label: item.title }))} />
@@ -272,7 +224,7 @@ export function MomentListPage() {
   const doAssign = async (moment: PortfolioMoment, nextExperienceId: string) => { setBusy(moment.id); try { const next = nextExperienceId ? await assignMoment(moment.id, nextExperienceId) : await unassignMoment(moment.id); if (next) setItems((current) => current.map((item) => item.id === moment.id ? next : item)) } catch (error) { setErrorMessage(getPortfolioErrorMessage(error, 'Unable to update assignment.')) } finally { setBusy(null) } }
   const remove = async (moment: PortfolioMoment) => { if (!window.confirm('Delete this moment and its uploaded media? This cannot be undone.')) return; setBusy(moment.id); try { await deleteMoment(moment.id); setItems((current) => current.filter((item) => item.id !== moment.id)) } catch (error) { setErrorMessage(getPortfolioErrorMessage(error, 'Unable to delete moment.')) } finally { setBusy(null) } }
 
-  return <PageShell><PageHeading eyebrow="Work in motion" title="Moments" description="Capture quick proof points, then connect them to the experiences they support." actions={<Link to="/portfolio/moments/new"><Button iconLeft={<UploadIcon className="h-4 w-4" />} >Capture moment</Button></Link>} />{errorMessage && <div className="mb-6"><Notice>{errorMessage}</Notice></div>}<Card className="mb-6"><CardContent><form className="grid gap-4 md:grid-cols-[1fr_170px_170px_auto] md:items-end" onSubmit={applyFilters}><Select label="Experience" value={experienceId} onChange={(event) => setExperienceId(event.target.value)} placeholder="All experiences" options={experiences.map((item) => ({ value: item.id, label: item.title }))} /><Select label="Status" value={status} onChange={(event) => setStatus(event.target.value)} placeholder="All statuses" options={MOMENT_STATUSES.map((value) => ({ value, label: value }))} /><Select label="Visibility" value={visibility} onChange={(event) => setVisibility(event.target.value)} placeholder="All visibility" options={visibilityOptions} /><Button type="submit">Apply filters</Button></form></CardContent></Card>{loading ? <LoadingState label="Loading moments…" /> : !items.length ? <EmptyState title="No moments yet" description="Use your phone camera or choose files from your device to capture a moment." action={<Link to="/portfolio/moments/new"><Button>Capture a moment</Button></Link>} /> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map((moment) => <article key={moment.id} className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]"><Link to={`/portfolio/moments/${moment.id}`}><MediaPreview moment={moment} /></Link><div className="space-y-3 p-4"><div className="flex items-start justify-between gap-2"><p className="line-clamp-2 font-semibold">{moment.caption || 'Untitled moment'}</p><StatusBadge tone={moment.status === 'ready' ? 'success' : 'warning'}>{moment.status}</StatusBadge></div><p className="text-xs text-[var(--color-text-secondary)]">{formatDate(moment.capturedAt)} · {moment.visibility}</p><p className="text-xs text-[var(--color-text-secondary)]">Experience: <span className="font-medium">{experienceTitle(moment.experienceId)}</span></p><TagList items={moment.skills} empty="No skills tagged" /><div className="flex items-center gap-2 border-t border-[var(--color-border)] pt-3"><Select aria-label={`Assign ${moment.caption || 'moment'} to experience`} value={moment.experienceId ?? ''} onChange={(event) => void doAssign(moment, event.target.value)} disabled={busy === moment.id} placeholder="Unassigned" options={[{ value: '', label: 'Unassigned' }, ...experiences.filter((item) => item.status !== 'archived').map((item) => ({ value: item.id, label: item.title }))]} /><button type="button" className="shrink-0 rounded-[var(--radius-md)] p-2 text-[var(--color-error)] hover:bg-[var(--color-error-bg)]" disabled={busy === moment.id} onClick={() => void remove(moment)} aria-label={`Delete ${moment.caption || 'moment'}`}><TrashIcon className="h-4 w-4" /></button></div></div></article>)}</div>}</PageShell>
+  return <PageShell><PageHeading eyebrow="Work in motion" title="Moments" description="Capture quick proof points, then connect them to the experiences they support." actions={<Link to="/portfolio/moments/new"><Button iconLeft={<UploadIcon className="h-4 w-4" />} >Capture moment</Button></Link>} />{errorMessage && <div className="mb-6"><Notice>{errorMessage}</Notice></div>}<Card className="mb-6"><CardContent><form className="grid gap-4 md:grid-cols-[1fr_170px_170px_auto] md:items-end" onSubmit={applyFilters}><Select label="Experience" value={experienceId} onChange={(event) => setExperienceId(event.target.value)} placeholder="All experiences" options={experiences.map((item) => ({ value: item.id, label: item.title }))} /><Select label="Status" value={status} onChange={(event) => setStatus(event.target.value)} placeholder="All statuses" options={MOMENT_STATUSES.map((value) => ({ value, label: value }))} /><Select label="Visibility" value={visibility} onChange={(event) => setVisibility(event.target.value as ExperienceVisibility)} placeholder="All visibility" options={visibilityOptions} /><Button type="submit">Apply filters</Button></form></CardContent></Card>{loading ? <LoadingState label="Loading moments…" /> : !items.length ? <EmptyState title="No moments yet" description="Capture a photo with your browser or device camera, or choose media files from your device." action={<Link to="/portfolio/moments/new"><Button>Capture a moment</Button></Link>} /> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map((moment) => <article key={moment.id} className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-white)] shadow-[var(--shadow-sm)]"><Link to={`/portfolio/moments/${moment.id}`}><MediaPreview moment={moment} /></Link><div className="space-y-3 p-4"><div className="flex items-start justify-between gap-2"><p className="line-clamp-2 font-semibold">{moment.caption || 'Untitled moment'}</p><StatusBadge tone={moment.status === 'ready' ? 'success' : 'warning'}>{moment.status}</StatusBadge></div><p className="text-xs text-[var(--color-text-secondary)]">{formatDate(moment.capturedAt)} · {moment.visibility}</p><p className="text-xs text-[var(--color-text-secondary)]">Experience: <span className="font-medium">{experienceTitle(moment.experienceId)}</span></p><TagList items={moment.skills} empty="No skills tagged" /><div className="flex items-center gap-2 border-t border-[var(--color-border)] pt-3"><Select aria-label={`Assign ${moment.caption || 'moment'} to experience`} value={moment.experienceId ?? ''} onChange={(event) => void doAssign(moment, event.target.value)} disabled={busy === moment.id} placeholder="Unassigned" options={[{ value: '', label: 'Unassigned' }, ...experiences.filter((item) => item.status !== 'archived').map((item) => ({ value: item.id, label: item.title }))]} /><button type="button" className="shrink-0 rounded-[var(--radius-md)] p-2 text-[var(--color-error)] hover:bg-[var(--color-error-bg)]" disabled={busy === moment.id} onClick={() => void remove(moment)} aria-label={`Delete ${moment.caption || 'moment'}`}><TrashIcon className="h-4 w-4" /></button></div></div></article>)}</div>}</PageShell>
 }
 
 export function MomentDetailPage() {
