@@ -15,6 +15,7 @@ import type {
   PortfolioProfileInput,
   PublicPortfolioResponse,
 } from './portfolioTypes'
+import { buildMomentFormData } from './momentUploadForm'
 
 type Wrapped<T, K extends string> = { [P in K]: T }
 
@@ -220,14 +221,7 @@ export async function createMoment(
   payload: MomentInput,
   options: PortfolioUploadOptions = {},
 ) {
-  const formData = new FormData()
-  fileList.forEach((file) => formData.append('media', file))
-  Object.entries({
-    ...payload,
-    skills: payload.skills?.length ? JSON.stringify(payload.skills) : undefined,
-  }).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') formData.append(key, String(value))
-  })
+  const formData = buildMomentFormData(fileList, payload)
 
   const response = await request<Wrapped<PortfolioMoment, 'moment'>>(
     () => httpClient.post('/portfolio/moments', formData, {

@@ -68,3 +68,12 @@ export function validateMomentMediaFiles(files: PortfolioUploadCandidate[]) {
   if (files.length > MAX_MOMENT_MEDIA_COUNT) return `A moment can contain at most ${MAX_MOMENT_MEDIA_COUNT} media files.`
   return files.map((file) => validatePortfolioUploadFile(file, 'moment')).find(Boolean)
 }
+
+export function appendMomentMediaFiles<T extends PortfolioUploadCandidate>(current: T[], next: T[]) {
+  const combined = [...current, ...next]
+  if (combined.length > MAX_MOMENT_MEDIA_COUNT) {
+    return { files: current, error: `A moment can contain at most ${MAX_MOMENT_MEDIA_COUNT} media files.` }
+  }
+  const error = next.length ? validateMomentMediaFiles(combined) : undefined
+  return error ? { files: current, error } : { files: combined, error: undefined }
+}
