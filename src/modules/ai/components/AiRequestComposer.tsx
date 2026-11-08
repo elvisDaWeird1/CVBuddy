@@ -19,7 +19,7 @@ import {
   getAiApiErrorStatus,
   scoreCv,
   translateCv,
-  type AiRequestPayload,
+  type AiCareerTargetPayload,
   type AiResultRecord,
 } from '@/modules/ai/aiApi'
 import {
@@ -373,7 +373,7 @@ export function AiRequestComposer({
     })
 
     if (selectedAction === 'analyze') {
-      const payload: AiRequestPayload = { industrySlug, verticalSlug, targetRole: trimmedRole }
+      const payload: AiCareerTargetPayload = { industrySlug, verticalSlug, targetRole: trimmedRole }
       setIsScorePending(true)
       try {
         const resultRecord = await scoreCv(selectedCv.id, payload, idempotencyKey)
