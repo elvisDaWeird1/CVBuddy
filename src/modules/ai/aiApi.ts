@@ -2,6 +2,15 @@ import axios from 'axios'
 import { httpClient } from '@/apis'
 import { type BackendApiResponse } from '@/modules/auth/authApi'
 
+export type AiLlmModel = 'qwen/qwen3.8-27b' | 'openai/gpt-oss-120b'
+
+export interface AiJdExtractPayload {
+  company_name?: string
+  required_keywords: string[]
+  preferred_keywords: string[]
+  responsibilities: string[]
+}
+
 export interface AiRequestPayload {
   industrySlug?: string
   targetRole?: string
@@ -9,14 +18,8 @@ export interface AiRequestPayload {
   verticalSlug?: string
   companyModel?: 'corporate' | 'startup_agency'
   language?: 'vi' | 'en' | 'both'
-  jdExtract?: {
-    role_title?: string
-    company_name?: string
-    required_keywords?: string[]
-    preferred_keywords?: string[]
-    responsibilities?: string[]
-  }
-  llmModel?: string
+  jdExtract?: AiJdExtractPayload
+  llmModel?: AiLlmModel
   extractionMode?: 'local' | 'ai' | 'hybrid'
   strictIndustryMatch?: boolean
   sourceLang?: string
@@ -110,20 +113,30 @@ export interface AiResultsQuery {
 }
 
 function normalizePayload(payload: AiRequestPayload): AiRequestPayload {
-  return {
-    industrySlug: payload.industrySlug?.trim(),
-    targetRole: payload.targetRole?.trim(),
-    cvText: payload.cvText?.trim(),
-    verticalSlug: payload.verticalSlug?.trim(),
-    companyModel: payload.companyModel,
-    language: payload.language,
-    jdExtract: payload.jdExtract,
-    llmModel: payload.llmModel?.trim(),
-    extractionMode: payload.extractionMode,
-    strictIndustryMatch: payload.strictIndustryMatch,
-    sourceLang: payload.sourceLang?.trim(),
-    translationMode: payload.translationMode,
+  const normalized: AiRequestPayload = {}
+
+  if (payload.industrySlug !== undefined) normalized.industrySlug = payload.industrySlug.trim()
+  if (payload.targetRole !== undefined) normalized.targetRole = payload.targetRole.trim()
+  if (payload.cvText !== undefined) normalized.cvText = payload.cvText.trim()
+  if (payload.verticalSlug !== undefined) normalized.verticalSlug = payload.verticalSlug.trim()
+  if (payload.companyModel !== undefined) normalized.companyModel = payload.companyModel
+  if (payload.language !== undefined) normalized.language = payload.language
+  if (payload.jdExtract !== undefined) {
+    const companyName = payload.jdExtract.company_name?.trim()
+    normalized.jdExtract = {
+      ...(companyName ? { company_name: companyName } : {}),
+      required_keywords: [...payload.jdExtract.required_keywords],
+      preferred_keywords: [...payload.jdExtract.preferred_keywords],
+      responsibilities: [...payload.jdExtract.responsibilities],
+    }
   }
+  if (payload.llmModel !== undefined) normalized.llmModel = payload.llmModel
+  if (payload.extractionMode !== undefined) normalized.extractionMode = payload.extractionMode
+  if (payload.strictIndustryMatch !== undefined) normalized.strictIndustryMatch = payload.strictIndustryMatch
+  if (payload.sourceLang !== undefined) normalized.sourceLang = payload.sourceLang.trim()
+  if (payload.translationMode !== undefined) normalized.translationMode = payload.translationMode
+
+  return normalized
 }
 
 async function runAiAction(path: string, body: unknown, idempotencyKey = createAiIdempotencyKey()) {
