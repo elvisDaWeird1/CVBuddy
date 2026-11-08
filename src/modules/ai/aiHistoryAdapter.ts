@@ -1,8 +1,9 @@
-import { type AiResultRecord } from './aiApi'
-import { type CvDocument } from '@/modules/applicant/cvApi'
+import { getAiApiErrorMessage, getAiApiErrorStatus, getAiResultById, type AiResultRecord } from './aiApi'
+import { getMyCvs, type CvDocument } from '@/modules/applicant/cvApi'
 
 export type AiHistoryType = 'score' | 'feedback' | 'translation' | 'unknown'
 export type AiHistoryStatus = 'completed' | 'failed' | 'processing' | 'unknown'
+export type AiAction = 'analyze' | 'translate'
 
 export interface AiHistoryItemViewModel {
   id: string
@@ -38,9 +39,66 @@ function readString(value: unknown) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
-function readResultId(record: AiResultRecord) {
+export function readResultId(record: AiResultRecord) {
   const raw = record as unknown as Record<string, unknown>
   return readString(raw.id) || readString(raw._id) || 'unknown-result'
+}
+
+export function getAiResultRoute(resultId: string) {
+  return `/ai/results/${encodeURIComponent(resultId)}`
+}
+
+export function isCvAvailable(cv: CvDocument) {
+  const status = cv.status?.trim().toLowerCase()
+  return !status || status === 'active' || status === 'available'
+}
+
+export function resolveAiComposerPrefill(
+  cvs: CvDocument[],
+  query: { cvId?: string | null; action?: string | null },
+): { selectedCvId: string; selectedAction: AiAction | '' } {
+  const rawCvId = typeof query.cvId === 'string' ? query.cvId.trim() : ''
+  const matchedCv = rawCvId
+    ? cvs.find((cv) => cv.id === rawCvId && isCvAvailable(cv))
+    : undefined
+  const rawAction = typeof query.action === 'string' ? query.action.trim().toLowerCase() : ''
+  const selectedAction: AiAction | '' = rawAction === 'analyze' || rawAction === 'translate'
+    ? rawAction
+    : ''
+
+  return {
+    selectedCvId: matchedCv ? matchedCv.id : '',
+    selectedAction,
+  }
+}
+
+export function getAiResultDetailErrorMessage(error: unknown) {
+  const status = getAiApiErrorStatus(error)
+  if (status === 403) {
+    return 'You do not have permission to view this AI result.'
+  }
+  if (status === 404) {
+    return 'This saved AI result does not exist or is no longer available.'
+  }
+  return getAiApiErrorMessage(error, 'Unable to open this saved AI result. Please try again.')
+}
+
+export async function loadAiResultDetail(resultId: string) {
+  const [record, cvs] = await Promise.all([
+    getAiResultById(resultId),
+    getMyCvs().catch((): CvDocument[] => []),
+  ])
+  const item = adaptAiHistory([record], cvs)[0] ?? null
+  const matchedCv = item?.cvId
+    ? cvs.find((cv) => cv.id === item.cvId && isCvAvailable(cv))
+    : undefined
+
+  return {
+    record,
+    cvs,
+    item,
+    sourceCvId: matchedCv ? matchedCv.id : null,
+  }
 }
 
 function readCvId(record: AiResultRecord) {

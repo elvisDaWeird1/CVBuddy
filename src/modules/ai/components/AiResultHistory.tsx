@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileTextIcon } from '@/components/ui/icons'
+import { ArrowRightIcon, FileTextIcon } from '@/components/ui/icons'
 import { Select } from '@/components/ui/select'
-import { type AiHistoryItemViewModel } from '@/modules/ai/aiHistoryAdapter'
+import { getAiResultRoute, type AiHistoryItemViewModel } from '@/modules/ai/aiHistoryAdapter'
 import { formatCareerContext } from '@/modules/ai/aiCareerCatalog'
+import { SafeRouterLink } from './ScoreOverview'
 
 interface AiResultHistoryProps {
   items: AiHistoryItemViewModel[]
@@ -12,7 +13,7 @@ interface AiResultHistoryProps {
   error?: string | null
   selectedId?: string | null
   onRetry: () => void
-  onSelect: (item: AiHistoryItemViewModel) => void
+  onSelect?: (item: AiHistoryItemViewModel) => void
 }
 
 function statusClass(status: AiHistoryItemViewModel['status']) {
@@ -60,7 +61,7 @@ export function AiResultHistory({
       </CardHeader>
       <CardContent>
         {!loading && !error && items.length > 0 ? (
-          <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
             <Select
               aria-label="Filter AI results by type"
               onChange={(event) => setTypeFilter(event.target.value)}
@@ -105,48 +106,71 @@ export function AiResultHistory({
             <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">
               Select a CV and start an analysis to build your history.
             </p>
+            <SafeRouterLink
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-teal)] hover:underline"
+              to="/ai"
+            >
+              Start CV analysis
+              <ArrowRightIcon className="h-4 w-4" />
+            </SafeRouterLink>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-hover)] bg-[var(--color-bg-main)] px-4 py-6 text-center">
             <p className="text-sm font-semibold text-[var(--color-text-primary)]">No results match these filters.</p>
-            <button className="mt-2 text-sm font-semibold text-[var(--color-teal)] hover:underline" onClick={() => { setTypeFilter('all'); setStatusFilter('all') }} type="button">Clear filters</button>
+            <button
+              className="mt-2 text-sm font-semibold text-[var(--color-teal)] hover:underline"
+              onClick={() => { setTypeFilter('all'); setStatusFilter('all') }}
+              type="button"
+            >
+              Clear filters
+            </button>
           </div>
         ) : (
           <div className="space-y-3" role="list" aria-label="Recent AI results">
-            {filteredItems.map((item) => (
-              <div key={item.id} role="listitem">
-                <button
-                  aria-pressed={selectedId === item.id}
-                  className={selectedId === item.id
-                    ? 'w-full rounded-[var(--radius-lg)] border border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'
-                    : 'w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-main)] p-4 text-left transition-colors hover:border-[var(--color-border-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'}
-                  onClick={() => onSelect(item)}
-                  type="button"
-                >
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold text-[var(--color-text-primary)]">{item.typeLabel}</span>
-                      <span className="mt-1 block truncate text-xs text-[var(--color-text-secondary)]">{item.cvName}</span>
+            {filteredItems.map((item) => {
+              const resultHref = getAiResultRoute(item.id)
+              const isSelected = selectedId === item.id
+
+              return (
+                <div key={item.id} role="listitem">
+                  <SafeRouterLink
+                    aria-current={isSelected ? 'page' : undefined}
+                    className={isSelected
+                      ? 'block w-full rounded-[var(--radius-lg)] border border-[var(--color-teal)] bg-[var(--color-bg-soft)] p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'
+                      : 'block w-full rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-main)] p-4 text-left transition-colors hover:border-[var(--color-border-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal)] focus-visible:ring-offset-2'}
+                    onClick={() => onSelect?.(item)}
+                    to={resultHref}
+                  >
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-[var(--color-text-primary)]">{item.typeLabel}</span>
+                        <span className="mt-1 block truncate text-xs text-[var(--color-text-secondary)]">{item.cvName}</span>
+                      </span>
+                      <span className={`shrink-0 rounded-[var(--radius-full)] px-2 py-1 text-xs font-semibold ${statusClass(item.status)}`}>
+                        {item.statusLabel}
+                      </span>
                     </span>
-                    <span className={'shrink-0 rounded-[var(--radius-full)] px-2 py-1 text-xs font-semibold ' + statusClass(item.status)}>
-                      {item.statusLabel}
+                    <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)]">
+                      <span>{item.createdAtLabel}</span>
+                      {item.type === 'score' && item.score !== null ? (
+                        <span className="font-semibold text-[var(--color-teal)]">Score {item.score}/100</span>
+                      ) : null}
                     </span>
-                  </span>
-                  <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)]">
-                    <span>{item.createdAtLabel}</span>
-                    {item.type === 'score' && item.score !== null ? <span className="font-semibold text-[var(--color-teal)]">Score {item.score}/100</span> : null}
-                  </span>
-                  {item.targetRole || item.industrySlug ? (
-                    <span className="mt-2 block truncate text-xs text-[var(--color-text-secondary)]">
-                      {formatCareerContext(item.industrySlug, item.verticalSlug, item.targetRole) || [item.targetRole, item.industrySlug?.replace(/_/g, ' ')].filter(Boolean).join(' · ')}
-                    </span>
-                  ) : null}
-                  {item.status === 'failed' ? (
-                    <span className="mt-2 block text-xs leading-relaxed text-[var(--color-error)]">Open this result to view the saved error details.</span>
-                  ) : null}
-                </button>
-              </div>
-            ))}
+                    {item.targetRole || item.industrySlug ? (
+                      <span className="mt-2 block truncate text-xs text-[var(--color-text-secondary)]">
+                        {formatCareerContext(item.industrySlug, item.verticalSlug, item.targetRole)
+                          || [item.targetRole, item.industrySlug?.replace(/_/g, ' ')].filter(Boolean).join(' · ')}
+                      </span>
+                    ) : null}
+                    {item.status === 'failed' ? (
+                      <span className="mt-2 block text-xs leading-relaxed text-[var(--color-error)]">
+                        Open this result to view the saved error details.
+                      </span>
+                    ) : null}
+                  </SafeRouterLink>
+                </div>
+              )
+            })}
           </div>
         )}
       </CardContent>
