@@ -1,5 +1,6 @@
 import type { AuthAccount, AuthSessionData } from './authApi'
-import { getInitialAuthStatus, type AuthSessionStatus } from './authPolicy'
+import { getInitialAuthStatus, isGoogleProfileIncomplete, type AuthSessionStatus } from './authPolicy'
+import { disableGoogleAutoSelect } from './googleIdentity'
 
 const AUTH_TOKEN_KEY = 'cvbuddy.auth.token'
 const AUTH_ACCOUNT_KEY = 'cvbuddy.auth.account'
@@ -38,12 +39,31 @@ export function saveAuthSession(session: AuthSessionData) {
     window.localStorage.setItem(AUTH_TOKEN_KEY, session.token)
   }
 
-  if (session.account) {
-    window.localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify(session.account))
+  const nextAccount = session.account ? { ...session.account } : undefined
+  if (nextAccount && session.profile && typeof session.profile === 'object') {
+    if (typeof session.profile.fullName === 'string') {
+      nextAccount.fullName = session.profile.fullName
+    }
+    if (typeof session.profile.companyName === 'string') {
+      nextAccount.companyName = session.profile.companyName
+    }
+    if (typeof session.profile.avatarUrl === 'string') {
+      nextAccount.avatarUrl = session.profile.avatarUrl
+    }
+    if (typeof session.profile.isComplete === 'boolean') {
+      nextAccount.isComplete = session.profile.isComplete
+    }
+  }
+  if (nextAccount && typeof session.needsProfileCompletion === 'boolean') {
+    nextAccount.needsProfileCompletion = session.needsProfileCompletion
+  }
+
+  if (nextAccount) {
+    window.localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify(nextAccount))
   }
 
   const token = session.token ?? getAuthToken()
-  const account = session.account ?? getStoredAccount()
+  const account = nextAccount ?? getStoredAccount()
   publishAuthSnapshot({
     token,
     account,
@@ -70,6 +90,14 @@ export function updateStoredAccount(patch: Partial<AuthAccount>) {
   const current = getStoredAccount()
   if (!current) return
   const account = { ...current, ...patch }
+  if (typeof patch.fullName === 'string') {
+    const incomplete = isGoogleProfileIncomplete({
+      account,
+      profile: { fullName: patch.fullName },
+    })
+    account.isComplete = !incomplete
+    account.needsProfileCompletion = incomplete
+  }
   const token = getAuthToken()
   window.localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify(account))
   publishAuthSnapshot({
@@ -110,6 +138,7 @@ export function markAuthSessionUnavailable(expectedToken: string) {
 }
 
 export function clearAuthSession() {
+  disableGoogleAutoSelect()
   window.localStorage.removeItem(AUTH_TOKEN_KEY)
   window.localStorage.removeItem(AUTH_ACCOUNT_KEY)
   publishAuthSnapshot({ token: null, account: null, status: 'anonymous' })

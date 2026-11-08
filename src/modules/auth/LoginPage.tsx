@@ -9,6 +9,7 @@ import { ArrowRightIcon, LockIcon, MailIcon } from '@/components/ui/icons'
 import { getAuthApiErrorMessage, login } from './authApi'
 import { getAuthRole, getWorkspacePathForRole } from './authPolicy'
 import { clearAuthMessage, getAuthMessage, saveAuthSession } from './authStorage'
+import { GoogleAuthSection } from './GoogleAuthSection'
 
 const loginSchema = z.object({
   email: z.string().trim().email('Enter a valid email address.'),
@@ -133,6 +134,8 @@ export default function LoginPage() {
             Sign In
           </Button>
         </form>
+
+        <GoogleAuthSection mode="signin" onStatusChange={setFormStatus} />
 
         <p className="mt-5 text-center text-sm text-[var(--color-text-secondary)]">
           Don&apos;t have an account?{' '}
