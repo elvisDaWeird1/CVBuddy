@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import { getAuthApiErrorStatus, getCurrentAuthSession, type AuthAccount } from './authApi'
+import { getAuthApiErrorStatus, getCurrentAuthSession } from './authApi'
 import {
   clearAuthSession,
   confirmAuthSession,
@@ -8,7 +8,11 @@ import {
   retryAuthSessionVerification,
   setAuthMessage,
 } from './authStorage'
-import { classifySessionVerificationFailure, getAuthRole } from './authPolicy'
+import {
+  classifySessionVerificationFailure,
+  getAuthRole,
+  hydrateAccountWithProfile,
+} from './authPolicy'
 import { useAuthSession } from './useAuthSession'
 
 interface AuthSessionBoundaryProps {
@@ -25,19 +29,6 @@ function verifyToken(token: string) {
   })
   pendingVerification = { token, request }
   return request
-}
-
-function hydrateAccount(account: AuthAccount, profile?: Record<string, unknown> | null): AuthAccount {
-  if (!profile) return account
-
-  const profileFields = ['fullName', 'companyName', 'avatarUrl'] as const
-  const hydratedAccount = { ...account }
-
-  for (const field of profileFields) {
-    if (typeof profile[field] === 'string') hydratedAccount[field] = profile[field]
-  }
-
-  return hydratedAccount
 }
 
 export function AuthSessionBoundary({ children }: AuthSessionBoundaryProps) {
@@ -59,7 +50,14 @@ export function AuthSessionBoundary({ children }: AuthSessionBoundaryProps) {
           return
         }
 
-        confirmAuthSession(token, hydrateAccount(account, response.data?.profile))
+        confirmAuthSession(
+          token,
+          hydrateAccountWithProfile(
+            account,
+            response.data?.profile,
+            response.data?.needsProfileCompletion,
+          ),
+        )
       })
       .catch((error) => {
         if (!active) return

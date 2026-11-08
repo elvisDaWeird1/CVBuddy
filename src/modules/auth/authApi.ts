@@ -1,4 +1,7 @@
 import { httpClient } from '@/apis'
+import { extractGoogleLinkChallenge, type GoogleLinkChallenge } from './authPolicy'
+
+export { extractGoogleLinkChallenge, type GoogleLinkChallenge }
 
 export interface BackendApiResponse<TData = unknown> {
   success: boolean
@@ -6,6 +9,10 @@ export interface BackendApiResponse<TData = unknown> {
   data?: TData
   errors?: Array<{ field?: string; code?: string; message?: string }>
   code?: string
+  requestId?: string
+  requireLink?: boolean
+  email?: string
+  linkToken?: string
 }
 
 export interface AuthAccount {
@@ -16,15 +23,37 @@ export interface AuthAccount {
   companyName?: string
   avatarUrl?: string
   role?: string
+  authMethods?: string[]
+  isComplete?: boolean
+  needsProfileCompletion?: boolean
+  [key: string]: unknown
+}
+
+export interface GoogleAuthProfileData {
+  id?: string
+  fullName?: string
+  companyName?: string
+  avatarUrl?: string
+  isComplete?: boolean
   [key: string]: unknown
 }
 
 export interface AuthSessionData {
   token?: string
   account?: AuthAccount
+  needsProfileCompletion?: boolean
+  profile?: GoogleAuthProfileData | null
+}
+
+export interface GoogleAuthResponseData extends AuthSessionData {
+  requireLink?: boolean
+  email?: string
+  linkToken?: string
+  isNewAccount?: boolean
 }
 
 export interface CurrentAuthSessionData {
+  needsProfileCompletion?: boolean
   account: AuthAccount
   profile?: Record<string, unknown> | null
 }
@@ -40,6 +69,16 @@ export interface RegisterApplicantPayload {
   fullName: string
 }
 
+export interface GoogleAuthPayload {
+  idToken: string
+}
+
+export interface GoogleLinkPayload {
+  idToken: string
+  password: string
+  linkToken: string
+}
+
 export interface ChangePasswordPayload {
   currentPassword: string
   newPassword: string
@@ -52,6 +91,16 @@ export async function login(payload: LoginPayload) {
 
 export async function registerApplicant(payload: RegisterApplicantPayload) {
   const response = await httpClient.post<BackendApiResponse<AuthSessionData>>('/auth/register/applicant', payload)
+  return response.data
+}
+
+export async function authenticateWithGoogle(payload: GoogleAuthPayload) {
+  const response = await httpClient.post<BackendApiResponse<GoogleAuthResponseData>>('/auth/google', payload)
+  return response.data
+}
+
+export async function linkGoogleAccount(payload: GoogleLinkPayload) {
+  const response = await httpClient.post<BackendApiResponse<GoogleAuthResponseData>>('/auth/google/link', payload)
   return response.data
 }
 
