@@ -91,11 +91,12 @@ export function AiResultHistoryDetail({
   loading,
   error,
   errorStatus,
-  sourceCvId = null,
+  sourceCvId,
   onRetry,
   onBack,
 }: AiResultHistoryDetailProps) {
-  const resolvedItem = item ?? (record ? adaptAiHistory([record], [])[0] : null)
+  const resolvedItem = item ?? (record ? adaptAiHistory([record], null)[0] : null)
+  const effectiveSourceCvId = sourceCvId !== undefined ? sourceCvId : (resolvedItem?.sourceCvId ?? null)
   const effectiveType = resolvedItem?.type ?? 'unknown'
   const analysisResult = record && (
     effectiveType === 'score'
@@ -161,7 +162,7 @@ export function AiResultHistoryDetail({
             </p>
             {record.errorCode ? <p className="text-xs text-[var(--color-text-muted)]">Reference: {record.errorCode}</p> : null}
             <Button onClick={onRetry} size="sm" type="button" variant="secondary">Refresh detail</Button>
-            <AiNextActions sourceCvId={sourceCvId} />
+            <AiNextActions sourceCvId={effectiveSourceCvId} />
           </CardContent>
         </Card>
       ) : effectiveStatus === 'processing' ? (
@@ -175,17 +176,17 @@ export function AiResultHistoryDetail({
           </CardContent>
         </Card>
       ) : analysisResult ? (
-        <ScoreOverview result={analysisResult} sourceCvId={sourceCvId} />
+        <ScoreOverview result={analysisResult} sourceCvId={effectiveSourceCvId} />
       ) : feedbackResult ? (
         <div className="space-y-4">
           {feedbackResult.aiComment ? <AiCommentCard comment={feedbackResult.aiComment} /> : null}
           <FeedbackPanel result={feedbackResult} />
-          <AiNextActions sourceCvId={sourceCvId} />
+          <AiNextActions sourceCvId={effectiveSourceCvId} />
         </div>
       ) : effectiveType === 'translation' ? (
         <div className="space-y-4">
           <TranslationPanel readOnly result={adaptTranslationResult(record)} />
-          <AiNextActions includeTranslate={false} sourceCvId={sourceCvId} />
+          <AiNextActions includeTranslate={false} sourceCvId={effectiveSourceCvId} />
         </div>
       ) : (
         <Card>
@@ -194,7 +195,7 @@ export function AiResultHistoryDetail({
             <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
               This result type is not supported by the current screen.
             </p>
-            <AiNextActions sourceCvId={sourceCvId} />
+            <AiNextActions sourceCvId={effectiveSourceCvId} />
           </CardContent>
         </Card>
       )}

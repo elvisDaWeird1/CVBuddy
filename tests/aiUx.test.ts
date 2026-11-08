@@ -22,15 +22,22 @@ let adaptFeedbackResult: (result: AiResultRecord) => AiFeedbackViewModel
 let adaptTranslationResult: (result: AiResultRecord) => AiTranslationViewModel
 let adaptAiHistory: (
   records: AiResultRecord[],
-  cvs: Array<{ id: string; title: string; status?: string; fileType: string; fileSize: number; uploadedAt: string }>,
+  cvs?: Array<{ id: string; title: string; status?: string; fileType: string; fileSize: number; uploadedAt: string }> | null,
 ) => AiHistoryItemViewModel[]
 let resolveAiComposerPrefill: (
   cvs: Array<{ id: string; title: string; status?: string; fileType: string; fileSize: number; uploadedAt: string }>,
   query: { cvId?: string | null; action?: string | null },
 ) => { selectedCvId: string; selectedAction: string }
+let loadAiResultHistory: () => Promise<{
+  records: AiResultRecord[]
+  items: AiHistoryItemViewModel[]
+  cvLookupFailed: boolean
+}>
 let loadAiResultDetail: (resultId: string) => Promise<{
   record: AiResultRecord
+  item: AiHistoryItemViewModel | null
   sourceCvId: string | null
+  cvLookupFailed: boolean
 }>
 let ScoreOverview: ComponentType<ScoreOverviewProps>
 let AiResultHistoryDetail: ComponentType<AiResultHistoryDetailProps>
@@ -67,6 +74,7 @@ before(async () => {
   const historyAdapterModule = await server.ssrLoadModule('/src/modules/ai/aiHistoryAdapter.ts')
   adaptAiHistory = historyAdapterModule.adaptAiHistory
   resolveAiComposerPrefill = historyAdapterModule.resolveAiComposerPrefill
+  loadAiResultHistory = historyAdapterModule.loadAiResultHistory
   loadAiResultDetail = historyAdapterModule.loadAiResultDetail
 
   const scoreOverviewModule = await server.ssrLoadModule('/src/modules/ai/components/ScoreOverview.tsx')
@@ -692,4 +700,199 @@ test('15. routes /ai, /ai/history, /ai/results/:resultId, redirects /ai-chat to 
     resolveAiComposerPrefill(availableCvs, { cvId: 'cv-disabled', action: 'invalid-action' }),
     { selectedCvId: '', selectedAction: '' },
   )
+})
+
+test('16. distinguishes temporary CV lookup failure from deleted CV in detail, history, and retry flows', async () => {
+  const originalGet = httpClient.get
+  const originalPost = httpClient.post
+  const getCalls: string[] = []
+  const postCalls: string[] = []
+  let cvEndpointMode: 'fail' | 'missing' | 'deleted' | 'available' = 'fail'
+
+  const scoredRecord = makeRecord({
+    id: 'res-cv-lookup',
+    cvDocumentId: 'cv/99',
+    result: {
+      overall_score: 80,
+      dimensions: {
+        layout_ats: { score: 82 },
+        language: { score: 85 },
+        keywords: { score: 75, missing: ['FastAPI'] },
+        jd_fit: { score: 78 },
+      },
+    },
+  })
+
+  httpClient.get = async (path: string) => {
+    getCalls.push(path)
+    if (path === '/ai/results/res-cv-lookup') {
+      return {
+        data: {
+          success: true,
+          message: 'OK',
+          data: { aiResult: scoredRecord },
+        },
+      }
+    }
+    if (path === '/ai/results') {
+      return {
+        data: {
+          success: true,
+          message: 'OK',
+          data: {
+            aiResults: [
+              scoredRecord,
+              makeRecord({ id: 'res-cv-lookup-2', cvDocumentId: 'cv-100' }),
+            ],
+          },
+        },
+      }
+    }
+    if (path === '/cvs') {
+      if (cvEndpointMode === 'fail') {
+        throw new Error('Temporary /cvs network failure')
+      }
+      if (cvEndpointMode === 'missing') {
+        return {
+          data: {
+            success: true,
+            message: 'OK',
+            data: { cvs: [] },
+          },
+        }
+      }
+      if (cvEndpointMode === 'deleted') {
+        return {
+          data: {
+            success: true,
+            message: 'OK',
+            data: {
+              cvs: [
+                {
+                  id: 'cv/99',
+                  title: 'Deleted_Resume.pdf',
+                  status: 'DELETED',
+                  fileType: 'PDF',
+                  fileSize: 1024,
+                  uploadedAt: '2026-10-10T00:00:00.000Z',
+                },
+              ],
+            },
+          },
+        }
+      }
+      return {
+        data: {
+          success: true,
+          message: 'OK',
+          data: {
+            cvs: [
+              {
+                id: 'cv/99',
+                title: 'Restored_Resume.pdf',
+                status: 'ACTIVE',
+                fileType: 'PDF',
+                fileSize: 1024,
+                uploadedAt: '2026-10-10T00:00:00.000Z',
+              },
+            ],
+          },
+        },
+      }
+    }
+    throw new Error(`Unexpected GET ${path}`)
+  }
+
+  httpClient.post = async (path: string) => {
+    postCalls.push(path)
+    throw new Error(`POST must not be called during detail/history load or retry: ${path}`)
+  }
+
+  try {
+    // 1. GET result succeeds, GET /cvs fails:
+    // - Result still renders
+    // - Does NOT falsely claim CV was deleted
+    // - Translation link still uses encoded cvDocumentId
+    cvEndpointMode = 'fail'
+    const detailWhenCvFails = await loadAiResultDetail('res-cv-lookup')
+    assert.equal(detailWhenCvFails.cvLookupFailed, true)
+    assert.equal(detailWhenCvFails.sourceCvId, 'cv/99')
+    assert.equal(detailWhenCvFails.item?.cvName, 'CV details temporarily unavailable')
+
+    const detailHtmlWhenCvFails = renderToStaticMarkup(
+      createElement(AiResultHistoryDetail, {
+        item: detailWhenCvFails.item,
+        record: detailWhenCvFails.record,
+        loading: false,
+        error: null,
+        sourceCvId: detailWhenCvFails.sourceCvId,
+        onRetry: () => undefined,
+      }),
+    )
+    assert.match(detailHtmlWhenCvFails, /id="overall-score-heading"/)
+    assert.match(detailHtmlWhenCvFails, /CV details temporarily unavailable/)
+    assert.doesNotMatch(detailHtmlWhenCvFails, /CV no longer available/)
+    assert.match(detailHtmlWhenCvFails, /href="\/ai\?cvId=cv%2F99&amp;action=translate"/)
+    assert.match(detailHtmlWhenCvFails, /Translate this CV/)
+
+    // 2. GET result and GET /cvs succeed, but CV does not exist (or is deleted):
+    // - Displays "CV no longer available"
+    // - Does NOT render "Translate this CV"
+    cvEndpointMode = 'missing'
+    const detailWhenCvMissing = await loadAiResultDetail('res-cv-lookup')
+    assert.equal(detailWhenCvMissing.cvLookupFailed, false)
+    assert.equal(detailWhenCvMissing.sourceCvId, null)
+    assert.equal(detailWhenCvMissing.item?.cvName, 'CV no longer available')
+
+    const detailHtmlWhenCvMissing = renderToStaticMarkup(
+      createElement(AiResultHistoryDetail, {
+        item: detailWhenCvMissing.item,
+        record: detailWhenCvMissing.record,
+        loading: false,
+        error: null,
+        sourceCvId: detailWhenCvMissing.sourceCvId,
+        onRetry: () => undefined,
+      }),
+    )
+    assert.match(detailHtmlWhenCvMissing, /CV no longer available/)
+    assert.doesNotMatch(detailHtmlWhenCvMissing, /Translate this CV/)
+
+    cvEndpointMode = 'deleted'
+    const detailWhenCvDeleted = await loadAiResultDetail('res-cv-lookup')
+    assert.equal(detailWhenCvDeleted.sourceCvId, null)
+    assert.equal(detailWhenCvDeleted.item?.cvName, 'CV no longer available')
+
+    // 3. History loads while CV lookup fails:
+    // - Does NOT label every CV as deleted ("CV no longer available")
+    cvEndpointMode = 'fail'
+    const historyWhenCvFails = await loadAiResultHistory()
+    assert.equal(historyWhenCvFails.cvLookupFailed, true)
+    assert.equal(historyWhenCvFails.items.length, 2)
+    for (const item of historyWhenCvFails.items) {
+      assert.equal(item.cvName, 'CV details temporarily unavailable')
+    }
+
+    const historyHtmlWhenCvFails = renderToStaticMarkup(
+      createElement(AiResultHistory, {
+        items: historyWhenCvFails.items,
+        loading: false,
+        error: null,
+        onRetry: () => undefined,
+      }),
+    )
+    assert.match(historyHtmlWhenCvFails, /CV details temporarily unavailable/)
+    assert.doesNotMatch(historyHtmlWhenCvFails, /CV no longer available/)
+
+    // 4. Retry / refresh after temporary CV failure uses GET only and restores CV metadata
+    cvEndpointMode = 'available'
+    const detailAfterRetry = await loadAiResultDetail('res-cv-lookup')
+    assert.equal(detailAfterRetry.cvLookupFailed, false)
+    assert.equal(detailAfterRetry.sourceCvId, 'cv/99')
+    assert.equal(detailAfterRetry.item?.cvName, 'Restored_Resume.pdf')
+    assert.deepEqual(postCalls, [])
+    assert.ok(getCalls.every((path) => path === '/cvs' || path.startsWith('/ai/results')))
+  } finally {
+    httpClient.get = originalGet
+    httpClient.post = originalPost
+  }
 })

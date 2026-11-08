@@ -1,20 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRightIcon } from '@/components/ui/icons'
-import { getMyCvs, type CvDocument } from '@/modules/applicant/cvApi'
 import {
   getAiApiErrorMessage,
   getAiApiErrorStatus,
-  getAiResults,
   type AiResultRecord,
 } from './aiApi'
 import {
-  adaptAiHistory,
   getAiResultDetailErrorMessage,
   getAiResultRoute,
-  isCvAvailable,
   loadAiResultDetail,
+  loadAiResultHistory,
   readResultId,
+  type AiHistoryItemViewModel,
 } from './aiHistoryAdapter'
 import { AiRequestComposer } from './components/AiRequestComposer'
 import { AiResultHistory } from './components/AiResultHistory'
@@ -79,44 +77,20 @@ export default function AiChatPage() {
 }
 
 export function AiHistoryPage() {
-  const [cvs, setCvs] = useState<CvDocument[]>([])
-  const [historyRecords, setHistoryRecords] = useState<AiResultRecord[]>([])
+  const [history, setHistory] = useState<AiHistoryItemViewModel[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
   const [historyError, setHistoryError] = useState<string | null>(null)
-
-  const loadHistory = useCallback(async () => {
-    setLoadingHistory(true)
-    setHistoryError(null)
-
-    try {
-      const [records, nextCvs] = await Promise.all([
-        getAiResults(),
-        getMyCvs().catch((): CvDocument[] => []),
-      ])
-      setHistoryRecords(records)
-      setCvs(nextCvs)
-    } catch (error) {
-      setHistoryError(getAiApiErrorMessage(error, 'Unable to load recent AI results. Please try again.'))
-    } finally {
-      setLoadingHistory(false)
-    }
-  }, [])
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let active = true
 
     async function run() {
-      setLoadingHistory(true)
-      setHistoryError(null)
-
       try {
-        const [records, nextCvs] = await Promise.all([
-          getAiResults(),
-          getMyCvs().catch((): CvDocument[] => []),
-        ])
+        const loaded = await loadAiResultHistory()
         if (active) {
-          setHistoryRecords(records)
-          setCvs(nextCvs)
+          setHistory(loaded.items)
+          setHistoryError(null)
         }
       } catch (error) {
         if (active) {
@@ -133,9 +107,13 @@ export function AiHistoryPage() {
     return () => {
       active = false
     }
-  }, [])
+  }, [reloadToken])
 
-  const history = useMemo(() => adaptAiHistory(historyRecords, cvs), [historyRecords, cvs])
+  const handleRetry = useCallback(() => {
+    setLoadingHistory(true)
+    setHistoryError(null)
+    setReloadToken((value) => value + 1)
+  }, [])
 
   return (
     <div className="mx-auto w-full max-w-[960px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -178,7 +156,7 @@ export function AiHistoryPage() {
         error={historyError}
         items={history}
         loading={loadingHistory}
-        onRetry={() => void loadHistory()}
+        onRetry={handleRetry}
       />
     </div>
   )
@@ -186,71 +164,49 @@ export function AiHistoryPage() {
 
 export function AiResultDetailPage() {
   const { resultId } = useParams<{ resultId: string }>()
-  const [detailRecord, setDetailRecord] = useState<AiResultRecord | null>(null)
-  const [cvs, setCvs] = useState<CvDocument[]>([])
-  const [detailLoading, setDetailLoading] = useState(true)
-  const [detailError, setDetailError] = useState<string | null>(null)
-  const [detailErrorStatus, setDetailErrorStatus] = useState<number | undefined>(undefined)
+  const [detailState, setDetailState] = useState<{
+    key: string
+    record: AiResultRecord | null
+    item: AiHistoryItemViewModel | null
+    sourceCvId: string | null
+    error: string | null
+    errorStatus?: number
+  } | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
+  const normalizedResultId = resultId?.trim() || ''
+  const requestKey = `${normalizedResultId}:${reloadToken}`
+  const detailLoading = Boolean(normalizedResultId) && detailState?.key !== requestKey
 
-  const fetchDetail = useCallback(async (targetId: string | undefined) => {
-    if (!targetId || !targetId.trim()) {
-      setDetailRecord(null)
-      setDetailError('This saved AI result does not exist or is no longer available.')
-      setDetailErrorStatus(404)
-      setDetailLoading(false)
+  useEffect(() => {
+    if (!normalizedResultId) {
       return
     }
 
-    setDetailLoading(true)
-    setDetailError(null)
-    setDetailErrorStatus(undefined)
-
-    try {
-      const loaded = await loadAiResultDetail(targetId)
-      setDetailRecord(loaded.record)
-      setCvs(loaded.cvs)
-    } catch (error) {
-      setDetailRecord(null)
-      setDetailErrorStatus(getAiApiErrorStatus(error))
-      setDetailError(getAiResultDetailErrorMessage(error))
-    } finally {
-      setDetailLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
     let active = true
 
     async function run() {
-      if (!resultId || !resultId.trim()) {
-        if (active) {
-          setDetailRecord(null)
-          setDetailError('This saved AI result does not exist or is no longer available.')
-          setDetailErrorStatus(404)
-          setDetailLoading(false)
-        }
-        return
-      }
-
-      setDetailLoading(true)
-      setDetailError(null)
-      setDetailErrorStatus(undefined)
-
       try {
-        const loaded = await loadAiResultDetail(resultId)
+        const loaded = await loadAiResultDetail(normalizedResultId)
         if (active) {
-          setDetailRecord(loaded.record)
-          setCvs(loaded.cvs)
+          setDetailState({
+            key: requestKey,
+            record: loaded.record,
+            item: loaded.item,
+            sourceCvId: loaded.sourceCvId,
+            error: null,
+            errorStatus: undefined,
+          })
         }
       } catch (error) {
         if (active) {
-          setDetailRecord(null)
-          setDetailErrorStatus(getAiApiErrorStatus(error))
-          setDetailError(getAiResultDetailErrorMessage(error))
-        }
-      } finally {
-        if (active) {
-          setDetailLoading(false)
+          setDetailState({
+            key: requestKey,
+            record: null,
+            item: null,
+            sourceCvId: null,
+            error: getAiResultDetailErrorMessage(error),
+            errorStatus: getAiApiErrorStatus(error),
+          })
         }
       }
     }
@@ -259,17 +215,17 @@ export function AiResultDetailPage() {
     return () => {
       active = false
     }
-  }, [resultId])
+  }, [normalizedResultId, requestKey])
 
-  const historyItem = useMemo(
-    () => (detailRecord ? adaptAiHistory([detailRecord], cvs)[0] ?? null : null),
-    [detailRecord, cvs],
-  )
-  const availableSourceCvId = useMemo(() => {
-    if (!historyItem?.cvId) return null
-    const matched = cvs.find((cv) => cv.id === historyItem.cvId && isCvAvailable(cv))
-    return matched ? matched.id : null
-  }, [cvs, historyItem])
+  const currentDetail = detailState?.key === requestKey ? detailState : null
+  const detailError = !normalizedResultId
+    ? 'This saved AI result does not exist or is no longer available.'
+    : (currentDetail?.error ?? null)
+  const detailErrorStatus = !normalizedResultId ? 404 : currentDetail?.errorStatus
+
+  const handleRetry = useCallback(() => {
+    setReloadToken((value) => value + 1)
+  }, [])
 
   return (
     <div className="mx-auto w-full max-w-[1040px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -311,11 +267,11 @@ export function AiResultDetailPage() {
       <AiResultHistoryDetail
         error={detailError}
         errorStatus={detailErrorStatus}
-        item={historyItem}
+        item={currentDetail?.item ?? null}
         loading={detailLoading}
-        onRetry={() => void fetchDetail(resultId)}
-        record={detailRecord}
-        sourceCvId={availableSourceCvId}
+        onRetry={handleRetry}
+        record={currentDetail?.record ?? null}
+        sourceCvId={currentDetail?.sourceCvId ?? null}
       />
     </div>
   )
