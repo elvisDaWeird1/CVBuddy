@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { ArrowRightIcon, LockIcon, MailIcon, UserIcon } from '@/components/ui/icons'
 import { getAuthApiErrorMessage, registerApplicant } from './authApi'
 import { saveAuthSession } from './authStorage'
+import { GoogleAuthSection } from './GoogleAuthSection'
 
 const registerApplicantSchema = z
   .object({
@@ -155,6 +156,8 @@ export default function RegisterApplicantPage() {
             Create Account
           </Button>
         </form>
+
+        <GoogleAuthSection mode="signup" onStatusChange={setFormStatus} />
 
         <p className="mt-5 text-center text-sm text-[var(--color-text-secondary)]">
           Already have an account?{' '}
