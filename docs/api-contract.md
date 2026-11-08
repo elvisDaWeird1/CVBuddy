@@ -34,6 +34,14 @@ This document is the frontend API integration reference for CVBuddy. Backend API
 - `GET /api/portfolio/public/:slug` is unauthenticated and returns only public-ready content. Private and unknown slugs both return `404`.
 - Frontend routes: protected owner workspace `/portfolio`; unauthenticated public view `/p/:slug`.
 
+## AI request contract
+
+- Frontend calls the authenticated Node `/api/ai/...` routes only; it never calls FastAPI or sends `X-AI-Internal-Key`.
+- Targeted analysis sends camelCase career context: `{ industrySlug, verticalSlug, targetRole }`. All three values are required for review and translate-and-score; the AI workspace also supplies all three when scoring a selected target.
+- Optional `jdExtract` contains `company_name` plus the required string arrays `required_keywords`, `preferred_keywords`, and `responsibilities`. The frontend does not send `role_title`; Node derives it from `targetRole`.
+- Optional `llmModel` is limited to `qwen/qwen3.8-27b` or `openai/gpt-oss-120b`. When no model is selected, the field is omitted and Node sends `llm_model: null` internally.
+- `tier`, plan, credits, credit cost, extracted `sections`, and `local_metrics` are server-controlled or extraction-owned and must never be sent by the browser.
+
 ## Response Shape
 
 Backend responses are expected to use:

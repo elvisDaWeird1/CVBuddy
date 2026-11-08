@@ -44,7 +44,36 @@ test('AI actions use the shared client, Node paths, bearer and idempotency witho
     try {
       const { httpClient } = await server.ssrLoadModule('/src/apis/httpClient.ts')
       const api = await server.ssrLoadModule('/src/modules/ai/aiApi.ts')
-      const payload = { industrySlug: 'language', targetRole: 'Translator' }
+      const payload = {
+        industrySlug: ' ai_software ',
+        verticalSlug: ' machine_learning ',
+        targetRole: ' AI Engineer Intern ',
+        companyModel: 'corporate',
+        jdExtract: {
+          company_name: ' Example Labs ',
+          required_keywords: ['Python'],
+          preferred_keywords: ['MLOps'],
+          responsibilities: ['Train and evaluate models'],
+        },
+        llmModel: 'openai/gpt-oss-120b',
+        extractionMode: 'hybrid',
+        strictIndustryMatch: false,
+      }
+      const expectedBody = {
+        industrySlug: 'ai_software',
+        verticalSlug: 'machine_learning',
+        targetRole: 'AI Engineer Intern',
+        companyModel: 'corporate',
+        jdExtract: {
+          company_name: 'Example Labs',
+          required_keywords: ['Python'],
+          preferred_keywords: ['MLOps'],
+          responsibilities: ['Train and evaluate models'],
+        },
+        llmModel: 'openai/gpt-oss-120b',
+        extractionMode: 'hybrid',
+        strictIndustryMatch: false,
+      }
       const actions = [
         ['score', () => api.scoreCv('cv/1', payload, 'retry-key')],
         ['review', () => api.reviewCv('cv/1', payload, 'retry-key')],
@@ -59,6 +88,11 @@ test('AI actions use the shared client, Node paths, bearer and idempotency witho
           assert.equal(config.headers.get('Authorization'), 'Bearer test-user-token')
           assert.equal(config.headers.get('Idempotency-Key'), 'retry-key')
           assert.equal(config.headers.has('X-AI-Internal-Key'), false)
+          const body = typeof config.data === 'string' ? JSON.parse(config.data) : config.data
+          assert.deepEqual(body, action === 'translate-to-english' ? {} : expectedBody)
+          for (const serverControlled of ['tier', 'plan', 'planCode', 'credits', 'creditCost', 'sections', 'local_metrics']) {
+            assert.equal(Object.hasOwn(body, serverControlled), false)
+          }
           return { data: { success: true, data: { aiResult: { id: 'result' }, workflow: { id: 'workflow' } } }, status: 200, statusText: 'OK', headers: {}, config }
         }
         await run()

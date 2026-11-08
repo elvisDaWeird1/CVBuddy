@@ -22,7 +22,7 @@ import {
   getAiResults,
   scoreCv,
   translateCv,
-  type AiRequestPayload,
+  type AiCareerTargetPayload,
   type AiResultRecord,
 } from './aiApi'
 import { canRetryAiRequest, shouldReuseAiIdempotencyKey } from './aiRetryPolicy'
@@ -455,7 +455,7 @@ export default function AiChatPage() {
     })
 
     if (selectedAction === 'analyze') {
-      const payload: AiRequestPayload = { industrySlug, verticalSlug, targetRole: trimmedRole }
+      const payload: AiCareerTargetPayload = { industrySlug, verticalSlug, targetRole: trimmedRole }
       setIsScorePending(true)
       try {
         setScoreResult(adaptScoreResult(await scoreCv(selectedCv.id, payload, idempotencyKey)))
