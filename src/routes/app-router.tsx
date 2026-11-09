@@ -12,7 +12,7 @@ import RegisterApplicantPage from '@/modules/auth/RegisterApplicantPage'
 import ApplicantProfilePage from '@/modules/applicant/ApplicantProfilePage'
 import EditProfilePage from '@/modules/applicant/EditProfilePage'
 import CvPage from '@/modules/applicant/CvPage'
-import AiChatPage from '@/modules/ai/AiChatPage'
+import AiChatPage, { AiHistoryPage, AiResultDetailPage } from '@/modules/ai/AiChatPage'
 import ChangePasswordPage from '@/modules/settings/ChangePasswordPage'
 import NotFound from '@/modules/admin/NotFound'
 import { ApplicantSectionPage } from '@/modules/applicant/ApplicantSectionPage'
@@ -30,7 +30,7 @@ const APPLICANT_ONLY = [AUTH_ROLES.APPLICANT] as const
 const ADMIN_ONLY = [AUTH_ROLES.ADMIN] as const
 const COMPANY_ONLY = [AUTH_ROLES.COMPANY] as const
 
-const appRoutes = [
+export const appRoutes = [
   {
     element: <MainLayout />,
     children: [
@@ -95,7 +95,10 @@ const appRoutes = [
           { path: 'profile', element: <ApplicantProfilePage /> },
           { path: 'applicant/profile', element: <ApplicantProfilePage /> },
           { path: 'cv', element: <CvPage /> },
-          { path: 'ai-chat', element: <AiChatPage /> },
+          { path: 'ai', element: <AiChatPage /> },
+          { path: 'ai/history', element: <AiHistoryPage /> },
+          { path: 'ai/results/:resultId', element: <AiResultDetailPage /> },
+          { path: 'ai-chat', element: <Navigate to="/ai" replace /> },
           { path: 'pricing', element: <PricingPage /> },
           { path: 'billing', element: <BillingPage /> },
           { path: 'billing/return', element: <PaymentStatusPage cancelled={false} /> },
@@ -121,4 +124,6 @@ const appRoutes = [
   { path: '*', element: <NotFound /> },
 ]
 
-export const appRouter = createBrowserRouter(appRoutes)
+export const appRouter = typeof document !== 'undefined'
+  ? createBrowserRouter(appRoutes)
+  : (null as unknown as ReturnType<typeof createBrowserRouter>)

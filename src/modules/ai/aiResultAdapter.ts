@@ -1,9 +1,19 @@
 import { type AiResultRecord } from './aiApi'
 
+export const CANONICAL_DIMENSION_KEYS = [
+  'layout_ats',
+  'language',
+  'keywords',
+  'jd_fit',
+] as const
+
+export type CanonicalDimensionKey = (typeof CANONICAL_DIMENSION_KEYS)[number]
+
 export interface AiDimensionViewModel {
   key: string
   label: string
   score: number | null
+  assessmentLabel: string
   description?: string
   issues: string[]
   fixes: string[]
@@ -12,10 +22,30 @@ export interface AiDimensionViewModel {
   gaps: string[]
 }
 
+export interface AiPriorityGroupViewModel {
+  key: string
+  label: string
+  score: number
+  assessmentLabel: string
+  issues: string[]
+  gaps: string[]
+  fixes: string[]
+}
+
+export interface AiStrongestAreaViewModel {
+  key: string
+  label: string
+  score: number
+  assessmentLabel: string
+  description?: string
+}
+
 export interface AiScoreViewModel {
   overallScore: number | null
   assessmentLabel: string
+  priorityGroups: AiPriorityGroupViewModel[]
   dimensions: AiDimensionViewModel[]
+  strongestArea: AiStrongestAreaViewModel | null
   missingKeywords: string[]
   suggestedBullets: string[]
   roleFitGaps: string[]
@@ -73,6 +103,8 @@ const DIMENSION_LABELS: Record<string, string> = {
   experience: 'Experience',
   relevance: 'Relevance',
 }
+
+const CANONICAL_KEY_SET = new Set<string>(CANONICAL_DIMENSION_KEYS)
 
 function isRecord(value: unknown): value is RecordValue {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -170,6 +202,7 @@ function readText(value: unknown, keys: string[] = []): string | undefined {
 
   return undefined
 }
+
 function readStringList(value: unknown): string[] {
   if (typeof value === 'string' && value.trim()) {
     return [value.trim()]
@@ -259,15 +292,85 @@ export function hasStructuredAnalysisResult(result: AiResultRecord) {
   }
 
   const dimensions = structured.dimensions
-  return ['layout_ats', 'language', 'keywords', 'jd_fit']
-    .every((key) => isRecord(dimensions[key]))
+  return CANONICAL_DIMENSION_KEYS.every((key) => isRecord(dimensions[key]))
 }
 
 function formatDimensionLabel(key: string) {
   return DIMENSION_LABELS[key] || key.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
-function readDimensions(result: RecordValue): AiDimensionViewModel[] {
+export function getDimensionAssessmentLabel(score: number | null) {
+  if (score === null || !Number.isFinite(score)) {
+    return 'Not scored'
+  }
+
+  if (score < 60) {
+    return 'Needs focus'
+  }
+
+  if (score < 80) {
+    return 'On track'
+  }
+
+  return 'Strong'
+}
+
+function buildDimensionViewModel(key: string, value: unknown): AiDimensionViewModel {
+  const score = readNumberFrom(value, ['score', 'overall_score', 'overallScore', 'value', 'rating', 'points'])
+  const description = readText(value, [
+    'description',
+    'feedback',
+    'summary',
+    'assessment',
+    'recommendation',
+    'notes',
+    'message',
+  ])
+  const valueRecord = isRecord(value) ? value : undefined
+  const issues = valueRecord ? uniqueStrings(readStringList(valueRecord.issues)) : []
+  const fixes = valueRecord ? uniqueStrings(readStringList(valueRecord.fixes)) : []
+  const missingKeywords = valueRecord
+    ? uniqueStrings([
+        ...readStringList(valueRecord.missing),
+        ...readStringList(valueRecord.missing_keywords),
+        ...readStringList(valueRecord.missingKeywords),
+      ])
+    : []
+  const suggestedBullets = valueRecord
+    ? uniqueStrings([
+        ...readStringList(valueRecord.suggested_bullets),
+        ...readStringList(valueRecord.suggestedBullets),
+      ])
+    : []
+  const gaps = valueRecord ? uniqueStrings(readStringList(valueRecord.gaps)) : []
+
+  return {
+    key,
+    label: formatDimensionLabel(key),
+    score,
+    assessmentLabel: getDimensionAssessmentLabel(score),
+    description,
+    issues,
+    fixes,
+    missingKeywords,
+    suggestedBullets,
+    gaps,
+  }
+}
+
+function hasDimensionData(dimension: AiDimensionViewModel) {
+  return (
+    dimension.score !== null
+    || Boolean(dimension.description)
+    || dimension.issues.length > 0
+    || dimension.fixes.length > 0
+    || dimension.missingKeywords.length > 0
+    || dimension.suggestedBullets.length > 0
+    || dimension.gaps.length > 0
+  )
+}
+
+function readDimensions(result: RecordValue, normalizeCanonicalSet = false): AiDimensionViewModel[] {
   const dimensions = result.dimensions
   const entries: Array<[string, unknown]> = isRecord(dimensions)
     ? Object.entries(dimensions)
@@ -284,59 +387,83 @@ function readDimensions(result: RecordValue): AiDimensionViewModel[] {
         ? Object.entries(result.subScores)
         : []
 
-  return entries.flatMap(([key, value]) => {
-    const score = readNumberFrom(value, ['score', 'overall_score', 'overallScore', 'value', 'rating', 'points'])
-    const description = readText(value, [
-      'description',
-      'feedback',
-      'summary',
-      'assessment',
-      'recommendation',
-      'notes',
-      'message',
-    ])
-    const valueRecord = isRecord(value) ? value : undefined
-    const issues = valueRecord ? readStringList(valueRecord.issues) : []
-    const fixes = valueRecord ? readStringList(valueRecord.fixes) : []
-    const missingKeywords = valueRecord
-      ? uniqueStrings([
-          ...readStringList(valueRecord.missing),
-          ...readStringList(valueRecord.missing_keywords),
-          ...readStringList(valueRecord.missingKeywords),
-        ])
-      : []
-    const suggestedBullets = valueRecord
-      ? uniqueStrings([
-          ...readStringList(valueRecord.suggested_bullets),
-          ...readStringList(valueRecord.suggestedBullets),
-        ])
-      : []
-    const gaps = valueRecord ? readStringList(valueRecord.gaps) : []
+  const parsedByKey = new Map<string, AiDimensionViewModel>()
+  const legacyDimensions: AiDimensionViewModel[] = []
+  let hasCanonicalEntry = false
 
-    if (
-      score === null
-      && !description
-      && issues.length === 0
-      && fixes.length === 0
-      && missingKeywords.length === 0
-      && suggestedBullets.length === 0
-      && gaps.length === 0
-    ) {
-      return []
+  for (const [key, value] of entries) {
+    const viewModel = buildDimensionViewModel(key, value)
+    if (CANONICAL_KEY_SET.has(key)) {
+      if (isRecord(value) || hasDimensionData(viewModel)) {
+        hasCanonicalEntry = true
+      }
+      parsedByKey.set(key, viewModel)
+      continue
     }
 
-    return [{
-      key,
-      label: formatDimensionLabel(key),
-      score,
-      description,
-      issues,
-      fixes,
-      missingKeywords,
-      suggestedBullets,
-      gaps,
-    }]
-  })
+    if (hasDimensionData(viewModel)) {
+      legacyDimensions.push(viewModel)
+    }
+  }
+
+  const canonicalWithData = CANONICAL_DIMENSION_KEYS
+    .map((key) => parsedByKey.get(key))
+    .filter((item): item is AiDimensionViewModel => Boolean(item && hasDimensionData(item)))
+
+  if (normalizeCanonicalSet && (hasCanonicalEntry || canonicalWithData.length > 0)) {
+    const normalizedCanonical = CANONICAL_DIMENSION_KEYS.map(
+      (key) => parsedByKey.get(key) ?? buildDimensionViewModel(key, undefined),
+    )
+    return [...normalizedCanonical, ...legacyDimensions]
+  }
+
+  return [...canonicalWithData, ...legacyDimensions]
+}
+
+export function derivePriorityGroups(dimensions: AiDimensionViewModel[]): AiPriorityGroupViewModel[] {
+  return dimensions
+    .filter(
+      (dimension): dimension is AiDimensionViewModel & { score: number } =>
+        dimension.score !== null
+        && Number.isFinite(dimension.score)
+        && (dimension.issues.length > 0 || dimension.gaps.length > 0 || dimension.fixes.length > 0),
+    )
+    .sort((left, right) => left.score - right.score)
+    .map((dimension) => ({
+      key: dimension.key,
+      label: dimension.label,
+      score: dimension.score,
+      assessmentLabel: dimension.assessmentLabel,
+      issues: dimension.issues,
+      gaps: dimension.gaps,
+      fixes: dimension.fixes,
+    }))
+}
+
+export function deriveStrongestArea(dimensions: AiDimensionViewModel[]): AiStrongestAreaViewModel | null {
+  let strongest: (AiDimensionViewModel & { score: number }) | null = null
+
+  for (const dimension of dimensions) {
+    if (dimension.score === null || !Number.isFinite(dimension.score)) {
+      continue
+    }
+
+    if (!strongest || dimension.score > strongest.score) {
+      strongest = dimension as AiDimensionViewModel & { score: number }
+    }
+  }
+
+  if (!strongest) {
+    return null
+  }
+
+  return {
+    key: strongest.key,
+    label: strongest.label,
+    score: strongest.score,
+    assessmentLabel: strongest.assessmentLabel,
+    description: strongest.description,
+  }
 }
 
 function getAssessmentLabel(score: number | null) {
@@ -360,7 +487,9 @@ export function adaptScoreResult(result: AiResultRecord): AiScoreViewModel {
   const source = resolveResult(result)
   const structured = source.structured
   const overallScore = result.score ?? (structured ? readNumberFrom(structured.overall_score ?? structured.overallScore ?? structured.score, []) : null)
-  const dimensions = structured ? readDimensions(structured) : []
+  const dimensions = structured ? readDimensions(structured, true) : []
+  const priorityGroups = derivePriorityGroups(dimensions)
+  const strongestArea = deriveStrongestArea(dimensions)
   const keywordDimension = structured && isRecord(structured.dimensions)
     ? structured.dimensions.keywords
     : undefined
@@ -370,18 +499,29 @@ export function adaptScoreResult(result: AiResultRecord): AiScoreViewModel {
         ...readStringList(structured.missing_keywords),
         ...(isRecord(keywordDimension) ? readStringList(keywordDimension.missing) : []),
         ...(isRecord(keywordDimension) ? readStringList(keywordDimension.gaps) : []),
+        ...dimensions.flatMap((dimension) => dimension.missingKeywords),
       ])
     : []
-  const suggestedBullets = isRecord(keywordDimension)
+  const suggestedBullets = structured
     ? uniqueStrings([
-        ...readStringList(keywordDimension.suggested_bullets),
-        ...readStringList(keywordDimension.suggestedBullets),
+        ...readStringList(structured.suggested_bullets),
+        ...readStringList(structured.suggestedBullets),
+        ...(isRecord(keywordDimension) ? readStringList(keywordDimension.suggested_bullets) : []),
+        ...(isRecord(keywordDimension) ? readStringList(keywordDimension.suggestedBullets) : []),
+        ...dimensions.flatMap((dimension) => dimension.suggestedBullets),
       ])
     : []
   const jdFitDimension = structured && isRecord(structured.dimensions)
     ? structured.dimensions.jd_fit
     : undefined
-  const roleFitGaps = isRecord(jdFitDimension) ? readStringList(jdFitDimension.gaps) : []
+  const roleFitGaps = structured
+    ? uniqueStrings([
+        ...readStringList(structured.roleFitGaps),
+        ...readStringList(structured.role_fit_gaps),
+        ...(isRecord(jdFitDimension) ? readStringList(jdFitDimension.gaps) : []),
+        ...dimensions.flatMap((dimension) => dimension.gaps),
+      ])
+    : []
   const rewrites = structured ? readRewrites(structured.rewrites) : []
   const rawConfidence = structured ? readNumberFrom(structured.confidence, []) : null
   const confidence = rawConfidence === null
@@ -404,8 +544,9 @@ export function adaptScoreResult(result: AiResultRecord): AiScoreViewModel {
     : undefined
   const note = noteCandidate === aiComment ? undefined : noteCandidate
   const disclaimer = structured ? readFirstText(structured, ['disclaimer']) : undefined
+  const hasVisibleDimensionContent = dimensions.some((dimension) => hasDimensionData(dimension))
   const hasVisibleResult = overallScore !== null
-    || dimensions.length > 0
+    || hasVisibleDimensionContent
     || Boolean(aiComment)
     || Boolean(note)
     || missingKeywords.length > 0
@@ -419,14 +560,15 @@ export function adaptScoreResult(result: AiResultRecord): AiScoreViewModel {
     ? structured.dimensions
     : undefined
   const hasAllContractDimensions = contractDimensions
-    ? ['layout_ats', 'language', 'keywords', 'jd_fit']
-        .every((key) => isRecord(contractDimensions[key]))
+    ? CANONICAL_DIMENSION_KEYS.every((key) => isRecord(contractDimensions[key]))
     : false
 
   return {
     overallScore,
     assessmentLabel: getAssessmentLabel(overallScore),
-    dimensions,
+    priorityGroups,
+    dimensions: hasVisibleDimensionContent ? dimensions : [],
+    strongestArea,
     missingKeywords,
     suggestedBullets,
     roleFitGaps,
@@ -483,6 +625,7 @@ function readRewrites(value: unknown): AiRewriteViewModel[] {
     }]
   })
 }
+
 export function adaptFeedbackResult(result: AiResultRecord): AiFeedbackViewModel {
   const source = resolveResult(result)
   const structured = source.structured

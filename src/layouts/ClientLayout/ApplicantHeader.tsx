@@ -10,7 +10,7 @@ import { getLandingPath, LANDING_HOME_HASH } from '@/modules/pages/landingNaviga
 const applicantNavItems = [
   { label: 'Profile', to: '/profile' },
   { label: 'CV', to: '/cv' },
-  { label: 'AI Chatting', to: '/ai-chat' },
+  { label: 'CV Analysis', to: '/ai' },
   { label: 'Portfolio', to: '/portfolio' },
   { label: 'Billing', to: '/billing' },
 ] as const
